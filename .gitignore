@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Debug
+/public/lib/Debug
+/.vs/tsm/v14
+/ipch/STATEMACHINE-60d3a2f8
+/StateMachine/Debug
+/StateMachineUnitTest/Debug
+/tsm.VC.VC.opendb
+/tsm.VC.db
