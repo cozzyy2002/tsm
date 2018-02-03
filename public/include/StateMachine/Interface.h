@@ -35,4 +35,15 @@ public:
 	CComPtr<IState> m_subState;
 	IState* m_masterState;
 };
+
+class IStateMachine
+{
+public:
+	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) = 0;
+	virtual HRESULT shutdown(IContext* context) = 0;
+	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
+	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
+};
+
+extern IStateMachine* createStateMachine();
 }

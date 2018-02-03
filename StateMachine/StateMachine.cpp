@@ -4,11 +4,16 @@
 
 namespace tsm {
 
+IStateMachine* createStateMachine()
+{
+	return new StateMachine();
+}
+
 StateMachine::StateMachine()
 {
 }
 
-HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* event /*= nullptr*/)
+HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* event)
 {
 	context->m_currentState = initialState;
 	context->m_currentState->_entry(context, event, nullptr);
@@ -17,6 +22,11 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 }
 
 HRESULT StateMachine::shutdown(IContext* context)
+{
+	return E_NOTIMPL;
+}
+
+HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 {
 	return E_NOTIMPL;
 }

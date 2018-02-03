@@ -4,11 +4,10 @@
 #include <StateMachine/Event.h>
 #include <StateMachine/State.h>
 
-class MockContext;
 class MockEvent;
 class MockState;
 
-class MockContext : public tsm::Context<MockState>
+class MockContext : public tsm::Context<MockEvent, MockState>
 {
 public:
 };
