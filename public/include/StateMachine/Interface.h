@@ -2,8 +2,14 @@
 
 #include <StateMachine/Unknown.h>
 
+#include <deque>
+#include <memory>
+#include <mutex>
+#include <thread>
+
 namespace tsm {
 
+class IEvent;
 class IState;
 
 class IContext
@@ -11,7 +17,32 @@ class IContext
 public:
 	virtual ~IContext() {}
 
+	// Data for IAsyncContext.
+	struct AsyncData {
+		std::thread thread;							// Worker thread.
+		CHandle hReadyEvent;						// Event handle set when ready to handle IEvent.
+		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
+		std::recursive_mutex eventQueueLock;		// Lock to modify event queue.
+	};
+
+	// Returns nullptr(Async operation is not supported).
+	virtual AsyncData* getAsyncData() { return nullptr; }
+
 	CComPtr<IState> m_currentState;
+	using lock_t = std::lock_guard<std::recursive_mutex>;
+	virtual lock_t* getHandleEventLock() { return new lock_t(m_handleEventLock); }
+
+protected:
+	std::recursive_mutex m_handleEventLock;
+};
+
+class IAsyncContext : public IContext
+{
+public:
+	virtual AsyncData* getAsyncData() { return &m_asyncData; }
+
+protected:
+	AsyncData m_asyncData;
 };
 
 class IEvent : public Unknown
