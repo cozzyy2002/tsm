@@ -20,7 +20,7 @@ public:
 	TestUnknown(ULONG& cRef) : rcRef(cRef) {}
 
 	bool deleted() const;
-	ULONG Release();
+	ULONG Release(IUnknown* _this);
 
 protected:
 	ULONG& rcRef;
@@ -31,7 +31,7 @@ class MockEvent : public tsm::Event, public TestUnknown
 public:
 	MockEvent() : TestUnknown(m_cRef) {}
 
-	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
+	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(this); }
 };
 
 class MockState : public tsm::State<MockContext, MockEvent, MockState>, public TestUnknown
@@ -40,7 +40,7 @@ public:
 	MockState() : TestUnknown(m_cRef) {}
 
 	void setMasterState(MockState* masterState) { m_masterState = masterState; }
-	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
+	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(this); }
 
 	MOCK_METHOD3(handleEvent, HRESULT(MockContext*, MockEvent*, MockState**));
 	MOCK_METHOD3(entry, HRESULT(MockContext*, MockEvent*, MockState*));

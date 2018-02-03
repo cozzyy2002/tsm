@@ -14,11 +14,11 @@ bool TestUnknown::deleted() const
  *   Be created in stack.
  *   check where the object is deleted by calling deleted() method.
  */
-ULONG TestUnknown::Release()
+ULONG TestUnknown::Release(IUnknown* _this)
 {
 	rcRef = InterlockedDecrement(&rcRef);
 	if((LONG)rcRef < 0) {
-		ADD_FAILURE() << "Invalid reference count: " << rcRef;
+		ADD_FAILURE() << typeid(*_this).name() << ": Invalid reference count: " << (LONG)rcRef;
 	}
 	return rcRef;
 }
