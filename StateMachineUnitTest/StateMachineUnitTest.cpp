@@ -42,9 +42,9 @@ TEST_F(StateMachineSetupUnitTest, 0)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
 
-	testee.setup(&mockContext, &mockState0);
+	ASSERT_HRESULT_SUCCEEDED(testee.setup(&mockContext, &mockState0));
 
-	ASSERT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_FALSE(mockState0.deleted());
 }
 
@@ -53,11 +53,32 @@ TEST_F(StateMachineSetupUnitTest, 1)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, nullptr)).WillOnce(Return(S_OK));
 
-	testee.setup(&mockContext, &mockState0, &mockEvent);
+	ASSERT_HRESULT_SUCCEEDED(testee.setup(&mockContext, &mockState0, &mockEvent));
 
-	ASSERT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
+}
+
+// State::entry() returns error
+TEST_F(StateMachineSetupUnitTest, 2)
+{
+	auto hr = E_ABORT;
+	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, nullptr)).WillOnce(Return(hr));
+
+	ASSERT_EQ(hr, testee.setup(&mockContext, &mockState0, &mockEvent));
+
+	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_FALSE(mockState0.deleted());
+}
+
+// StateMachine::setup() was not called before handleEvent().
+TEST_F(StateMachineSetupUnitTest, 3)
+{
+	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, testee.handleEvent(&mockContext, &mockEvent));
+
+	EXPECT_TRUE(mockEvent.deleted());
 }
 
 // -------------------------
@@ -81,6 +102,7 @@ TEST_F(StateMachineEventUnitTest, 0)
 
 	ASSERT_HRESULT_SUCCEEDED(testee.handleEvent(&mockContext, &mockEvent));
 
+	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
 }
@@ -95,7 +117,23 @@ TEST_F(StateMachineEventUnitTest, 1)
 
 	ASSERT_HRESULT_SUCCEEDED(testee.handleEvent(&mockContext, &mockEvent));
 
+	EXPECT_EQ(&mockState1, mockContext.m_currentState);
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_TRUE(mockState0.deleted());
 	EXPECT_FALSE(mockState1.deleted());
+}
+
+// State::handleEvent() returns error.
+TEST_F(StateMachineEventUnitTest, 2)
+{
+	auto hr = E_ABORT;
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
+		.WillOnce(Return(hr));
+	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+
+	ASSERT_EQ(hr, testee.handleEvent(&mockContext, &mockEvent));
+
+	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_FALSE(mockState0.deleted());
 }

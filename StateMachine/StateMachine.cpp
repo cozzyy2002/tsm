@@ -2,6 +2,9 @@
 #include <StateMachine/StateMachine.h>
 #include <StateMachine/Interface.h>
 
+#define HR_ASSERT_OK(exp) do { auto _hr(HR_EXPECT_OK(exp)); if(FAILED(_hr)) return _hr; } while(false)
+#define HR_EXPECT_OK(exp) (exp)
+
 namespace tsm {
 
 StateMachine::StateMachine()
@@ -11,7 +14,7 @@ StateMachine::StateMachine()
 HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* event /*= nullptr*/)
 {
 	context->m_currentState = initialState;
-	context->m_currentState->_entry(context, event, nullptr);
+	HR_ASSERT_OK(context->m_currentState->_entry(context, event, nullptr));
 
 	return S_OK;
 }
@@ -21,6 +24,17 @@ HRESULT StateMachine::shutdown(IContext* context)
 	return E_NOTIMPL;
 }
 
+HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
+{
+	auto asyncData = context->getAsyncData();
+	if(asyncData) {
+		return E_NOTIMPL;
+	} else {
+		// Async operation is not supported.
+		return E_ILLEGAL_METHOD_CALL;
+	}
+}
+
 HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 {
 	if(!context->m_currentState) {
@@ -28,15 +42,17 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 		return E_ILLEGAL_METHOD_CALL;
 	}
 
+	std::unique_ptr<IContext::lock_t> _lock(context->getHandleEventLock());
+
 	CComPtr<IEvent> e(event);
 	IState* nextState = nullptr;
-	HRESULT hr = context->m_currentState->_handleEvent(context, event, &nextState);
+	HRESULT hr = HR_EXPECT_OK(context->m_currentState->_handleEvent(context, event, &nextState));
 	CComPtr<IState> _nextState(nextState);
 	if(SUCCEEDED(hr) && nextState) {
-		context->m_currentState->_exit(context, event, nextState);
+		HR_ASSERT_OK(context->m_currentState->_exit(context, event, nextState));
 		CComPtr<IState> previousState(context->m_currentState);
 		context->m_currentState = nextState;
-		context->m_currentState->_entry(context, event, previousState);
+		HR_ASSERT_OK(context->m_currentState->_entry(context, event, previousState));
 	}
 	return hr;
 }
