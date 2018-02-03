@@ -1,6 +1,6 @@
 #include <StateMachine/stdafx.h>
-#include <StateMachine/StateMachine.h>
 #include <StateMachine/Interface.h>
+#include "StateMachine.h"
 
 #define HR_ASSERT_OK(exp) do { auto _hr(HR_EXPECT_OK(exp)); if(FAILED(_hr)) return _hr; } while(false)
 #define HR_EXPECT_OK(exp) (exp)

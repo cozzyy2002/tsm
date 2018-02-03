@@ -1,6 +1,6 @@
 #pragma once
 
-#include <StateMachine/Interface.h>
+#include "Interface.h"
 
 namespace tsm {
 

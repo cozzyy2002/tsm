@@ -24,9 +24,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -42,14 +39,14 @@
     <ClInclude Include="..\public\include\StateMachine\State.h">
       <Filter>public\include</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\include\StateMachine\StateMachine.h">
-      <Filter>public\include</Filter>
-    </ClInclude>
     <ClInclude Include="..\public\include\StateMachine\stdafx.h">
       <Filter>public\include</Filter>
     </ClInclude>
     <ClInclude Include="..\public\include\StateMachine\Unknown.h">
       <Filter>public\include</Filter>
+    </ClInclude>
+    <ClInclude Include="StateMachine.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -3,11 +3,6 @@
 
 #include "stdafx.h"
 
-#include <StateMachine/Context.h>
-#include <StateMachine/State.h>
-#include <StateMachine/Event.h>
-#include <StateMachine/StateMachine.h>
-
 #include "Mocks.h"
 
 using namespace testing;
@@ -84,9 +79,7 @@ class StateMachineEventUnitTest : public StateMachineUnitTest
 public:
 	void SetUp() {
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
-		mockContext.setup(&mockState0);
-		ASSERT_EQ(&mockState0, mockContext.m_currentState);
-		EXPECT_FALSE(mockState0.deleted());
+		ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
 	}
 };
 
