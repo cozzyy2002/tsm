@@ -39,6 +39,7 @@ class MockState : public tsm::State<MockContext, MockEvent, MockState>, public T
 public:
 	MockState() : TestUnknown(m_cRef) {}
 
+	void setMasterState(MockState* masterState) { m_masterState = masterState; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
 
 	MOCK_METHOD3(handleEvent, HRESULT(MockContext*, MockEvent*, MockState**));

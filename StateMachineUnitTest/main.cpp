@@ -4,6 +4,6 @@ using namespace testing;
 
 int _tmain(int argc, TCHAR *argv[])
 {
-	InitGoogleTest(&argc, argv);
+	InitGoogleMock(&argc, argv);
 	return RUN_ALL_TESTS();
 }
