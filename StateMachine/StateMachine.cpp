@@ -11,7 +11,7 @@ StateMachine::StateMachine()
 HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* event /*= nullptr*/)
 {
 	context->m_currentState = initialState;
-	context->m_currentState->_entry(context, event, context->m_currentState);
+	context->m_currentState->_entry(context, event, nullptr);
 
 	return S_OK;
 }
@@ -23,6 +23,11 @@ HRESULT StateMachine::shutdown(IContext* context)
 
 HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 {
+	if(!context->m_currentState) {
+		// Current state has not been set.
+		return E_ILLEGAL_METHOD_CALL;
+	}
+
 	CComPtr<IEvent> e(event);
 	IState* nextState = nullptr;
 	HRESULT hr = context->m_currentState->_handleEvent(context, event, &nextState);

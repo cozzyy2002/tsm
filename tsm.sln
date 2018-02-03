@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StateMachine", "StateMachine\StateMachine.vcxproj", "{BD429D1D-B2CF-479C-A3BB-AD081C5C210F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StateMachineUnitTest", "StateMachineUnitTest\StateMachineUnitTest.vcxproj", "{6556934D-0242-42E4-95CD-25D42D296DA6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BD429D1D-B2CF-479C-A3BB-AD081C5C210F} = {BD429D1D-B2CF-479C-A3BB-AD081C5C210F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

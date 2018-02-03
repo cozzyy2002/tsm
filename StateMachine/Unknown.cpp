@@ -20,19 +20,19 @@ tstring Unknown::toString() const
 	return (LPCTSTR)str;
 }
 
-HRESULT Unknown::QueryInterface(REFIID riid, void ** ppvObject)
+HRESULT STDMETHODCALLTYPE Unknown::QueryInterface(REFIID riid, void ** ppvObject)
 {
 	return QISearch(this, getQUITABs(), riid, ppvObject);
 }
 
-ULONG Unknown::AddRef(void)
+ULONG STDMETHODCALLTYPE Unknown::AddRef(void)
 {
 	auto cRef = InterlockedIncrement(&m_cRef);
 	std::cout << typeid(*this).name() << "::AddRef: Reference count=" << m_cRef << std::endl;
 	return cRef;
 }
 
-ULONG Unknown::Release(void)
+ULONG STDMETHODCALLTYPE Unknown::Release(void)
 {
 	auto cRef = InterlockedDecrement(&m_cRef);
 	std::cout << typeid(*this).name() << "::Release: Reference count=" << m_cRef << std::endl;

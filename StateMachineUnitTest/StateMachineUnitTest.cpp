@@ -8,72 +8,48 @@
 #include <StateMachine/Event.h>
 #include <StateMachine/StateMachine.h>
 
-#include <iostream>
+#include "Mocks.h"
+
+using namespace testing;
 
 template<class T>
 static LPCSTR getObjectName(T* obj) { return typeid(*obj).name(); }
 
-class State;
-class Event;
-
-class Context : public tsm::Context<State>
+class StateMachineUnitTest : public Test
 {
 public:
-	HRESULT setup();
-	HRESULT handleEvent(Event* event);
+	class Testee : public tsm::StateMachine
+	{};
 
-	LPCTSTR x() { return __FUNCTIONW__; }
-
-protected:
-	tsm::StateMachine sm;
-};
-
-class Event : public tsm::Event {};
-
-class State : public tsm::State<Context, Event, State>
-{
-};
-
-class InitialState : public State {
-	virtual HRESULT entry(Context* context, Event* event, State* previousState) {
-		std::cout << __FUNCTION__ << ": previousState=" << getObjectName(previousState) << std::endl;
-		return S_OK;
+	void SetUp() {
+		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
+		testee.setup(&mockContext, &mockState0);
+		ASSERT_EQ(&mockState0, mockContext.m_currentState);
+		EXPECT_EQ(1, mockState0.getRefCount());
 	}
+	void TearDown() {}
+
+	Testee testee;
+	MockContext mockContext;
+	MockEvent mockEvent;
+	MockState mockState0, mockState1;
 };
 
-class UnInitializedState : public State
+TEST_F(StateMachineUnitTest, 0)
 {
-public:
-	virtual HRESULT handleEvent(Context* context, Event* event, State** nextState) {
-		std::wcout << __FUNCTIONW__ L"(" << context->x() << L"," << event->toString().c_str() << L")" << std::endl;
-		*nextState = new InitialState();
-		return S_OK;
-		//return E_ABORT;
-	}
-	virtual HRESULT exit(Context* context, Event* event, State* nextState) {
-		std::cout << __FUNCTION__ << ": nextState=" << getObjectName(nextState) << std::endl;
-		return S_OK;
-	}
-};
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, _)).WillOnce(Return(S_OK));
+	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+	EXPECT_CALL(mockState1, entry(_, _, _)).Times(0);
 
-HRESULT Context::setup()
-{
-	auto e = new UnInitializedState();
-	return sm.setup(this, e);
-}
-HRESULT Context::handleEvent(Event* event)
-{
-	return sm.handleEvent(this, event);
+	ASSERT_HRESULT_SUCCEEDED(testee.handleEvent(&mockContext, &mockEvent));
+
+	EXPECT_EQ(0, mockEvent.getRefCount());
+	EXPECT_EQ(1, mockState0.getRefCount());
 }
 
-
-int main()
+TEST_F(StateMachineUnitTest, 1)
 {
-	Context c;
-	c.setup();
-	std::cout << "Current state=" << typeid(*c.getCurrentState()).name() << std::endl;
-	c.handleEvent(new Event());
-	std::cout << "Current state=" << typeid(*c.getCurrentState()).name() << std::endl;
-
-    return 0;
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, _)).WillOnce(Return(S_OK));
+	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(S_OK));
+	EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));
 }
