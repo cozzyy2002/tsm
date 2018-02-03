@@ -13,19 +13,33 @@ class MockContext : public tsm::Context<MockState>
 public:
 };
 
-class MockEvent : public tsm::Event
+/* Base class for Mock class inheriting IUnknown */
+class TestUnknown
 {
 public:
-	virtual ULONG STDMETHODCALLTYPE Release(void);
-	ULONG getRefCount() const { return m_cRef; }
+	TestUnknown(ULONG& cRef) : rcRef(cRef) {}
+
+	bool deleted() const;
+	ULONG Release();
+
+protected:
+	ULONG& rcRef;
 };
 
-class MockState : public tsm::State<MockContext, MockEvent, MockState>
+class MockEvent : public tsm::Event, public TestUnknown
 {
 public:
-	MockState() { m_cRef++; }
-	virtual ULONG STDMETHODCALLTYPE Release(void);
-	ULONG getRefCount() const { return m_cRef; }
+	MockEvent() : TestUnknown(m_cRef) {}
+
+	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
+};
+
+class MockState : public tsm::State<MockContext, MockEvent, MockState>, public TestUnknown
+{
+public:
+	MockState() : TestUnknown(m_cRef) {}
+
+	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
 
 	MOCK_METHOD3(handleEvent, HRESULT(MockContext*, MockEvent*, MockState**));
 	MOCK_METHOD3(entry, HRESULT(MockContext*, MockEvent*, MockState*));

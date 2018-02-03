@@ -25,9 +25,12 @@ public:
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
 		testee.setup(&mockContext, &mockState0);
 		ASSERT_EQ(&mockState0, mockContext.m_currentState);
-		EXPECT_EQ(1, mockState0.getRefCount());
+		EXPECT_FALSE(mockState0.deleted());
 	}
-	void TearDown() {}
+	void TearDown() {
+		// Prevent Unknown::Release() method of MockState from being called after deleting.
+		mockContext.m_currentState.Release();
+	}
 
 	Testee testee;
 	MockContext mockContext;
@@ -43,8 +46,8 @@ TEST_F(StateMachineUnitTest, 0)
 
 	ASSERT_HRESULT_SUCCEEDED(testee.handleEvent(&mockContext, &mockEvent));
 
-	EXPECT_EQ(0, mockEvent.getRefCount());
-	EXPECT_EQ(1, mockState0.getRefCount());
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_FALSE(mockState0.deleted());
 }
 
 TEST_F(StateMachineUnitTest, 1)

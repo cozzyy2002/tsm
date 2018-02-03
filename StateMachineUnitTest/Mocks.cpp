@@ -2,16 +2,23 @@
 
 #include "Mocks.h"
 
-// Mock is created in stack not heap, so it does not delete itself.
-ULONG STDMETHODCALLTYPE MockEvent::Release(void)
+bool TestUnknown::deleted() const
 {
-	auto cRef = InterlockedDecrement(&m_cRef);
-	return cRef;
+	return (rcRef == 0);
 }
 
-// Mock is created in stack not heap, so it does not delete itself.
-ULONG STDMETHODCALLTYPE MockState::Release(void)
+/*
+ * Implementation of IUnknown::Release()
+ *
+ * This method does not delete this object even if reference count reaches zero to:
+ *   Be created in stack.
+ *   check where the object is deleted by calling deleted() method.
+ */
+ULONG TestUnknown::Release()
 {
-	auto cRef = InterlockedDecrement(&m_cRef);
-	return cRef;
+	rcRef = InterlockedDecrement(&rcRef);
+	if((LONG)rcRef < 0) {
+		ADD_FAILURE() << "Invalid reference count: " << rcRef;
+	}
+	return rcRef;
 }
