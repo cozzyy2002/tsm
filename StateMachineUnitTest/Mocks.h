@@ -16,9 +16,10 @@ public:
 class TestUnknown
 {
 public:
-	TestUnknown(ULONG& cRef) : rcRef(cRef) {}
+	TestUnknown(ULONG& cRef) : rcRef(cRef), isReleaseCalled(false) {}
 	virtual ~TestUnknown();
 
+	ULONG getReferenceCount() const { return rcRef; }
 	bool deleted() const;
 	ULONG Release();
 
@@ -27,6 +28,7 @@ protected:
 	void setObject(IUnknown* _this);
 
 	ULONG& rcRef;
+	bool isReleaseCalled;
 	std::string className;
 };
 

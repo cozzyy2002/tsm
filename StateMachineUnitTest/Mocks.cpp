@@ -11,7 +11,8 @@ TestUnknown::~TestUnknown()
 
 bool TestUnknown::deleted() const
 {
-	return (rcRef == 0);
+	if(!isReleaseCalled) ADD_FAILURE() << className << "::Release has been called.";
+	return isReleaseCalled && (rcRef == 0);
 }
 
 /*
@@ -23,6 +24,7 @@ bool TestUnknown::deleted() const
  */
 ULONG TestUnknown::Release()
 {
+	isReleaseCalled = true;
 	LONG cRef = InterlockedDecrement(&rcRef);
 	if(cRef < 0) {
 		ADD_FAILURE() << className << ": Invalid reference count: " << cRef;

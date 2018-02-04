@@ -65,8 +65,30 @@ TEST_F(StateMachineSetupUnitTest, 2)
 	EXPECT_FALSE(mockState0.deleted());
 }
 
-// StateMachine::setup() was not called before handleEvent().
+// StateMachine::setup() was called twice.
+// 2nd call should fail.
 TEST_F(StateMachineSetupUnitTest, 3)
+{
+	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
+
+	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
+	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, mockContext.setup(&mockState0, &mockEvent));
+
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_EQ(1, mockState0.getReferenceCount());
+}
+
+// StateMachine::setup() was not called before shutdown().
+TEST_F(StateMachineSetupUnitTest, 4)
+{
+	// shutdown() can be called any time.
+	ASSERT_HRESULT_SUCCEEDED(mockContext.shutdown());
+
+	EXPECT_EQ(nullptr, mockContext.m_currentState);
+}
+
+// StateMachine::handleEvent() is called before setup().
+TEST_F(StateMachineSetupUnitTest, 5)
 {
 	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, mockContext.handleEvent(&mockEvent));
 

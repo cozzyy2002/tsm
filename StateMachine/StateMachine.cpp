@@ -37,6 +37,10 @@ protected:
 
 HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* event)
 {
+	// Ensure to release object on error.
+	CComPtr<IState> _initialState(initialState);
+	CComPtr<IEvent> _event(event);
+
 	// Check if setup() has not been called.
 	HR_ASSERT_OK(FAILED(setupCompleted(context)) ? S_OK : E_ILLEGAL_METHOD_CALL);
 
@@ -63,12 +67,15 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 	return S_OK;
 }
 
+/*
+ * Shutdown state machine.
+ *
+ * This method can be called even if setup() has been called.
+ */
 HRESULT StateMachine::shutdown(IContext* context)
 {
-	HR_ASSERT_OK(setupCompleted(context));
-
 	auto asyncData = context->getAsyncData();
-	if(asyncData) {
+	if(asyncData && asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
 		SetEvent(asyncData->hEventShutdown);
 		auto& thread = asyncData->thread;
@@ -78,11 +85,16 @@ HRESULT StateMachine::shutdown(IContext* context)
 		thread.detach();
 	}
 
+	context->m_currentState.Release();
+
 	return S_OK;
 }
 
 HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 {
+	// Ensure to release object on error.
+	CComPtr<IEvent> _event(event);
+
 	HR_ASSERT_OK(setupCompleted(context));
 
 	auto asyncData = context->getAsyncData();
@@ -102,6 +114,9 @@ HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 
 HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 {
+	// Ensure to release object on error.
+	CComPtr<IEvent> _event(event);
+
 	HR_ASSERT_OK(setupCompleted(context));
 
 	std::unique_ptr<IContext::lock_t> _lock(context->getHandleEventLock());
