@@ -23,9 +23,9 @@ bool TestUnknown::deleted() const
  */
 ULONG TestUnknown::Release()
 {
-	rcRef = InterlockedDecrement(&rcRef);
-	if((LONG)rcRef < 0) {
-		ADD_FAILURE() << className << ": Invalid reference count: " << (LONG)rcRef;
+	LONG cRef = InterlockedDecrement(&rcRef);
+	if(cRef < 0) {
+		ADD_FAILURE() << className << ": Invalid reference count: " << cRef;
 	}
 	return rcRef;
 }

@@ -32,7 +32,7 @@ public:
 // StateMachine::setup(Event* = nullptr)
 TEST_F(StateMachineSetupUnitTest, 0)
 {
-	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
+	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
 	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
 
@@ -43,7 +43,7 @@ TEST_F(StateMachineSetupUnitTest, 0)
 // StateMachine::setup(Event* = event)
 TEST_F(StateMachineSetupUnitTest, 1)
 {
-	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, nullptr)).WillOnce(Return(S_OK));
+	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(S_OK));
 
 	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0, &mockEvent));
 
@@ -56,7 +56,7 @@ TEST_F(StateMachineSetupUnitTest, 1)
 TEST_F(StateMachineSetupUnitTest, 2)
 {
 	auto hr = E_ABORT;
-	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, nullptr)).WillOnce(Return(hr));
+	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
 	ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));
 
@@ -78,7 +78,7 @@ class StateMachineEventUnitTest : public StateMachineUnitTest
 {
 public:
 	void SetUp() {
-		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
+		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 		ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
 	}
 };

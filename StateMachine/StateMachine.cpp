@@ -1,5 +1,6 @@
 #include <StateMachine/stdafx.h>
-#include <StateMachine/Interface.h>
+
+#include <StateMachine/State.h>
 #include "StateMachine.h"
 
 #define HR_ASSERT_OK(exp) do { auto _hr(HR_EXPECT_OK(exp)); if(FAILED(_hr)) return _hr; } while(false)
@@ -16,18 +17,38 @@ StateMachine::StateMachine()
 {
 }
 
+/*
+ * State class for StateMachine::startup() method.
+ */
+class StartupState : public State<IContext, IEvent, IState>
+{
+public:
+	StartupState(IState* initialState) : m_initialState(initialState) {}
+
+	// Sets initial state as next state regardless of event.
+	HRESULT handleEvent(IContext* context, IEvent* event, IState** nextState) {
+		*nextState = m_initialState;
+		return S_OK;
+	}
+
+protected:
+	CComPtr<IState> m_initialState;
+};
+
 HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* event)
 {
-	context->m_currentState = initialState;
+	// Check if setup() has not been called.
+	HR_ASSERT_OK(FAILED(setupCompleted(context)) ? S_OK : E_ILLEGAL_METHOD_CALL);
+
+	// Set StartupState object as current state.
+	context->m_currentState = new StartupState(initialState);
 
 	auto asyncData = context->getAsyncData();
 	if(asyncData) {
-		// Setup event queue and .
+		// Setup event queue.
 		asyncData->eventQueue.clear();
 		asyncData->hEventAvailable.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
-		if(event) {
-			triggerEvent(context, event);
-		}
+		triggerEvent(context, event);
 
 		// Setup worker thread in which event handling is performed.
 		// entry() of initial state will be called in the thread.
@@ -36,7 +57,7 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 		asyncData->thread = std::thread([this, context] { doWorkerThread(context); });
 	} else {
 		// Call entry() of initial state in the caller thread.
-		HR_ASSERT_OK(context->m_currentState->_entry(context, event, nullptr));
+		HR_ASSERT_OK(handleEvent(context, event));
 	}
 
 	return S_OK;
@@ -44,6 +65,8 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 
 HRESULT StateMachine::shutdown(IContext* context)
 {
+	HR_ASSERT_OK(setupCompleted(context));
+
 	auto asyncData = context->getAsyncData();
 	if(asyncData) {
 		// Signal worker thread to shutdown and wait for it to terminate.
@@ -60,6 +83,8 @@ HRESULT StateMachine::shutdown(IContext* context)
 
 HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 {
+	HR_ASSERT_OK(setupCompleted(context));
+
 	auto asyncData = context->getAsyncData();
 	if(asyncData) {
 		// Add the event to event queue and signal that event is available.
@@ -77,10 +102,7 @@ HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 
 HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 {
-	if(!context->m_currentState) {
-		// Current state has not been set.
-		return E_ILLEGAL_METHOD_CALL;
-	}
+	HR_ASSERT_OK(setupCompleted(context));
 
 	std::unique_ptr<IContext::lock_t> _lock(context->getHandleEventLock());
 
@@ -141,6 +163,11 @@ HRESULT StateMachine::doWorkerThread(IContext* context)
 		} while(!event);
 	} while(true);
 	return S_OK;
+}
+
+HRESULT StateMachine::setupCompleted(IContext* context) const
+{
+	return context->m_currentState ? S_OK : E_ILLEGAL_METHOD_CALL;
 }
 
 }

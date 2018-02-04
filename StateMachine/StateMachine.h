@@ -16,6 +16,7 @@ public:
 
 protected:
 	HRESULT doWorkerThread(IContext* context);
+	HRESULT setupCompleted(IContext* context) const;
 };
 
 }
