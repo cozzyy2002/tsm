@@ -13,6 +13,9 @@ public:
 	HRESULT shutdown(IContext* context);
 	HRESULT triggerEvent(IContext* context, IEvent* event);
 	HRESULT handleEvent(IContext* context, IEvent* event);
+
+protected:
+	HRESULT doWorkerThread(IContext* context);
 };
 
 }

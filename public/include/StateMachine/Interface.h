@@ -17,32 +17,26 @@ class IContext
 public:
 	virtual ~IContext() {}
 
-	// Data for IAsyncContext.
+	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
 		std::thread thread;							// Worker thread.
-		CHandle hReadyEvent;						// Event handle set when ready to handle IEvent.
+		CHandle hEventReady;						// Event handle set when ready to handle IEvent.
 		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
+		CHandle hEventAvailable;					// Event handle set when event is queued.
+		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
 		std::recursive_mutex eventQueueLock;		// Lock to modify event queue.
 	};
 
 	// Returns nullptr(Async operation is not supported).
-	virtual AsyncData* getAsyncData() { return nullptr; }
+	virtual AsyncData* getAsyncData() = 0;
 
-	CComPtr<IState> m_currentState;
 	using lock_t = std::lock_guard<std::recursive_mutex>;
 	virtual lock_t* getHandleEventLock() { return new lock_t(m_handleEventLock); }
 
+	CComPtr<IState> m_currentState;
+
 protected:
 	std::recursive_mutex m_handleEventLock;
-};
-
-class IAsyncContext : public IContext
-{
-public:
-	virtual AsyncData* getAsyncData() { return &m_asyncData; }
-
-protected:
-	AsyncData m_asyncData;
 };
 
 class IEvent : public Unknown
