@@ -82,7 +82,6 @@ HRESULT StateMachine::shutdown(IContext* context)
 		if(thread.joinable()) {
 			thread.join();
 		}
-		thread.detach();
 	}
 
 	context->m_currentState.Release();
@@ -134,37 +133,32 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	return hr;
 }
 
+HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
+{
+	auto asyncData = context->getAsyncData();
+	if(asyncData) {
+		DWORD wait = WaitForSingleObject(asyncData->hEventReady, timeout);
+		return HR_EXPECT_OK(checkWaitResult(wait));
+	} else {
+		return S_OK;
+	}
+}
+
 HRESULT StateMachine::doWorkerThread(IContext* context)
 {
 	auto asyncData = context->getAsyncData();
 	HANDLE hEvents[] = { asyncData->hEventAvailable, asyncData->hEventShutdown };
 	static const DWORD eventsCount = ARRAYSIZE(hEvents);
 
-	{
-		// Call entry() of initial state.
-		std::unique_ptr<IContext::lock_t> _lock(context->getHandleEventLock());
-		context->m_currentState->_entry(context, nullptr, nullptr);
-	}
-
-	SetEvent(asyncData->hEventReady);
+	auto first = true;
 	do {
 		// Wait for event to be queued.
 		DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, INFINITE);
 		if(wait < eventsCount) ResetEvent(hEvents[wait]);
-		switch(wait) {
-		case WAIT_OBJECT_0:
-			// One or more events are available in the event queue. 
-			break;
-		case WAIT_OBJECT_0 + 1:
-			// Exit worker thread.
-			return S_OK;
-		default:
-			// Error occurred.
-			return HRESULT_FROM_WIN32(GetLastError());
-		}
-
-		CComPtr<IEvent> event;
+		HR_ASSERT_OK(checkWaitResult(wait, eventsCount));
+		if(wait == (WAIT_OBJECT_0 + 1)) break;
 		do {
+			CComPtr<IEvent> event;
 			{
 				// Fetch event from the queue.
 				IContext::lock_t _lock(asyncData->eventQueueLock);
@@ -175,7 +169,12 @@ HRESULT StateMachine::doWorkerThread(IContext* context)
 
 			// Handle the event.
 			HR_ASSERT_OK(handleEvent(context, event));
-		} while(!event);
+			if(first) {
+				// Set ready event after first event handled(AsyncContext::setup() is completed).
+				first = false;
+				SetEvent(asyncData->hEventReady);
+			}
+		} while(true);
 	} while(true);
 	return S_OK;
 }
@@ -183,6 +182,25 @@ HRESULT StateMachine::doWorkerThread(IContext* context)
 HRESULT StateMachine::setupCompleted(IContext* context) const
 {
 	return context->m_currentState ? S_OK : E_ILLEGAL_METHOD_CALL;
+}
+
+// Check return value of WaitForSingleObject() and WaitForMultipleObjects().
+HRESULT StateMachine::checkWaitResult(DWORD wait, DWORD eventCount /*= 1*/) const
+{
+	switch(wait) {
+	case WAIT_TIMEOUT:
+		return HRESULT_FROM_WIN32(WAIT_TIMEOUT);
+	case WAIT_FAILED:
+		return HRESULT_FROM_WIN32(GetLastError());
+	default:
+		if((WAIT_OBJECT_0 <= wait) && (wait < (WAIT_OBJECT_0 + eventCount))) {
+			// Wait succeeded.
+			return S_OK;
+		} else {
+			// Unknown return value.
+			return E_UNEXPECTED;
+		}
+	}
 }
 
 }

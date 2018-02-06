@@ -18,15 +18,18 @@ public:
 		mockContext.m_currentState.Release();
 	}
 
-	MockContext mockContext;
+	MockAsyncContext mockContext;
 	MockEvent mockEvent;
-	MockState mockState0, mockState1;
+	MockAsyncState mockState0, mockState1;
 };
 
 // -------------------------
 class StateMachineSetupUnitTest : public StateMachineUnitTest
 {
 public:
+	void TearDown() {
+		EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	}
 };
 
 // StateMachine::setup(Event* = nullptr)
@@ -35,9 +38,12 @@ TEST_F(StateMachineSetupUnitTest, 0)
 	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
 	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
+	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
 
 	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	EXPECT_TRUE(mockState0.deleted());
 }
 
 // StateMachine::setup(Event* = event)
@@ -46,10 +52,13 @@ TEST_F(StateMachineSetupUnitTest, 1)
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(S_OK));
 
 	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0, &mockEvent));
+	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
 
 	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	EXPECT_TRUE(mockState0.deleted());
 }
 
 // State::entry() returns error
@@ -59,10 +68,13 @@ TEST_F(StateMachineSetupUnitTest, 2)
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
 	ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));
+	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
 
 	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	EXPECT_TRUE(mockState0.deleted());
 }
 
 // StateMachine::setup() was called twice.
@@ -73,15 +85,18 @@ TEST_F(StateMachineSetupUnitTest, 3)
 
 	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
 	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, mockContext.setup(&mockState0, &mockEvent));
+	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
 
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_EQ(1, mockState0.getReferenceCount());
+	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	EXPECT_TRUE(mockState0.deleted());
 }
 
-// StateMachine::setup() was not called before shutdown().
+// StateMachine::shutdown() is called before setup().
 TEST_F(StateMachineSetupUnitTest, 4)
 {
-	// shutdown() can be called any time.
+	// shutdown() can be called even if before setup().
 	ASSERT_HRESULT_SUCCEEDED(mockContext.shutdown());
 
 	EXPECT_EQ(nullptr, mockContext.m_currentState);
@@ -102,6 +117,9 @@ public:
 	void SetUp() {
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 		ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
+	}
+	void TearDown() {
+		ASSERT_HRESULT_SUCCEEDED(mockContext.shutdown());
 	}
 };
 
