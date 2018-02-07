@@ -5,7 +5,7 @@
 #include <memory>
 namespace tsm {
 
-template<class E, class S>
+template<class E = IEvent, class S = IState>
 class Context : public IContext
 {
 public:
@@ -26,7 +26,7 @@ protected:
 	std::unique_ptr<IStateMachine> m_stateMachine;
 };
 
-template<class E, class S>
+template<class E = IEvent, class S = IState>
 class AsyncContext : public Context<E, S>
 {
 public:

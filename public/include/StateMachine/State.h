@@ -4,7 +4,7 @@
 
 namespace tsm {
 
-template<class C, class E, class S>
+template<class C = IContext, class E = IEvent, class S = IState>
 class State : public IState
 {
 public:

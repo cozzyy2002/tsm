@@ -20,7 +20,7 @@ StateMachine::StateMachine()
 /*
  * State class for StateMachine::startup() method.
  */
-class StartupState : public State<IContext, IEvent, IState>
+class StartupState : public State<>
 {
 public:
 	StartupState(IState* initialState) : m_initialState(initialState) {}

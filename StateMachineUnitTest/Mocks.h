@@ -5,15 +5,15 @@
 #include <StateMachine/State.h>
 
 class MockEvent;
-class MockState;
+template <class C> class MockState;
 class MockAsyncState;
 
-class MockContext : public tsm::Context<MockEvent, MockState>
+class MockContext : public tsm::Context<MockEvent, MockState<MockContext>>
 {
 public:
 };
 
-class MockAsyncContext : public tsm::AsyncContext<MockEvent, MockAsyncState>
+class MockAsyncContext : public tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>>
 {
 public:
 };
@@ -46,7 +46,8 @@ public:
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
 };
 
-class MockState : public tsm::State<MockContext, MockEvent, MockState>, public TestUnknown
+template<class C>
+class MockState : public tsm::State<C, MockEvent, MockState<C>>, public TestUnknown
 {
 public:
 	MockState() : TestUnknown(m_cRef) { setObject(this); }
@@ -54,20 +55,7 @@ public:
 	void setMasterState(MockState* masterState) { m_masterState = masterState; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
 
-	MOCK_METHOD3(handleEvent, HRESULT(MockContext*, MockEvent*, MockState**));
-	MOCK_METHOD3(entry, HRESULT(MockContext*, MockEvent*, MockState*));
-	MOCK_METHOD3(exit, HRESULT(MockContext*, MockEvent*, MockState*));
-};
-
-class MockAsyncState : public tsm::State<MockAsyncContext, MockEvent, MockAsyncState>, public TestUnknown
-{
-public:
-	MockAsyncState() : TestUnknown(m_cRef) { setObject(this); }
-
-	void setMasterState(MockState* masterState) { m_masterState = masterState; }
-	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
-
-	MOCK_METHOD3(handleEvent, HRESULT(MockAsyncContext*, MockEvent*, MockAsyncState**));
-	MOCK_METHOD3(entry, HRESULT(MockAsyncContext*, MockEvent*, MockAsyncState*));
-	MOCK_METHOD3(exit, HRESULT(MockAsyncContext*, MockEvent*, MockAsyncState*));
+	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent*, MockState**));
+	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent*, MockState*));
+	MOCK_METHOD3_T(exit, HRESULT(C*, MockEvent*, MockState*));
 };
