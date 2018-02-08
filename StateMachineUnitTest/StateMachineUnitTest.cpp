@@ -10,6 +10,9 @@ using namespace testing;
 template<class T>
 static LPCSTR getObjectName(T* obj) { return typeid(*obj).name(); }
 
+typedef Types<MockContext, MockAsyncContext> ContextTypes;
+
+template<class C>
 class StateMachineUnitTest : public Test
 {
 public:
@@ -18,13 +21,14 @@ public:
 		mockContext.m_currentState.Release();
 	}
 
-	MockAsyncContext mockContext;
+	C mockContext;
 	MockEvent mockEvent;
-	MockState<MockAsyncContext> mockState0, mockState1;
+	MockState<C> mockState0, mockState1;
 };
 
 // -------------------------
-class StateMachineSetupUnitTest : public StateMachineUnitTest
+template<class C>
+class StateMachineSetupUnitTest : public StateMachineUnitTest<C>
 {
 public:
 	void TearDown() {
@@ -32,8 +36,10 @@ public:
 	}
 };
 
+TYPED_TEST_CASE(StateMachineSetupUnitTest, ContextTypes);
+
 // StateMachine::setup(Event* = nullptr)
-TEST_F(StateMachineSetupUnitTest, 0)
+TYPED_TEST(StateMachineSetupUnitTest, 0)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
@@ -47,7 +53,7 @@ TEST_F(StateMachineSetupUnitTest, 0)
 }
 
 // StateMachine::setup(Event* = event)
-TEST_F(StateMachineSetupUnitTest, 1)
+TYPED_TEST(StateMachineSetupUnitTest, 1)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(S_OK));
 
@@ -62,7 +68,7 @@ TEST_F(StateMachineSetupUnitTest, 1)
 }
 
 // State::entry() returns error
-TEST_F(StateMachineSetupUnitTest, 2)
+TYPED_TEST(StateMachineSetupUnitTest, 2)
 {
 	auto hr = E_ABORT;
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
@@ -79,7 +85,7 @@ TEST_F(StateMachineSetupUnitTest, 2)
 
 // StateMachine::setup() was called twice.
 // 2nd call should fail.
-TEST_F(StateMachineSetupUnitTest, 3)
+TYPED_TEST(StateMachineSetupUnitTest, 3)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
@@ -94,7 +100,7 @@ TEST_F(StateMachineSetupUnitTest, 3)
 }
 
 // StateMachine::shutdown() is called before setup().
-TEST_F(StateMachineSetupUnitTest, 4)
+TYPED_TEST(StateMachineSetupUnitTest, 4)
 {
 	// shutdown() can be called even if before setup().
 	ASSERT_HRESULT_SUCCEEDED(mockContext.shutdown());
@@ -103,7 +109,7 @@ TEST_F(StateMachineSetupUnitTest, 4)
 }
 
 // StateMachine::handleEvent() is called before setup().
-TEST_F(StateMachineSetupUnitTest, 5)
+TYPED_TEST(StateMachineSetupUnitTest, 5)
 {
 	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, mockContext.handleEvent(&mockEvent));
 
@@ -111,7 +117,8 @@ TEST_F(StateMachineSetupUnitTest, 5)
 }
 
 // -------------------------
-class StateMachineEventUnitTest : public StateMachineUnitTest
+template<class C>
+class StateMachineEventUnitTest : public StateMachineUnitTest<C>
 {
 public:
 	void SetUp() {
@@ -123,8 +130,10 @@ public:
 	}
 };
 
+TYPED_TEST_CASE(StateMachineEventUnitTest, ContextTypes);
+
 // No state transition occurs.
-TEST_F(StateMachineEventUnitTest, 0)
+TYPED_TEST(StateMachineEventUnitTest, 0)
 {
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(Return(S_OK));
@@ -138,7 +147,7 @@ TEST_F(StateMachineEventUnitTest, 0)
 }
 
 // State transition occurs.
-TEST_F(StateMachineEventUnitTest, 1)
+TYPED_TEST(StateMachineEventUnitTest, 1)
 {
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
@@ -154,7 +163,7 @@ TEST_F(StateMachineEventUnitTest, 1)
 }
 
 // State::handleEvent() returns error.
-TEST_F(StateMachineEventUnitTest, 2)
+TYPED_TEST(StateMachineEventUnitTest, 2)
 {
 	auto hr = E_ABORT;
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
