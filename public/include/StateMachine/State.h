@@ -4,7 +4,7 @@
 
 namespace tsm {
 
-template<class C = IContext, class E = IEvent, class S = IState>
+template<class C = IContext, class E = IEvent>
 class State : public IState
 {
 public:
@@ -14,24 +14,24 @@ public:
 
 #pragma region Implementation of IState that call methods of sub class.
 	HRESULT _handleEvent(IContext* context, IEvent* event, IState** nextState) {
-		return handleEvent((C*)context, (E*)event, (S**)nextState);
+		return handleEvent((C*)context, (E*)event, nextState);
 	}
 	HRESULT _entry(IContext* context, IEvent* event, IState* previousState) {
-		return entry((C*)context, (E*)event, (S*)previousState);
+		return entry((C*)context, (E*)event, previousState);
 	}
 	HRESULT _exit(IContext* context, IEvent* event, IState* nextState) {
-		return exit((C*)context, (E*)event, (S*)nextState);
+		return exit((C*)context, (E*)event, nextState);
 	}
 #pragma endregion
 
 #pragma region Methods to be implemented by sub class.
-	virtual HRESULT handleEvent(C*, E* event, S** nextState) { return S_FALSE; }
-	virtual HRESULT entry(C* context, E* event, S* previousState) { return S_FALSE; }
-	virtual HRESULT exit(C* context, E* event, S* nextState) { return S_FALSE; }
+	virtual HRESULT handleEvent(C*, E* event, IState** nextState) { return S_FALSE; }
+	virtual HRESULT entry(C* context, E* event, IState* previousState) { return S_FALSE; }
+	virtual HRESULT exit(C* context, E* event, IState* nextState) { return S_FALSE; }
 #pragma endregion
 
-	S* getMasterState() { return (S*)m_masterState; }
-	S* getSubState() { return (S*)m_subState.p; }
+	State* getMasterState() { return (State*)m_masterState; }
+	State* getSubState() { return (State*)m_subState.p; }
 
 	bool isSubState() const { return m_masterState ? true : false; }
 };

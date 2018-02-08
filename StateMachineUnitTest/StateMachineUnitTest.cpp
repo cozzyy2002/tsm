@@ -18,9 +18,9 @@ public:
 		mockContext.m_currentState.Release();
 	}
 
-	MockContext mockContext;
+	MockAsyncContext mockContext;
 	MockEvent mockEvent;
-	MockState<MockContext> mockState0, mockState1;
+	MockState<MockAsyncContext> mockState0, mockState1;
 };
 
 // -------------------------

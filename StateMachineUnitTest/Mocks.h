@@ -5,18 +5,11 @@
 #include <StateMachine/State.h>
 
 class MockEvent;
-template <class C> class MockState;
-class MockAsyncState;
+template <class C>
+class MockState;
 
-class MockContext : public tsm::Context<MockEvent, MockState<MockContext>>
-{
-public:
-};
-
-class MockAsyncContext : public tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>>
-{
-public:
-};
+class MockContext : public tsm::Context<MockEvent, MockState<MockContext>> {};
+class MockAsyncContext : public tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>> {};
 
 /* Base class for Mock class inheriting IUnknown */
 class TestUnknown
@@ -47,15 +40,16 @@ public:
 };
 
 template<class C>
-class MockState : public tsm::State<C, MockEvent, MockState<C>>, public TestUnknown
+class MockState : public tsm::State<C, MockEvent>, public TestUnknown
 {
 public:
 	MockState() : TestUnknown(m_cRef) { setObject(this); }
+	virtual ~MockState() {}
 
 	void setMasterState(MockState* masterState) { m_masterState = masterState; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
 
-	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent*, MockState**));
-	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent*, MockState*));
-	MOCK_METHOD3_T(exit, HRESULT(C*, MockEvent*, MockState*));
+	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent*, IState**));
+	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent*, IState*));
+	MOCK_METHOD3_T(exit, HRESULT(C*, MockEvent*, IState*));
 };
