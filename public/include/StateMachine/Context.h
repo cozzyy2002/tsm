@@ -9,7 +9,7 @@ template<class E = IEvent, class S = IState>
 class Context : public IContext
 {
 public:
-	Context() : m_stateMachine(createStateMachine()) {}
+	Context() { m_stateMachine.reset(createStateMachine()); }
 	virtual ~Context() {}
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return m_stateMachine->setup(this, initialState, event); }
@@ -21,9 +21,6 @@ public:
 	virtual AsyncData* getAsyncData() { return nullptr; }
 
 	S* getCurrentState() const { return (S*)m_currentState.p; }
-
-protected:
-	std::unique_ptr<IStateMachine> m_stateMachine;
 };
 
 template<class E = IEvent, class S = IState>

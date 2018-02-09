@@ -43,12 +43,12 @@ TYPED_TEST(StateMachineSetupUnitTest, 0)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
-	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
-	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
+	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
+	ASSERT_EQ(S_OK, mockContext.waitReady());
 
 	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_FALSE(mockState0.deleted());
-	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	ASSERT_EQ(S_OK, mockContext.shutdown());
 	EXPECT_TRUE(mockState0.deleted());
 }
 
@@ -57,13 +57,13 @@ TYPED_TEST(StateMachineSetupUnitTest, 1)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(S_OK));
 
-	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0, &mockEvent));
-	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
+	ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
+	ASSERT_EQ(S_OK, mockContext.waitReady());
 
 	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
-	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	ASSERT_EQ(S_OK, mockContext.shutdown());
 	EXPECT_TRUE(mockState0.deleted());
 }
 
@@ -73,13 +73,18 @@ TYPED_TEST(StateMachineSetupUnitTest, 2)
 	auto hr = E_ABORT;
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
-	ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));
-	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
+	if(mockContext.getAsyncData()) {
+		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
+		ASSERT_EQ(hr, mockContext.waitReady());
+	} else {
+		ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));
+		ASSERT_EQ(S_OK, mockContext.waitReady());
+	}
 
 	EXPECT_EQ(&mockState0, mockContext.m_currentState);
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
-	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	ASSERT_EQ(S_OK, mockContext.shutdown());
 	EXPECT_TRUE(mockState0.deleted());
 }
 
@@ -89,13 +94,13 @@ TYPED_TEST(StateMachineSetupUnitTest, 3)
 {
 	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
-	ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
+	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
 	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, mockContext.setup(&mockState0, &mockEvent));
-	ASSERT_HRESULT_SUCCEEDED(mockContext.waitReady());
+	ASSERT_EQ(S_OK, mockContext.waitReady());
 
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_EQ(1, mockState0.getReferenceCount());
-	EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	ASSERT_EQ(S_OK, mockContext.shutdown());
 	EXPECT_TRUE(mockState0.deleted());
 }
 
@@ -103,7 +108,7 @@ TYPED_TEST(StateMachineSetupUnitTest, 3)
 TYPED_TEST(StateMachineSetupUnitTest, 4)
 {
 	// shutdown() can be called even if before setup().
-	ASSERT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	ASSERT_EQ(S_OK, mockContext.shutdown());
 
 	EXPECT_EQ(nullptr, mockContext.m_currentState);
 }
@@ -123,10 +128,10 @@ class StateMachineEventUnitTest : public StateMachineUnitTest<C>
 public:
 	void SetUp() {
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
-		ASSERT_HRESULT_SUCCEEDED(mockContext.setup(&mockState0));
+		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
 	}
 	void TearDown() {
-		ASSERT_HRESULT_SUCCEEDED(mockContext.shutdown());
+		ASSERT_EQ(S_OK, mockContext.shutdown());
 	}
 };
 

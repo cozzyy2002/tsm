@@ -11,6 +11,7 @@ namespace tsm {
 
 class IEvent;
 class IState;
+class IStateMachine;
 
 class IContext
 {
@@ -19,7 +20,7 @@ public:
 
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
-		std::thread thread;							// Worker thread.
+		CHandle hWorkerThread;						// Handle of worker thread.
 		CHandle hEventReady;						// Event handle set when ready to handle IEvent.
 		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
 		CHandle hEventAvailable;					// Event handle set when event is queued.
@@ -34,6 +35,7 @@ public:
 	virtual lock_t* getHandleEventLock() { return new lock_t(m_handleEventLock); }
 
 	CComPtr<IState> m_currentState;
+	std::unique_ptr<IStateMachine> m_stateMachine;
 
 protected:
 	std::recursive_mutex m_handleEventLock;

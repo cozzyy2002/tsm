@@ -16,6 +16,7 @@ public:
 	HRESULT waitReady(IContext* context, DWORD timeout);
 
 protected:
+	static DWORD WINAPI workerThreadProc(LPVOID lpParameter);
 	HRESULT doWorkerThread(IContext* context);
 	HRESULT setupCompleted(IContext* context) const;
 	HRESULT checkWaitResult(DWORD wait, DWORD eventCount = 1) const;

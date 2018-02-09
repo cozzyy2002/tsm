@@ -58,7 +58,10 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 		// entry() of initial state will be called in the thread.
 		asyncData->hEventReady.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 		asyncData->hEventShutdown.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
-		asyncData->thread = std::thread([this, context] { doWorkerThread(context); });
+		asyncData->hWorkerThread.Attach(CreateThread(nullptr, 0, workerThreadProc, context, 0, nullptr));
+		if(!asyncData->hWorkerThread) {
+			return HRESULT_FROM_WIN32(GetLastError());
+		}
 	} else {
 		// Call entry() of initial state in the caller thread.
 		HR_ASSERT_OK(handleEvent(context, event));
@@ -78,10 +81,9 @@ HRESULT StateMachine::shutdown(IContext* context)
 	if(asyncData && asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
 		SetEvent(asyncData->hEventShutdown);
-		auto& thread = asyncData->thread;
-		if(thread.joinable()) {
-			thread.join();
-		}
+		// Wait for worker thread to terminate.
+		DWORD wait = WaitForSingleObject(asyncData->hWorkerThread, 100);
+		HR_ASSERT_OK(checkWaitResult(wait));
 	}
 
 	context->m_currentState.Release();
@@ -137,11 +139,45 @@ HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 {
 	auto asyncData = context->getAsyncData();
 	if(asyncData) {
-		DWORD wait = WaitForSingleObject(asyncData->hEventReady, timeout);
-		return HR_EXPECT_OK(checkWaitResult(wait));
+		HANDLE hEvents[] = { asyncData->hWorkerThread, asyncData->hEventReady, asyncData->hEventShutdown };
+		static const DWORD eventsCount = ARRAYSIZE(hEvents);
+		DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, timeout);
+		HR_ASSERT_OK(checkWaitResult(wait, eventsCount));
+		switch(wait) {
+		case WAIT_OBJECT_0:
+			// Worker thread has been terminated.
+			{
+				DWORD exitCode;
+				if(GetExitCodeProcess(asyncData->hWorkerThread, &exitCode)) {
+					// return exit code of worker thread.
+					HRESULT hr = HRESULT_FROM_WIN32(exitCode);
+					// (hr == S_OK) means that worker thread has terminated(Not ready).
+					return SUCCEEDED(hr) ? S_FALSE : hr;
+				} else {
+					// GetExitCoedeProcess() failed.
+					return HRESULT_FROM_WIN32(GetLastError());
+				}
+			}
+		case WAIT_OBJECT_0 + 1:
+			// Completed to setup.
+			return S_OK;
+		case WAIT_OBJECT_0 + 2:
+			// shutdown() has been called.
+			return S_FALSE;
+		default:
+			// Unreachable !
+			return E_UNEXPECTED;
+		}
 	} else {
 		return S_OK;
 	}
+}
+
+DWORD StateMachine::workerThreadProc(LPVOID lpParameter)
+{
+	auto context = (IContext*)lpParameter;
+	auto stateMachine = (StateMachine*)(context->m_stateMachine.get());
+	return stateMachine->doWorkerThread(context);
 }
 
 HRESULT StateMachine::doWorkerThread(IContext* context)
