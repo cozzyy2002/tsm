@@ -130,13 +130,25 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 	CComPtr<IEvent> e(event);
 	IState* nextState = nullptr;
-	HRESULT hr = HR_EXPECT_OK(context->m_currentState->_handleEvent(context, event, &nextState));
+	auto& currentState = context->m_currentState;
+	HRESULT hr = HR_EXPECT_OK(currentState->_handleEvent(context, event, &nextState));
 	CComPtr<IState> _nextState(nextState);
 	if(SUCCEEDED(hr) && nextState) {
-		HR_ASSERT_OK(context->m_currentState->_exit(context, event, nextState));
-		CComPtr<IState> previousState(context->m_currentState);
-		context->m_currentState = nextState;
-		HR_ASSERT_OK(context->m_currentState->_entry(context, event, previousState));
+		hr = forEachState(currentState, [this, context, event, nextState](IState* state)
+		{
+			return ((state != nextState) && (state != nextState->m_masterState)) ?
+				HR_EXPECT_OK(state->_exit(context, event, nextState)) :
+				S_FALSE;
+		});
+		if(hr == S_FALSE) hr = S_OK;	// forEachState() exits successfully.
+		if(SUCCEEDED(hr)) {
+			CComPtr<IState> previousState(currentState);
+			currentState = nextState;
+			if(!currentState->entryCalled) {
+				currentState->entryCalled = true;
+				HR_ASSERT_OK(currentState->_entry(context, event, previousState));
+			}
+		}
 	}
 	return hr;
 }
@@ -245,6 +257,19 @@ HRESULT StateMachine::checkWaitResult(DWORD wait, DWORD eventCount /*= 1*/) cons
 			return E_UNEXPECTED;
 		}
 	}
+}
+
+// Call function with IState object from sub state to it's master state.
+// If function returns other than S_OK, enumeration stops.
+HRESULT StateMachine::forEachState(IState * state, std::function<HRESULT(IState*)> func)
+{
+	HRESULT hr = S_OK;
+	while(state) {
+		hr = func(state);
+		if(hr != S_OK) break;
+		state = state->m_masterState;
+	}
+	return hr;
 }
 
 }

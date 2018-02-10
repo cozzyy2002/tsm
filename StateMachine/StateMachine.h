@@ -1,6 +1,7 @@
 #pragma once
 
 #include <StateMachine/Interface.h>
+#include <functional>
 
 namespace tsm {
 
@@ -20,6 +21,7 @@ protected:
 	HRESULT doWorkerThread(IContext* context);
 	HRESULT setupCompleted(IContext* context) const;
 	HRESULT checkWaitResult(DWORD wait, DWORD eventCount = 1) const;
+	HRESULT forEachState(IState* state, std::function<HRESULT(IState*)> func);
 };
 
 }

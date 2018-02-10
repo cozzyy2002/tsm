@@ -23,7 +23,7 @@ public:
 
 	C mockContext;
 	MockEvent mockEvent;
-	MockState<C> mockState0, mockState1;
+	MockState<C> mockState0, mockState1, mockState2, mockState3;
 };
 
 // -------------------------
@@ -218,4 +218,45 @@ TYPED_TEST(StateMachineEventUnitTest, 4)
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_TRUE(mockState0.deleted());
 	EXPECT_FALSE(mockState1.deleted());
+}
+
+// -------------------------
+template<class C>
+class StateMachineSubStateUnitTest : public StateMachineUnitTest<C>
+{
+public:
+	void TearDown() {
+		EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+	}
+};
+
+TYPED_TEST_CASE(StateMachineSubStateUnitTest, ContextTypes);
+
+// StateMachine::setup(Event* = nullptr)
+TYPED_TEST(StateMachineSubStateUnitTest, 0)
+{
+	{
+		InSequence _sequence;
+		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
+		EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, _))
+			.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
+		EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));
+		EXPECT_CALL(mockState1, handleEvent(&mockContext, &mockEvent, _))
+			.WillOnce(DoAll(SetArgPointee<2>(&mockState0), Return(S_OK)));
+		EXPECT_CALL(mockState1, exit(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));
+	}
+	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+
+	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
+	ASSERT_EQ(S_OK, mockContext.waitReady());
+
+	mockState1.setMasterState(&mockState0);
+	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));	// State0 -> State1
+	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));	// State1 -> State0(Sub state goes back to master state)
+
+	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_TRUE(mockState1.deleted());
+	ASSERT_EQ(S_OK, mockContext.shutdown());
+	EXPECT_TRUE(mockState0.deleted());
 }

@@ -51,7 +51,7 @@ public:
 class IState : public Unknown
 {
 public:
-	IState(IState* masterState) : m_masterState(masterState) {}
+	IState(IState* masterState) : m_masterState(masterState), entryCalled(false) {}
 	virtual ~IState() {}
 
 #pragma region Methods to be called by StateMachine.
@@ -60,8 +60,8 @@ public:
 	virtual HRESULT _exit(IContext* context, IEvent* event, IState* nextState) = 0;
 #pragma endregion
 
-	CComPtr<IState> m_subState;
-	IState* m_masterState;
+	CComPtr<IState> m_masterState;
+	bool entryCalled;
 };
 
 class IStateMachine

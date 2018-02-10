@@ -47,7 +47,12 @@ public:
 	virtual ~MockState() {}
 
 	void setMasterState(MockState* masterState) { m_masterState = masterState; }
-	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
+	virtual ULONG STDMETHODCALLTYPE Release(void) {
+		auto cRef = TestUnknown::Release();
+		// Do as if deleted.
+		if(cRef == 0) m_masterState.Release();
+		return cRef;
+	}
 
 	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent*, IState**));
 	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent*, IState*));
