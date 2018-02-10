@@ -13,7 +13,7 @@ public:
 	virtual ~Context() {}
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return m_stateMachine->setup(this, initialState, event); }
-	HRESULT shutdown() { return m_stateMachine->shutdown(this); }
+	HRESULT shutdown(DWORD timeout = 100) { return m_stateMachine->shutdown(this, timeout); }
 	HRESULT handleEvent(E* event) { return m_stateMachine->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return m_stateMachine->waitReady(this, timeout); }
 

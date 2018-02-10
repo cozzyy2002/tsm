@@ -48,7 +48,7 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 	CComPtr<IEvent> _event(event);
 
 	// Check if setup() has not been called.
-	HR_ASSERT_OK(FAILED(setupCompleted(context)) ? S_OK : E_ILLEGAL_METHOD_CALL);
+	HR_ASSERT(FAILED(setupCompleted(context)), E_ILLEGAL_METHOD_CALL);
 
 	// Set StartupState object as current state.
 	context->m_currentState = new StartupState(initialState);
@@ -81,14 +81,14 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
  *
  * This method can be called even if setup() has been called.
  */
-HRESULT StateMachine::shutdown(IContext* context)
+HRESULT StateMachine::shutdown(IContext* context, DWORD timeout)
 {
 	auto asyncData = context->getAsyncData();
 	if(asyncData && asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
 		WIN32_ASSERT_OK(SetEvent(asyncData->hEventShutdown));
 		// Wait for worker thread to terminate.
-		DWORD wait = WaitForSingleObject(asyncData->hWorkerThread, 100);
+		DWORD wait = WaitForSingleObject(asyncData->hWorkerThread, timeout);
 		HR_ASSERT_OK(checkWaitResult(wait));
 	}
 

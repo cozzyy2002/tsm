@@ -183,3 +183,39 @@ TYPED_TEST(StateMachineEventUnitTest, 2)
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
 }
+
+// State::exit() returns error.
+TYPED_TEST(StateMachineEventUnitTest, 3)
+{
+	auto hr = E_ABORT;
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
+		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
+	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(hr));
+	EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).Times(0);
+
+	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
+
+	// mockState0 remains as current state.
+	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_TRUE(mockState1.deleted());
+}
+
+// State::entry() returns error.
+TYPED_TEST(StateMachineEventUnitTest, 4)
+{
+	auto hr = E_ABORT;
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
+		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
+	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(S_OK));
+	EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(hr));
+
+	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
+
+	// mockState1 becomes current state.
+	EXPECT_EQ(&mockState1, mockContext.m_currentState);
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_TRUE(mockState0.deleted());
+	EXPECT_FALSE(mockState1.deleted());
+}

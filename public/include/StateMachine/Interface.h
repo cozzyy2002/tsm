@@ -68,7 +68,7 @@ class IStateMachine
 {
 public:
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) = 0;
-	virtual HRESULT shutdown(IContext* context) = 0;
+	virtual HRESULT shutdown(IContext* context, DWORD timeout) = 0;
 	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;

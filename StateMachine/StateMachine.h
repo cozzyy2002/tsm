@@ -10,7 +10,7 @@ public:
 	StateMachine();
 
 	HRESULT setup(IContext* context, IState* initialState, IEvent* event);
-	HRESULT shutdown(IContext* context);
+	HRESULT shutdown(IContext* context, DWORD timeout);
 	HRESULT triggerEvent(IContext* context, IEvent* event);
 	HRESULT handleEvent(IContext* context, IEvent* event);
 	HRESULT waitReady(IContext* context, DWORD timeout);
