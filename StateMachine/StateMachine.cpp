@@ -155,7 +155,7 @@ HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 			// Worker thread has been terminated.
 			{
 				DWORD exitCode;
-				hr = WIN32_EXPECT_OK(GetExitCodeProcess(asyncData->hWorkerThread, &exitCode));
+				hr = WIN32_EXPECT_OK(GetExitCodeThread(asyncData->hWorkerThread, &exitCode));
 				if(SUCCEEDED(hr)) {
 					// return exit code of worker thread.
 					hr = HRESULT_FROM_WIN32(exitCode);
