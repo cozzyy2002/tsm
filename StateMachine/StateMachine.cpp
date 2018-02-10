@@ -1,10 +1,16 @@
 #include <StateMachine/stdafx.h>
 
 #include <StateMachine/State.h>
+#include <StateMachine/Assert.h>
 #include "StateMachine.h"
 
-#define HR_ASSERT_OK(exp) do { auto _hr(HR_EXPECT_OK(exp)); if(FAILED(_hr)) return _hr; } while(false)
-#define HR_EXPECT_OK(exp) (exp)
+HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
+{
+	if(FAILED(hr)) {
+		_tprintf_s(_T("'%s' failed: HRESULT=0x%08x at:\n%s:%d\n"), exp, hr, sourceFile, line);
+	}
+	return hr;
+}
 
 namespace tsm {
 
@@ -80,7 +86,7 @@ HRESULT StateMachine::shutdown(IContext* context)
 	auto asyncData = context->getAsyncData();
 	if(asyncData && asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
-		SetEvent(asyncData->hEventShutdown);
+		WIN32_ASSERT_OK(SetEvent(asyncData->hEventShutdown));
 		// Wait for worker thread to terminate.
 		DWORD wait = WaitForSingleObject(asyncData->hWorkerThread, 100);
 		HR_ASSERT_OK(checkWaitResult(wait));
@@ -105,7 +111,7 @@ HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 			IContext::lock_t _lock(asyncData->eventQueueLock);
 			asyncData->eventQueue.push_back(event);
 		}
-		SetEvent(asyncData->hEventAvailable);
+		WIN32_ASSERT_OK(SetEvent(asyncData->hEventAvailable));
 		return S_OK;
 	} else {
 		// Async operation is not supported.
@@ -137,6 +143,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 {
+	auto hr = S_OK;
 	auto asyncData = context->getAsyncData();
 	if(asyncData) {
 		HANDLE hEvents[] = { asyncData->hWorkerThread, asyncData->hEventReady, asyncData->hEventShutdown };
@@ -148,29 +155,30 @@ HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 			// Worker thread has been terminated.
 			{
 				DWORD exitCode;
-				if(GetExitCodeProcess(asyncData->hWorkerThread, &exitCode)) {
+				hr = WIN32_EXPECT_OK(GetExitCodeProcess(asyncData->hWorkerThread, &exitCode));
+				if(SUCCEEDED(hr)) {
 					// return exit code of worker thread.
-					HRESULT hr = HRESULT_FROM_WIN32(exitCode);
+					hr = HRESULT_FROM_WIN32(exitCode);
 					// (hr == S_OK) means that worker thread has terminated(Not ready).
-					return (hr == S_OK) ? S_FALSE : hr;
-				} else {
-					// GetExitCoedeProcess() failed.
-					return HRESULT_FROM_WIN32(GetLastError());
+					if(hr == S_OK) hr = S_FALSE;
 				}
 			}
+			break;
 		case WAIT_OBJECT_0 + 1:
 			// Completed to setup.
-			return S_OK;
+			hr = S_OK;
+			break;
 		case WAIT_OBJECT_0 + 2:
 			// shutdown() has been called.
-			return S_FALSE;
+			hr = S_FALSE;
+			break;
 		default:
 			// Unreachable !
-			return E_UNEXPECTED;
+			hr = E_UNEXPECTED;
+			break;
 		}
-	} else {
-		return S_OK;
 	}
+	return hr;
 }
 
 DWORD StateMachine::workerThreadProc(LPVOID lpParameter)
@@ -190,7 +198,7 @@ HRESULT StateMachine::doWorkerThread(IContext* context)
 	do {
 		// Wait for event to be queued.
 		DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, INFINITE);
-		if(wait < eventsCount) ResetEvent(hEvents[wait]);
+		if(wait < eventsCount) WIN32_ASSERT_OK(ResetEvent(hEvents[wait]));
 		HR_ASSERT_OK(checkWaitResult(wait, eventsCount));
 		if(wait == (WAIT_OBJECT_0 + 1)) break;
 		do {
@@ -208,7 +216,7 @@ HRESULT StateMachine::doWorkerThread(IContext* context)
 			if(first) {
 				// Set ready event after first event handled(AsyncContext::setup() is completed).
 				first = false;
-				SetEvent(asyncData->hEventReady);
+				WIN32_ASSERT_OK(SetEvent(asyncData->hEventReady));
 			}
 		} while(true);
 	} while(true);

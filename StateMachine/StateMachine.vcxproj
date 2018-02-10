@@ -139,6 +139,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\public\include\StateMachine\Assert.h" />
     <ClInclude Include="..\public\include\StateMachine\Context.h" />
     <ClInclude Include="..\public\include\StateMachine\Event.h" />
     <ClInclude Include="..\public\include\StateMachine\Interface.h" />
