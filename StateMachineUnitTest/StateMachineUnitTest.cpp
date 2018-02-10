@@ -74,11 +74,12 @@ TYPED_TEST(StateMachineSetupUnitTest, 2)
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
 	if(mockContext.getAsyncData()) {
+		// AsyncContext::waitRady() should return the error code from State::entry().
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
 		ASSERT_EQ(hr, mockContext.waitReady());
 	} else {
+		// Context::setup() should return the error code from State::entry().
 		ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));
-		ASSERT_EQ(S_OK, mockContext.waitReady());
 	}
 
 	EXPECT_EQ(&mockState0, mockContext.m_currentState);
@@ -129,6 +130,7 @@ public:
 	void SetUp() {
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
+		ASSERT_EQ(S_OK, mockContext.waitReady());
 	}
 	void TearDown() {
 		ASSERT_EQ(S_OK, mockContext.shutdown());

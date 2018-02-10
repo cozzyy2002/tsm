@@ -152,7 +152,7 @@ HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 					// return exit code of worker thread.
 					HRESULT hr = HRESULT_FROM_WIN32(exitCode);
 					// (hr == S_OK) means that worker thread has terminated(Not ready).
-					return SUCCEEDED(hr) ? S_FALSE : hr;
+					return (hr == S_OK) ? S_FALSE : hr;
 				} else {
 					// GetExitCoedeProcess() failed.
 					return HRESULT_FROM_WIN32(GetLastError());
