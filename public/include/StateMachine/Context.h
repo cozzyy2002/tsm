@@ -17,10 +17,19 @@ public:
 	HRESULT handleEvent(E* event) { return m_stateMachine->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return m_stateMachine->waitReady(this, timeout); }
 
+	virtual IState* _getCurrentState() { return m_currentState; }
+	virtual void _setCurrentState(IState* state) { m_currentState = state; }
+
 	// Returns nullptr(Async operation is not supported).
-	virtual AsyncData* getAsyncData() { return nullptr; }
+	virtual AsyncData* _getAsyncData() { return nullptr; }
 
 	S* getCurrentState() const { return (S*)m_currentState.p; }
+
+	virtual lock_t* _getHandleEventLock() { return new lock_t(m_handleEventLock); }
+
+protected:
+	CComPtr<IState> m_currentState;
+	lock_object_t m_handleEventLock;
 };
 
 template<class E = IEvent, class S = IState>
@@ -32,7 +41,7 @@ public:
 	HRESULT triggerEvent(E* event) { return m_stateMachine->triggerEvent(this, event); }
 
 	// Returns AsyncData object.
-	virtual AsyncData* getAsyncData() { return &m_asyncData; }
+	virtual AsyncData* _getAsyncData() { return &m_asyncData; }
 
 protected:
 	AsyncData m_asyncData;

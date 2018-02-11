@@ -51,9 +51,9 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 	HR_ASSERT(FAILED(setupCompleted(context)), E_ILLEGAL_METHOD_CALL);
 
 	// Set StartupState object as current state.
-	context->m_currentState = new StartupState(initialState);
+	context->_setCurrentState(new StartupState(initialState));
 
-	auto asyncData = context->getAsyncData();
+	auto asyncData = context->_getAsyncData();
 	if(asyncData) {
 		// Setup event queue.
 		asyncData->eventQueue.clear();
@@ -83,7 +83,7 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
  */
 HRESULT StateMachine::shutdown(IContext* context, DWORD timeout)
 {
-	auto asyncData = context->getAsyncData();
+	auto asyncData = context->_getAsyncData();
 	if(asyncData && asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
 		WIN32_ASSERT_OK(SetEvent(asyncData->hEventShutdown));
@@ -92,7 +92,7 @@ HRESULT StateMachine::shutdown(IContext* context, DWORD timeout)
 		HR_ASSERT_OK(checkWaitResult(wait));
 	}
 
-	context->m_currentState.Release();
+	context->_setCurrentState(nullptr);
 
 	return S_OK;
 }
@@ -104,7 +104,7 @@ HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 
 	HR_ASSERT_OK(setupCompleted(context));
 
-	auto asyncData = context->getAsyncData();
+	auto asyncData = context->_getAsyncData();
 	if(asyncData) {
 		// Add the event to event queue and signal that event is available.
 		{
@@ -126,11 +126,11 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 	HR_ASSERT_OK(setupCompleted(context));
 
-	std::unique_ptr<IContext::lock_t> _lock(context->getHandleEventLock());
+	std::unique_ptr<IContext::lock_t> _lock(context->_getHandleEventLock());
 
 	CComPtr<IEvent> e(event);
 	IState* nextState = nullptr;
-	auto& currentState = context->m_currentState;
+	auto currentState = context->_getCurrentState();
 	HRESULT hr = forEachState(currentState, [this, context, event, &nextState](IState* state)
 	{
 		HRESULT hr = HR_EXPECT_OK(state->_handleEvent(context, event, &nextState));
@@ -148,17 +148,17 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	if(SUCCEEDED(hr) && nextState) {
 		hr = forEachState(currentState, [this, context, event, nextState](IState* state)
 		{
-			return ((state != nextState) && (state != nextState->m_masterState)) ?
+			return ((state != nextState) && (state != nextState->_getMasterState())) ?
 				HR_EXPECT_OK(state->_exit(context, event, nextState)) :
 				S_FALSE;
 		});
 		if(hr == S_FALSE) hr = S_OK;	// forEachState() exits successfully.
 		if(SUCCEEDED(hr)) {
 			CComPtr<IState> previousState(currentState);
-			currentState = nextState;
-			if(!currentState->entryCalled) {
-				currentState->entryCalled = true;
-				HR_ASSERT_OK(currentState->_entry(context, event, previousState));
+			context->_setCurrentState(nextState);
+			if(!nextState->_hasEntryCalled()) {
+				nextState->_setEntryCalled(true);
+				HR_ASSERT_OK(nextState->_entry(context, event, previousState));
 			}
 		}
 	}
@@ -168,7 +168,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 {
 	auto hr = S_OK;
-	auto asyncData = context->getAsyncData();
+	auto asyncData = context->_getAsyncData();
 	if(asyncData) {
 		HANDLE hEvents[] = { asyncData->hWorkerThread, asyncData->hEventReady, asyncData->hEventShutdown };
 		static const DWORD eventsCount = ARRAYSIZE(hEvents);
@@ -214,7 +214,7 @@ DWORD StateMachine::workerThreadProc(LPVOID lpParameter)
 
 HRESULT StateMachine::doWorkerThread(IContext* context)
 {
-	auto asyncData = context->getAsyncData();
+	auto asyncData = context->_getAsyncData();
 	HANDLE hEvents[] = { asyncData->hEventAvailable, asyncData->hEventShutdown };
 	static const DWORD eventsCount = ARRAYSIZE(hEvents);
 
@@ -249,7 +249,7 @@ HRESULT StateMachine::doWorkerThread(IContext* context)
 
 HRESULT StateMachine::setupCompleted(IContext* context) const
 {
-	return context->m_currentState ? S_OK : E_ILLEGAL_METHOD_CALL;
+	return context->_getCurrentState() ? S_OK : E_ILLEGAL_METHOD_CALL;
 }
 
 // Check return value of WaitForSingleObject() and WaitForMultipleObjects().
@@ -279,7 +279,7 @@ HRESULT StateMachine::forEachState(IState * state, std::function<HRESULT(IState*
 	while(state) {
 		hr = func(state);
 		if(hr != S_OK) break;
-		state = state->m_masterState;
+		state = state->_getMasterState();
 	}
 	return hr;
 }

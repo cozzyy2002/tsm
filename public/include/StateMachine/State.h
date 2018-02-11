@@ -8,8 +8,7 @@ template<class C = IContext, class E = IEvent>
 class State : public IState
 {
 public:
-	State(IState* masterState = nullptr)
-		: IState(masterState) {}
+	State(IState* masterState = nullptr) : m_masterState(masterState) {}
 	virtual ~State() {}
 
 #pragma region Implementation of IState that call methods of sub class.
@@ -22,6 +21,11 @@ public:
 	HRESULT _exit(IContext* context, IEvent* event, IState* nextState) {
 		return exit((C*)context, (E*)event, nextState);
 	}
+
+	virtual IState* _getMasterState() { return m_masterState; }
+	virtual void _setMasterState(IState* state) { m_masterState = state; }
+	virtual bool _hasEntryCalled() { return m_entryCalled; }
+	virtual void _setEntryCalled(bool value) { m_entryCalled = value; }
 #pragma endregion
 
 #pragma region Methods to be implemented by sub class.
@@ -34,6 +38,10 @@ public:
 	State* getSubState() { return (State*)m_subState.p; }
 
 	bool isSubState() const { return m_masterState ? true : false; }
+
+protected:
+	CComPtr<IState> m_masterState;
+	bool m_entryCalled;
 };
 
 }

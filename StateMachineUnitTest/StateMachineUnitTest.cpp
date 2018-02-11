@@ -16,9 +16,9 @@ template<class C>
 class StateMachineUnitTest : public Test
 {
 public:
-	~StateMachineUnitTest() {
-		// Prevent Unknown::Release() method of MockState from being called after deleting.
-		mockContext.m_currentState.Release();
+	void SetUp() {}
+	void TearDown() {
+		EXPECT_EQ(nullptr, mockContext._getCurrentState());
 	}
 
 	C mockContext;
@@ -31,8 +31,13 @@ template<class C>
 class StateMachineSetupUnitTest : public StateMachineUnitTest<C>
 {
 public:
+	void SetUp() {
+		StateMachineUnitTest::SetUp();
+	}
 	void TearDown() {
 		EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+
+		StateMachineUnitTest::TearDown();
 	}
 };
 
@@ -46,7 +51,7 @@ TYPED_TEST(StateMachineSetupUnitTest, 0)
 	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
 	ASSERT_EQ(S_OK, mockContext.waitReady());
 
-	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_FALSE(mockState0.deleted());
 	ASSERT_EQ(S_OK, mockContext.shutdown());
 	EXPECT_TRUE(mockState0.deleted());
@@ -60,7 +65,7 @@ TYPED_TEST(StateMachineSetupUnitTest, 1)
 	ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
 	ASSERT_EQ(S_OK, mockContext.waitReady());
 
-	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
 	ASSERT_EQ(S_OK, mockContext.shutdown());
@@ -73,7 +78,7 @@ TYPED_TEST(StateMachineSetupUnitTest, 2)
 	auto hr = E_ABORT;
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
-	if(mockContext.getAsyncData()) {
+	if(mockContext._getAsyncData()) {
 		// AsyncContext::waitRady() should return the error code from State::entry().
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
 		ASSERT_EQ(hr, mockContext.waitReady());
@@ -82,7 +87,7 @@ TYPED_TEST(StateMachineSetupUnitTest, 2)
 		ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));
 	}
 
-	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
 	ASSERT_EQ(S_OK, mockContext.shutdown());
@@ -111,7 +116,7 @@ TYPED_TEST(StateMachineSetupUnitTest, 4)
 	// shutdown() can be called even if before setup().
 	ASSERT_EQ(S_OK, mockContext.shutdown());
 
-	EXPECT_EQ(nullptr, mockContext.m_currentState);
+	EXPECT_EQ(nullptr, mockContext._getCurrentState());
 }
 
 // StateMachine::handleEvent() is called before setup().
@@ -128,12 +133,16 @@ class StateMachineEventUnitTest : public StateMachineUnitTest<C>
 {
 public:
 	void SetUp() {
+		StateMachineUnitTest::SetUp();
+
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
 		ASSERT_EQ(S_OK, mockContext.waitReady());
 	}
 	void TearDown() {
 		ASSERT_EQ(S_OK, mockContext.shutdown());
+
+		StateMachineUnitTest::TearDown();
 	}
 };
 
@@ -148,7 +157,7 @@ TYPED_TEST(StateMachineEventUnitTest, 0)
 
 	ASSERT_HRESULT_SUCCEEDED(mockContext.handleEvent(&mockEvent));
 
-	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
 }
@@ -163,7 +172,7 @@ TYPED_TEST(StateMachineEventUnitTest, 1)
 
 	ASSERT_HRESULT_SUCCEEDED(mockContext.handleEvent(&mockEvent));
 
-	EXPECT_EQ(&mockState1, mockContext.m_currentState);
+	EXPECT_EQ(&mockState1, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_TRUE(mockState0.deleted());
 	EXPECT_FALSE(mockState1.deleted());
@@ -179,7 +188,7 @@ TYPED_TEST(StateMachineEventUnitTest, 2)
 
 	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
 
-	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
 }
@@ -196,7 +205,7 @@ TYPED_TEST(StateMachineEventUnitTest, 3)
 	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
 
 	// mockState0 remains as current state.
-	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_FALSE(mockState0.deleted());
 	EXPECT_TRUE(mockState1.deleted());
@@ -214,7 +223,7 @@ TYPED_TEST(StateMachineEventUnitTest, 4)
 	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
 
 	// mockState1 becomes current state.
-	EXPECT_EQ(&mockState1, mockContext.m_currentState);
+	EXPECT_EQ(&mockState1, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
 	EXPECT_TRUE(mockState0.deleted());
 	EXPECT_FALSE(mockState1.deleted());
@@ -225,8 +234,13 @@ template<class C>
 class StateMachineSubStateUnitTest : public StateMachineUnitTest<C>
 {
 public:
+	void SetUp() {
+		StateMachineUnitTest::SetUp();
+	}
 	void TearDown() {
 		EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+
+		StateMachineUnitTest::TearDown();
 	}
 };
 
@@ -255,7 +269,7 @@ TYPED_TEST(StateMachineSubStateUnitTest, 0)
 	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));	// State0 -> State1
 	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));	// State1 -> State0(Sub state goes back to master state)
 
-	EXPECT_EQ(&mockState0, mockContext.m_currentState);
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_FALSE(mockState0.deleted());
 	EXPECT_TRUE(mockState1.deleted());
 	ASSERT_EQ(S_OK, mockContext.shutdown());

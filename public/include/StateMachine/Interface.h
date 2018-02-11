@@ -28,18 +28,17 @@ public:
 		CHandle hWorkerThread;						// Handle of worker thread.
 	};
 
+	virtual IState* _getCurrentState() = 0;
+	virtual void _setCurrentState(IState* state) = 0;
+
 	// Returns nullptr(Async operation is not supported).
-	virtual AsyncData* getAsyncData() = 0;
+	virtual AsyncData* _getAsyncData() = 0;
 
 	using lock_object_t = std::recursive_mutex;
 	using lock_t = std::lock_guard<lock_object_t>;
-	virtual lock_t* getHandleEventLock() { return new lock_t(m_handleEventLock); }
+	virtual lock_t* _getHandleEventLock() = 0;
 
-	CComPtr<IState> m_currentState;
 	std::unique_ptr<IStateMachine> m_stateMachine;
-
-protected:
-	lock_object_t m_handleEventLock;
 };
 
 class IEvent : public Unknown
@@ -51,7 +50,6 @@ public:
 class IState : public Unknown
 {
 public:
-	IState(IState* masterState) : m_masterState(masterState), entryCalled(false) {}
 	virtual ~IState() {}
 
 #pragma region Methods to be called by StateMachine.
@@ -60,8 +58,10 @@ public:
 	virtual HRESULT _exit(IContext* context, IEvent* event, IState* nextState) = 0;
 #pragma endregion
 
-	CComPtr<IState> m_masterState;
-	bool entryCalled;
+	virtual IState* _getMasterState() = 0;
+	virtual void _setMasterState(IState* state) = 0;
+	virtual bool _hasEntryCalled() = 0;
+	virtual void _setEntryCalled(bool value) = 0;
 };
 
 class IStateMachine
