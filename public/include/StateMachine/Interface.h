@@ -73,5 +73,5 @@ public:
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
 };
 
-extern IStateMachine* createStateMachine();
+extern IStateMachine* createStateMachine(IContext* context);
 }

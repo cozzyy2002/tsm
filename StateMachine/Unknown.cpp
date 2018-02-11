@@ -20,11 +20,6 @@ tstring Unknown::toString() const
 	return (LPCTSTR)str;
 }
 
-HRESULT STDMETHODCALLTYPE Unknown::QueryInterface(REFIID riid, void ** ppvObject)
-{
-	return QISearch(this, getQUITABs(), riid, ppvObject);
-}
-
 ULONG STDMETHODCALLTYPE Unknown::AddRef(void)
 {
 	auto cRef = InterlockedIncrement(&m_cRef);
@@ -36,14 +31,4 @@ ULONG STDMETHODCALLTYPE Unknown::Release(void)
 	auto cRef = InterlockedDecrement(&m_cRef);
 	if(0 == cRef) delete this;
 	return cRef;
-}
-
-LPCQITAB Unknown::getQUITABs() const
-{
-	static const QITAB qitabs[] = {
-		QITABENT(Unknown, IUnknown),
-		{ 0 }
-	};
-
-	return qitabs;
 }

@@ -146,10 +146,12 @@
     <ClInclude Include="..\public\include\StateMachine\State.h" />
     <ClInclude Include="..\public\include\StateMachine\stdafx.h" />
     <ClInclude Include="..\public\include\StateMachine\Unknown.h" />
+    <ClInclude Include="AsyncStateMachine.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AsyncStateMachine.cpp" />
     <ClCompile Include="Unknown.cpp" />
     <ClCompile Include="StateMachine.cpp" />
     <ClCompile Include="stdafx.cpp">

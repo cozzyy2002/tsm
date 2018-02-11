@@ -9,7 +9,7 @@ template<class E = IEvent, class S = IState>
 class Context : public IContext
 {
 public:
-	Context() { m_stateMachine.reset(createStateMachine()); }
+	Context() { m_stateMachine.reset(createStateMachine(this)); }
 	virtual ~Context() {}
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return m_stateMachine->setup(this, initialState, event); }
