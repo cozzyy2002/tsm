@@ -18,6 +18,8 @@ class IContext
 public:
 	virtual ~IContext() {}
 
+	virtual bool isAsync() const = 0;
+
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
 		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.

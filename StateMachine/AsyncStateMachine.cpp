@@ -9,7 +9,7 @@ namespace tsm {
 
 /*static*/ IStateMachine* IStateMachine::create(IContext* context)
 {
-	return context->_getAsyncData() ? new AsyncStateMachine() : new StateMachine();
+	return context->isAsync() ? new AsyncStateMachine() : new StateMachine();
 }
 
 HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEvent * event)

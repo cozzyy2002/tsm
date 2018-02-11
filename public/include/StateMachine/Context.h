@@ -9,16 +9,21 @@ template<class E = IEvent, class S = IState>
 class Context : public IContext
 {
 public:
-	Context() { m_stateMachine.reset(IStateMachine::create(this)); }
 	virtual ~Context() {}
 
-	HRESULT setup(S* initialState, E* event = nullptr) { return m_stateMachine->setup(this, initialState, event); }
-	HRESULT shutdown(DWORD timeout = 100) { return m_stateMachine->shutdown(this, timeout); }
-	HRESULT handleEvent(E* event) { return m_stateMachine->handleEvent(this, event); }
-	HRESULT waitReady(DWORD timeout = 100) { return m_stateMachine->waitReady(this, timeout); }
+	virtual bool isAsync() const { return false; }
+
+	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
+	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
+	HRESULT triggerEvent(E* event) { return E_NOTIMPL; }
+	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }
+	HRESULT waitReady(DWORD timeout = 100) { return _getStateMachine()->waitReady(this, timeout); }
 	S* getCurrentState() const { return (S*)m_currentState.p; }
 
-	virtual IStateMachine* _getStateMachine() { return m_stateMachine.get(); }
+	IStateMachine* _getStateMachine() {
+		if(!m_stateMachine) m_stateMachine.reset(IStateMachine::create(this));
+		return m_stateMachine.get();
+	}
 	virtual IState* _getCurrentState() { return m_currentState; }
 	virtual void _setCurrentState(IState* state) { m_currentState = state; }
 
@@ -39,7 +44,9 @@ class AsyncContext : public Context<E, S>
 public:
 	virtual ~AsyncContext() {}
 
-	HRESULT triggerEvent(E* event) { return m_stateMachine->triggerEvent(this, event); }
+	virtual bool isAsync() const { return true; }
+
+	HRESULT triggerEvent(E* event) { return _getStateMachine()->triggerEvent(this, event); }
 	S* getCurrentState() const { return (S*)m_currentState.p; }
 
 	// Returns AsyncData object.

@@ -78,7 +78,7 @@ TYPED_TEST(StateMachineSetupUnitTest, 2)
 	auto hr = E_ABORT;
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
-	if(mockContext._getAsyncData()) {
+	if(mockContext.isAsync()) {
 		// AsyncContext::waitRady() should return the error code from State::entry().
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
 		ASSERT_EQ(hr, mockContext.waitReady());
