@@ -14,10 +14,6 @@ HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 
 namespace tsm {
 
-StateMachine::StateMachine()
-{
-}
-
 /*
  * State class for StateMachine::startup() method.
  */

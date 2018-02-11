@@ -6,14 +6,14 @@ namespace tsm {
 class AsyncStateMachine : public StateMachine
 {
 public:
-	AsyncStateMachine();
-	~AsyncStateMachine();
+	AsyncStateMachine() {}
+	virtual ~AsyncStateMachine() {}
 
-	HRESULT setup(IContext* context, IState* initialState, IEvent* event);
-	HRESULT shutdown(IContext* context, DWORD timeout);
-	HRESULT triggerEvent(IContext* context, IEvent* event);
-	HRESULT handleEvent(IContext* context, IEvent* event);
-	HRESULT waitReady(IContext* context, DWORD timeout);
+	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event);
+	virtual HRESULT shutdown(IContext* context, DWORD timeout);
+	virtual HRESULT triggerEvent(IContext* context, IEvent* event);
+	virtual HRESULT handleEvent(IContext* context, IEvent* event);
+	virtual HRESULT waitReady(IContext* context, DWORD timeout);
 
 protected:
 	static DWORD WINAPI workerThreadProc(LPVOID lpParameter);

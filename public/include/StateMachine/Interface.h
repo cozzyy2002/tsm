@@ -55,17 +55,21 @@ public:
 	virtual HRESULT _handleEvent(IContext* context, IEvent* event, IState** nextState) = 0;
 	virtual HRESULT _entry(IContext* context, IEvent* event, IState* previousState) = 0;
 	virtual HRESULT _exit(IContext* context, IEvent* event, IState* nextState) = 0;
-#pragma endregion
 
 	virtual IState* _getMasterState() = 0;
 	virtual void _setMasterState(IState* state) = 0;
 	virtual bool _hasEntryCalled() = 0;
 	virtual void _setEntryCalled(bool value) = 0;
+#pragma endregion
 };
 
 class IStateMachine
 {
 public:
+	static IStateMachine* create(IContext* context);
+
+	virtual ~IStateMachine() {}
+
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) = 0;
 	virtual HRESULT shutdown(IContext* context, DWORD timeout) = 0;
 	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
@@ -73,5 +77,4 @@ public:
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
 };
 
-extern IStateMachine* createStateMachine(IContext* context);
 }

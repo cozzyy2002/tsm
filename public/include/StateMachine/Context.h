@@ -9,13 +9,14 @@ template<class E = IEvent, class S = IState>
 class Context : public IContext
 {
 public:
-	Context() { m_stateMachine.reset(createStateMachine(this)); }
+	Context() { m_stateMachine.reset(IStateMachine::create(this)); }
 	virtual ~Context() {}
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return m_stateMachine->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return m_stateMachine->shutdown(this, timeout); }
 	HRESULT handleEvent(E* event) { return m_stateMachine->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return m_stateMachine->waitReady(this, timeout); }
+	S* getCurrentState() const { return (S*)m_currentState.p; }
 
 	virtual IStateMachine* _getStateMachine() { return m_stateMachine.get(); }
 	virtual IState* _getCurrentState() { return m_currentState; }
@@ -23,8 +24,6 @@ public:
 
 	// Returns nullptr(Async operation is not supported).
 	virtual AsyncData* _getAsyncData() { return nullptr; }
-
-	S* getCurrentState() const { return (S*)m_currentState.p; }
 
 	virtual lock_t* _getHandleEventLock() { return new lock_t(m_handleEventLock); }
 
@@ -41,6 +40,7 @@ public:
 	virtual ~AsyncContext() {}
 
 	HRESULT triggerEvent(E* event) { return m_stateMachine->triggerEvent(this, event); }
+	S* getCurrentState() const { return (S*)m_currentState.p; }
 
 	// Returns AsyncData object.
 	virtual AsyncData* _getAsyncData() { return &m_asyncData; }
