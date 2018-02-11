@@ -5,6 +5,9 @@
 #include "StateMachine.h"
 #include "AsyncStateMachine.h"
 
+// Make sure that IContext is instance of AsyncContext.
+#define ASSERT_ASYNC(c) HR_ASSERT(c->_getAsyncData(), E_INVALIDARG)
+
 namespace tsm {
 
 /*static*/ IStateMachine* IStateMachine::create(IContext* context)
@@ -14,6 +17,12 @@ namespace tsm {
 
 HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEvent * event)
 {
+	// Ensure to release object on error.
+	CComPtr<IState> _initialState(initialState);
+	CComPtr<IEvent> _event(event);
+
+	ASSERT_ASYNC(context);
+
 	HR_ASSERT_OK(setupInner(context, initialState, event));
 
 	auto asyncData = context->_getAsyncData();
@@ -21,7 +30,7 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 	// Setup event queue.
 	asyncData->eventQueue.clear();
 	asyncData->hEventAvailable.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
-	triggerEvent(context, event);
+	HR_ASSERT_OK(triggerEvent(context, event, 0));
 
 	// Setup worker thread in which event handling is performed.
 	// entry() of initial state will be called in the thread.
@@ -37,6 +46,8 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 
 HRESULT AsyncStateMachine::shutdown(IContext * context, DWORD timeout)
 {
+	ASSERT_ASYNC(context);
+
 	auto asyncData = context->_getAsyncData();
 	if(asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
@@ -50,35 +61,47 @@ HRESULT AsyncStateMachine::shutdown(IContext * context, DWORD timeout)
 	return S_OK;
 }
 
-HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
+HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event, int priority)
 {
 	// Ensure to release object on error.
 	CComPtr<IEvent> _event(event);
 
+	ASSERT_ASYNC(context);
+
 	HR_ASSERT_OK(setupCompleted(context));
 
 	auto asyncData = context->_getAsyncData();
-	if(asyncData) {
-		// Add the event to event queue and signal that event is available.
-		{
-			IContext::lock_t _lock(asyncData->eventQueueLock);
-			asyncData->eventQueue.push_back(event);
+	// Add the event to event queue and signal that event is available.
+	// Events are added to the queue by priority order.
+	// deque::back() is highest priority.
+	// Events with same priority are added by FIFO order(deque::back() is first event).
+	{
+		IContext::lock_t _lock(asyncData->eventQueueLock);
+		auto& eventQueue = asyncData->eventQueue;
+		auto it = eventQueue.begin();
+		for(; it != eventQueue.end(); it++) {
+			if(priority <= it->first) break;
 		}
-		WIN32_ASSERT_OK(SetEvent(asyncData->hEventAvailable));
-		return S_OK;
-	} else {
-		// Async operation is not supported.
-		return E_ILLEGAL_METHOD_CALL;
+		eventQueue.insert(it, std::make_pair(priority, event));
 	}
+	WIN32_ASSERT_OK(SetEvent(asyncData->hEventAvailable));
+	return S_OK;
 }
 
 HRESULT AsyncStateMachine::handleEvent(IContext * context, IEvent * event)
 {
+	// Ensure to release object on error.
+	CComPtr<IEvent> _event(event);
+
+	ASSERT_ASYNC(context);
+
 	return StateMachine::handleEvent(context, event);
 }
 
 HRESULT AsyncStateMachine::waitReady(IContext * context, DWORD timeout)
 {
+	ASSERT_ASYNC(context);
+
 	auto hr = S_OK;
 	auto asyncData = context->_getAsyncData();
 	HANDLE hEvents[] = { asyncData->hWorkerThread, asyncData->hEventReady, asyncData->hEventShutdown };
@@ -141,9 +164,10 @@ HRESULT AsyncStateMachine::doWorkerThread(IContext* context)
 			{
 				// Fetch event from the queue.
 				IContext::lock_t _lock(asyncData->eventQueueLock);
-				if(asyncData->eventQueue.empty()) break;
-				event = asyncData->eventQueue.front();
-				asyncData->eventQueue.pop_front();
+				auto& eventQueue = asyncData->eventQueue;
+				if(eventQueue.empty()) break;
+				event = eventQueue.back().second;
+				eventQueue.pop_back();
 			}
 
 			// Handle the event.

@@ -11,7 +11,7 @@ public:
 
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event);
 	virtual HRESULT shutdown(IContext* context, DWORD timeout);
-	virtual HRESULT triggerEvent(IContext* context, IEvent* event);
+	virtual HRESULT triggerEvent(IContext* context, IEvent* event, int priority);
 	virtual HRESULT handleEvent(IContext* context, IEvent* event);
 	virtual HRESULT waitReady(IContext* context, DWORD timeout);
 

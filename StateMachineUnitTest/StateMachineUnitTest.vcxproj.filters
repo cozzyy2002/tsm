@@ -41,5 +41,8 @@
     <ClCompile Include="Mocks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StateMachineAsyncUnitTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

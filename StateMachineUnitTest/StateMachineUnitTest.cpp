@@ -275,3 +275,28 @@ TYPED_TEST(StateMachineSubStateUnitTest, 0)
 	ASSERT_EQ(S_OK, mockContext.shutdown());
 	EXPECT_TRUE(mockState0.deleted());
 }
+
+// Test for Context to ensure that async operations are denied.
+class StateMachineNotImplTest : public StateMachineUnitTest<MockContext>
+{
+public:
+	void SetUp() {
+		StateMachineUnitTest::SetUp();
+
+		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
+		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
+		ASSERT_EQ(S_OK, mockContext.waitReady());
+	}
+	void TearDown() {
+		ASSERT_EQ(S_OK, mockContext.shutdown());
+
+		StateMachineUnitTest::TearDown();
+	}
+};
+
+TEST_F(StateMachineNotImplTest, 0)
+{
+	ASSERT_EQ(E_NOTIMPL, mockContext.triggerEvent(&mockEvent));
+
+	EXPECT_TRUE(mockEvent.deleted());
+}

@@ -34,9 +34,11 @@ protected:
 class MockEvent : public tsm::Event, public TestUnknown
 {
 public:
-	MockEvent() : TestUnknown(m_cRef) { setObject(this); }
+	MockEvent(int id = 0) : TestUnknown(m_cRef), id(id) { setObject(this); }
 
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
+
+	int id;
 };
 
 template<class C>

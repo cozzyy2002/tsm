@@ -11,7 +11,7 @@ TestUnknown::~TestUnknown()
 
 bool TestUnknown::deleted() const
 {
-	if(!isReleaseCalled) ADD_FAILURE() << className << "::Release has been called.";
+	if(!isReleaseCalled) ADD_FAILURE() << className << "::Release has not been called.";
 	return isReleaseCalled && (rcRef == 0);
 }
 

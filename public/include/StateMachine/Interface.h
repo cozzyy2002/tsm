@@ -3,9 +3,9 @@
 #include "Unknown.h"
 
 #include <deque>
+#include <utility>
 #include <memory>
 #include <mutex>
-#include <thread>
 
 namespace tsm {
 
@@ -22,7 +22,7 @@ public:
 
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
-		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
+		std::deque<std::pair<int, CComPtr<IEvent>>> eventQueue;		// FIFO of (priority, IEvent to be handled).
 		std::recursive_mutex eventQueueLock;		// Lock to modify IEvent queue.
 		CHandle hEventAvailable;					// Event handle set when IEvent is queued.
 		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
@@ -46,6 +46,9 @@ class IEvent : public Unknown
 {
 public:
 	virtual ~IEvent() {}
+
+	virtual int _getPriority() const = 0;
+	virtual void _setPriority(int priority) = 0;
 };
 
 class IState : public Unknown
@@ -74,7 +77,7 @@ public:
 
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) = 0;
 	virtual HRESULT shutdown(IContext* context, DWORD timeout) = 0;
-	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
+	virtual HRESULT triggerEvent(IContext* context, IEvent* event, int priority) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
 };

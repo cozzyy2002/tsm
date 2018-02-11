@@ -34,10 +34,6 @@ protected:
 
 HRESULT StateMachine::setupInner(IContext* context, IState * initialState, IEvent* event)
 {
-	// Ensure to release object on error.
-	CComPtr<IState> _initialState(initialState);
-	CComPtr<IEvent> _event(event);
-
 	// Check if setup() has not been called.
 	HR_ASSERT(FAILED(setupCompleted(context)), E_ILLEGAL_METHOD_CALL);
 
@@ -49,6 +45,10 @@ HRESULT StateMachine::setupInner(IContext* context, IState * initialState, IEven
 
 HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* event)
 {
+	// Ensure to release object on error.
+	CComPtr<IState> _initialState(initialState);
+	CComPtr<IEvent> _event(event);
+
 	HR_ASSERT_OK(setupInner(context, initialState, event));
 
 	// Call entry() of initial state in the caller thread.
@@ -74,6 +74,14 @@ HRESULT StateMachine::shutdown(IContext* context, DWORD timeout)
 	return S_OK;
 }
 
+HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event, int priority)
+{
+	// Ensure to release object on error.
+	CComPtr<IEvent> _event(event);
+
+	return E_NOTIMPL;
+}
+
 HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 {
 	// Ensure to release object on error.
@@ -83,7 +91,6 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 	std::unique_ptr<IContext::lock_t> _lock(context->_getHandleEventLock());
 
-	CComPtr<IEvent> e(event);
 	IState* nextState = nullptr;
 	auto currentState = context->_getCurrentState();
 	HRESULT hr = forEachState(currentState, [this, context, event, &nextState](IState* state)
@@ -122,6 +129,8 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 {
+	// Nothing to do.
+
 	return S_OK;
 }
 
