@@ -4,10 +4,16 @@
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
 
+/*static*/ tsm::IContext::OnAssertFailed *tsm::IContext::onAssertFailedProc = nullptr;
+
 HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 {
 	if(FAILED(hr)) {
-		_tprintf_s(_T("'%s' failed: HRESULT=0x%08x at:\n%s:%d\n"), exp, hr, sourceFile, line);
+		if(tsm::IContext::onAssertFailedProc) {
+			tsm::IContext::onAssertFailedProc(hr, exp, sourceFile, line);
+		} else {
+			_tprintf_s(_T("'%s' failed: HRESULT=0x%08x at:\n%s:%d\n"), exp, hr, sourceFile, line);
+		}
 	}
 	return hr;
 }

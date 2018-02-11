@@ -39,6 +39,9 @@ public:
 	virtual IState* _getCurrentState() = 0;
 	virtual void _setCurrentState(IState* state) = 0;
 
+	using OnAssertFailed = void(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
+	static OnAssertFailed* onAssertFailedProc;
+
 	// Returns nullptr(Async operation is not supported).
 	virtual AsyncData* _getAsyncData() = 0;
 

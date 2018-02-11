@@ -38,6 +38,7 @@ TEST_F(StateMachineAsyncUnitTest, 0)
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, Not(nullptr), _))
 		.WillRepeatedly(Invoke([&actualEventCount](MockAsyncContext* context, MockEvent* event, tsm::IState**)
 		{
+			// Wait for all triggerEvent() to be called.
 			if(actualEventCount == 0) Sleep(10);
 			EXPECT_EQ(actualEventCount++, event->id);
 			return S_OK;

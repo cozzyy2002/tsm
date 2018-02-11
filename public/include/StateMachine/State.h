@@ -8,7 +8,7 @@ template<class C = IContext, class E = IEvent>
 class State : public IState
 {
 public:
-	State(IState* masterState = nullptr) : m_masterState(masterState) {}
+	State(IState* masterState = nullptr) : m_masterState(masterState), m_entryCalled(false) {}
 	virtual ~State() {}
 
 #pragma region Implementation of IState that call methods of sub class.
