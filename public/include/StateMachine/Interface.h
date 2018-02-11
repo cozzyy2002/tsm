@@ -28,6 +28,7 @@ public:
 		CHandle hWorkerThread;						// Handle of worker thread.
 	};
 
+	virtual IStateMachine* _getStateMachine() = 0;
 	virtual IState* _getCurrentState() = 0;
 	virtual void _setCurrentState(IState* state) = 0;
 
@@ -37,8 +38,6 @@ public:
 	using lock_object_t = std::recursive_mutex;
 	using lock_t = std::lock_guard<lock_object_t>;
 	virtual lock_t* _getHandleEventLock() = 0;
-
-	std::unique_ptr<IStateMachine> m_stateMachine;
 };
 
 class IEvent : public Unknown

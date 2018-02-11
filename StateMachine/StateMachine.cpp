@@ -208,7 +208,7 @@ HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 DWORD StateMachine::workerThreadProc(LPVOID lpParameter)
 {
 	auto context = (IContext*)lpParameter;
-	auto stateMachine = (StateMachine*)(context->m_stateMachine.get());
+	auto stateMachine = (StateMachine*)(context->_getStateMachine());
 	return stateMachine->doWorkerThread(context);
 }
 

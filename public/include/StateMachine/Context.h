@@ -17,6 +17,7 @@ public:
 	HRESULT handleEvent(E* event) { return m_stateMachine->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return m_stateMachine->waitReady(this, timeout); }
 
+	virtual IStateMachine* _getStateMachine() { return m_stateMachine.get(); }
 	virtual IState* _getCurrentState() { return m_currentState; }
 	virtual void _setCurrentState(IState* state) { m_currentState = state; }
 
@@ -28,6 +29,7 @@ public:
 	virtual lock_t* _getHandleEventLock() { return new lock_t(m_handleEventLock); }
 
 protected:
+	std::unique_ptr<IStateMachine> m_stateMachine;
 	CComPtr<IState> m_currentState;
 	lock_object_t m_handleEventLock;
 };
