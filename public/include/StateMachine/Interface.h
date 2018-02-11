@@ -16,6 +16,11 @@ class IStateMachine;
 class IContext
 {
 public:
+	// Default event priority.
+	// This value is used by AsyncContext::triggerEvent().
+	// Context::triggerEvent() is not implemented.
+	static const int DefaultEventPriority = 0;
+
 	virtual ~IContext() {}
 
 	virtual bool isAsync() const = 0;

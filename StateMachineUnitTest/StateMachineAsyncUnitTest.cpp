@@ -29,6 +29,31 @@ public:
 	MockState<MockAsyncContext> mockState0, mockState1;
 };
 
+// Default event priority.
+// State::handleEvent() should be called by order of AsyncContext::triggerEvent().
+TEST_F(StateMachineAsyncUnitTest, 0)
+{
+	static const int EventsCount = 4;
+	int actualEventCount = 0;
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, Not(nullptr), _))
+		.WillRepeatedly(Invoke([&actualEventCount](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		{
+			if(actualEventCount == 0) Sleep(10);
+			EXPECT_EQ(actualEventCount++, event->id);
+			return S_OK;
+		}));
+
+	createEvents(EventsCount);
+	for(int i = 0; i < EventsCount; i++) {
+		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(mockEvents[i]));
+		// Wait for 1st State::handleEvent() to be called.
+		if(i == 0) Sleep(5);
+	}
+
+	Sleep(100);
+	EXPECT_EQ(EventsCount, actualEventCount);
+}
+
 // Data for priority test.
 using StateMachineAsyncPriorityUnitTestData = struct {
 	int priorities[5];

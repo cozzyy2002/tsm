@@ -30,7 +30,7 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 	// Setup event queue.
 	asyncData->eventQueue.clear();
 	asyncData->hEventAvailable.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
-	HR_ASSERT_OK(triggerEvent(context, event, 0));
+	HR_ASSERT_OK(triggerEvent(context, event, IContext::DefaultEventPriority));
 
 	// Setup worker thread in which event handling is performed.
 	// entry() of initial state will be called in the thread.

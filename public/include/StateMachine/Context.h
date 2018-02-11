@@ -15,7 +15,7 @@ public:
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
-	HRESULT triggerEvent(E* event, int priority = 0) { return _getStateMachine()->triggerEvent(this, event, priority); }
+	HRESULT triggerEvent(E* event, int priority = DefaultEventPriority) { return _getStateMachine()->triggerEvent(this, event, priority); }
 	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return _getStateMachine()->waitReady(this, timeout); }
 	S* getCurrentState() const { return (S*)m_currentState.p; }
