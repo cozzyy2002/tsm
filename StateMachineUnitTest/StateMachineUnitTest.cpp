@@ -232,7 +232,8 @@ public:
 
 TYPED_TEST_CASE(StateMachineSubStateUnitTest, ContextTypes);
 
-// StateMachine::setup(Event* = nullptr)
+// State chain: State0 -> State1
+// State1 returns State0 as next state.
 TYPED_TEST(StateMachineSubStateUnitTest, 0)
 {
 	{

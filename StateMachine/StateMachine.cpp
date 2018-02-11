@@ -131,7 +131,19 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	CComPtr<IEvent> e(event);
 	IState* nextState = nullptr;
 	auto& currentState = context->m_currentState;
-	HRESULT hr = HR_EXPECT_OK(currentState->_handleEvent(context, event, &nextState));
+	HRESULT hr = forEachState(currentState, [this, context, event, &nextState](IState* state)
+	{
+		HRESULT hr = HR_EXPECT_OK(state->_handleEvent(context, event, &nextState));
+		switch(hr) {
+		case S_OK:		// Event is handled. -> Stop enumeration.
+			return S_FALSE;
+		case S_FALSE:	// Event is ignored. -> Master state should handle the event.
+			return S_OK;
+		default:
+			return hr;
+		}
+	});
+	if(hr == S_FALSE) hr = S_OK;	// forEachState() exits successfully.
 	CComPtr<IState> _nextState(nextState);
 	if(SUCCEEDED(hr) && nextState) {
 		hr = forEachState(currentState, [this, context, event, nextState](IState* state)
