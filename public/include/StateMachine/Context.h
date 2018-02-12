@@ -32,6 +32,8 @@ public:
 
 	virtual lock_t* _getHandleEventLock() { return new lock_t(m_handleEventLock); }
 
+	virtual IStateMonitor* _getStateMonitor() { return nullptr; }
+
 protected:
 	std::unique_ptr<IStateMachine> m_stateMachine;
 	CComPtr<IState> m_currentState;

@@ -128,6 +128,10 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 				nextState->_setEntryCalled(true);
 				HR_ASSERT_OK(nextState->_entry(context, event, previousState));
 			}
+			callStateMonitor(context, [&](IStateMonitor* stateMonitor)
+			{
+				stateMonitor->onStateChanged(context, _event, previousState, nextState);
+			});
 		}
 	}
 	return hr;
@@ -156,6 +160,14 @@ HRESULT StateMachine::forEachState(IState * state, std::function<HRESULT(IState*
 		state = state->_getMasterState();
 	}
 	return hr;
+}
+
+void StateMachine::callStateMonitor(IContext* context, std::function<void(IStateMonitor* stateMonitor)> caller)
+{
+	auto stateMonitor = context->_getStateMonitor();
+	if(stateMonitor) {
+		caller(stateMonitor);
+	}
 }
 
 }

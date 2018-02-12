@@ -22,6 +22,7 @@ protected:
 	HRESULT shutdownInner(IContext* context, DWORD timeout);
 	HRESULT setupCompleted(IContext* context) const;
 	HRESULT forEachState(IState* state, std::function<HRESULT(IState*)> func);
+	void callStateMonitor(IContext* context, std::function<void(IStateMonitor* stateMonitor)> caller);
 };
 
 }

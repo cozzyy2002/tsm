@@ -12,6 +12,7 @@ namespace tsm {
 class IEvent;
 class IState;
 class IStateMachine;
+class IStateMonitor;
 
 class IContext
 {
@@ -48,6 +49,8 @@ public:
 	using lock_object_t = std::recursive_mutex;
 	using lock_t = std::lock_guard<lock_object_t>;
 	virtual lock_t* _getHandleEventLock() = 0;
+
+	virtual IStateMonitor* _getStateMonitor() = 0;
 };
 
 class IEvent : public Unknown
@@ -88,6 +91,15 @@ public:
 	virtual HRESULT triggerEvent(IContext* context, IEvent* event, int priority) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
+};
+
+// Monitor interface
+class IStateMonitor
+{
+public:
+	virtual void onIdle(IContext* context, bool setupCompleted) = 0;
+	virtual void onStateChanged(IContext* context, IEvent* event, IState* previous, IState* next) = 0;
+	virtual void onWorkerThreadExit(IContext* context, HRESULT exitCode) = 0;
 };
 
 }

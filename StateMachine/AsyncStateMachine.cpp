@@ -143,7 +143,12 @@ DWORD AsyncStateMachine::workerThreadProc(LPVOID lpParameter)
 {
 	auto context = (IContext*)lpParameter;
 	auto stateMachine = (AsyncStateMachine*)(context->_getStateMachine());
-	return stateMachine->doWorkerThread(context);
+	auto hr = stateMachine->doWorkerThread(context);
+	stateMachine->callStateMonitor(context, [&](IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onWorkerThreadExit(context, hr);
+	});
+	return hr;
 }
 
 HRESULT AsyncStateMachine::doWorkerThread(IContext* context)
@@ -152,7 +157,8 @@ HRESULT AsyncStateMachine::doWorkerThread(IContext* context)
 	HANDLE hEvents[] = { asyncData->hEventAvailable, asyncData->hEventShutdown };
 	static const DWORD eventsCount = ARRAYSIZE(hEvents);
 
-	auto first = true;
+	auto firstEvent = true;
+	auto firstIdle = true;
 	do {
 		// Wait for event to be queued.
 		DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, INFINITE);
@@ -165,16 +171,23 @@ HRESULT AsyncStateMachine::doWorkerThread(IContext* context)
 				// Fetch event from the queue.
 				IContext::lock_t _lock(asyncData->eventQueueLock);
 				auto& eventQueue = asyncData->eventQueue;
-				if(eventQueue.empty()) break;
+				if(eventQueue.empty()) {
+					callStateMonitor(context, [&](IStateMonitor* stateMonitor)
+					{
+						stateMonitor->onIdle(context, firstIdle);
+						firstIdle = false;
+					});
+					break;
+				}
 				event = eventQueue.back().second;
 				eventQueue.pop_back();
 			}
 
 			// Handle the event.
 			HR_ASSERT_OK(handleEvent(context, event));
-			if(first) {
+			if(firstEvent) {
 				// Set ready event after first event handled(AsyncContext::setup() is completed).
-				first = false;
+				firstEvent = false;
 				WIN32_ASSERT_OK(SetEvent(asyncData->hEventReady));
 			}
 		} while(true);
