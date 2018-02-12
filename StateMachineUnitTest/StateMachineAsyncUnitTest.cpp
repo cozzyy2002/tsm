@@ -29,9 +29,47 @@ public:
 	MockState<MockAsyncContext> mockState0, mockState1;
 };
 
+// Idetify event object and manage it's life time
+TEST_F(StateMachineAsyncUnitTest, 0)
+{
+	MockEvent e0, e1, e2;
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, _, Not(nullptr)))
+		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		{
+			EXPECT_EQ(&e0, event);
+			Sleep(10);
+			return S_OK;
+		}))
+		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		{
+			EXPECT_EQ(&e1, event);
+			return S_OK;
+		}))
+		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		{
+			EXPECT_EQ(nullptr, event);
+			return S_OK;
+		}))
+		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		{
+			EXPECT_EQ(&e2, event);
+			return S_OK;
+		}));
+
+		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
+		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e1));
+		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(nullptr));
+		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e2));
+		Sleep(100);
+
+		EXPECT_TRUE(e0.deleted());
+		EXPECT_TRUE(e1.deleted());
+		EXPECT_TRUE(e2.deleted());
+}
+
 // Default event priority.
 // State::handleEvent() should be called by order of AsyncContext::triggerEvent().
-TEST_F(StateMachineAsyncUnitTest, 0)
+TEST_F(StateMachineAsyncUnitTest, 1)
 {
 	static const int EventsCount = 4;
 	int actualEventCount = 0;

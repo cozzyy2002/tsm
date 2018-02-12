@@ -73,8 +73,8 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event, int 
 	auto asyncData = context->_getAsyncData();
 	// Add the event to event queue and signal that event is available.
 	// Events are added to the queue by priority order.
-	// deque::back() is highest priority.
-	// Events with same priority are added by FIFO order(deque::back() is first event).
+	// deque::back() returns event with highest priority.
+	// Events with same priority are added by FIFO order(deque::back() returns event triggered first).
 	{
 		IContext::lock_t _lock(asyncData->eventQueueLock);
 		auto& eventQueue = asyncData->eventQueue;
