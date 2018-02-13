@@ -12,3 +12,11 @@
 /tsm.VC.db
 /ipch/STATEMACHINEUNITTEST-78f2e538
 *.user
+/ipch
+/jpp/jpp/Debug
+/jpp/jpp/Release
+/jpp/JsonParser/Debug
+/jpp/JsonParser/Release
+/public/lib/Release
+/Release
+/StateMachine/Release
