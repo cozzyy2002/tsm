@@ -34,7 +34,7 @@ public:
 	virtual HRESULT exit(C* context, E* event, IState* nextState) { return S_FALSE; }
 #pragma endregion
 
-	State* getMasterState() { return (State*)m_masterState; }
+	State* getMasterState() { return (State*)m_masterState.p; }
 	State* getSubState() { return (State*)m_subState.p; }
 
 	bool isSubState() const { return m_masterState ? true : false; }
