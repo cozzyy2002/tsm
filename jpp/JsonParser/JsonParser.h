@@ -2,6 +2,22 @@
 
 #include <memory>
 
+namespace std {
+#ifdef UNICODE
+using tstring = wstring;
+using tistream = wistream;
+using tostream = wostream;
+using tistringstream = wistringstream;
+using tostringstream = wostringstream;
+#else
+using tstring = string;
+using tistream = istream;
+using tostream = ostream;
+using tistringstream = istringstream;
+using tostringstream = ostringstream;
+#endif
+} // namespace std
+
 namespace json_parser {
 
 class CJsonParser

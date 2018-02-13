@@ -12,3 +12,5 @@
 /tsm.VC.db
 /ipch/STATEMACHINEUNITTEST-78f2e538
 *.user
+/ipch
+/jpp/JsonParser/Debug

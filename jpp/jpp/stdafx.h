@@ -14,3 +14,6 @@
 
 // TODO: reference additional headers your program requires here
 #include <JsonParser/stdafx.h>
+
+#include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>

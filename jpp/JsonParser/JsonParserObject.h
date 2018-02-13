@@ -5,12 +5,18 @@
 
 namespace json_parser {
 
-class CParserContext : public state_machine::Context
+class CParserContext;
+class CParserEvent;
+class CParserState;
+
+using CParserStateBase = tsm::State<CParserContext, CParserEvent>;
+
+class CParserContext : public tsm::Context<CParserEvent, CParserStateBase>
 {
 public:
 	CParserContext();
 
-	HRESULT start(std::tostream& out, const CJsonParser::Option& option, state_machine::State* initialState);
+	HRESULT start(std::tostream& out, const CJsonParser::Option& option, CParserStateBase* initialState);
 	HRESULT stop();
 	void out(TCHAR character);
 
@@ -27,46 +33,43 @@ protected:
 // State that processes ordinary characters.
 // Ordinary characters are other than comment nor literal string.
 // This state is also created as initial state.
-class CParserState : public state_machine::State
+class CParserState : public CParserStateBase
 {
 public:
-	virtual HRESULT handleEvent(state_machine::Context& context, state_machine::Event& e, State& currentState, State** nextState) override;
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
 };
 
 // Comment state started by "/*" and ended by "*/"
-class CCommentState : public state_machine::State
+class CCommentState : public CParserStateBase
 {
 public:
 	CCommentState(CParserState* masterState) : State(masterState) {}
-	virtual HRESULT handleEvent(state_machine::Context& context, state_machine::Event& e, State& currentState, State** nextState) override;
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
 };
 
 // Comment state started by "//" and ended by end of line(EOL)
-class CSingleLineCommentState : public state_machine::State
+class CSingleLineCommentState : public CParserStateBase
 {
 public:
 	CSingleLineCommentState(CParserState* masterState) : State(masterState) {}
-	virtual HRESULT handleEvent(state_machine::Context& context, state_machine::Event& e, State& currentState, State** nextState) override;
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
 };
 
 // Literal state enclosed by single/double quotation mark.
-class CLiteralState : public state_machine::State
+class CLiteralState : public CParserStateBase
 {
 public:
 	CLiteralState(CParserState* masterState) : State(masterState) {}
-	virtual HRESULT handleEvent(state_machine::Context& context, state_machine::Event& e, State& currentState, State** nextState) override;
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
 };
 
-class CParserEvent : public state_machine::Event
+class CParserEvent : public tsm::Event
 {
 public:
 	CParserEvent(TCHAR character) : character(character) {}
 
 	// Character to parse.
 	TCHAR character;
-
-	// Suppress log this event.
-	virtual LogLevel getLogLevel() const override { return 0; }
 };
 
 }

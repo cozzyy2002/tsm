@@ -39,9 +39,6 @@ HRESULT json_parser::CJsonParser::preprocess(std::tistream& source, std::tostrea
 	if(option.expandTab && (option.tabStop < 2)) return E_INVALIDARG;
 
 	CParserContext context;
-	auto stateMachine(context.getStateMachine());
-	stateMachine->setLoggerName((stateMachine->getLoggerName() + _T(".JsonParser")).c_str());
-
 	context.start(out, option, new CParserState());
 
 	// Prevent input stream from skipping white space and end of line characters.
@@ -49,10 +46,10 @@ HRESULT json_parser::CJsonParser::preprocess(std::tistream& source, std::tostrea
 
 	TCHAR ch;
 	for(source >> ch; !source.eof(); source >> ch) {
-		CParserEvent e(ch);
+		CComPtr<CParserEvent> e(new CParserEvent(ch));
 		context.handleEvent(e);
 		// Note: e.character might be modified by state.
-		context.previousCharacter = e.character;
+		context.previousCharacter = e->character;
 	}
 	context.stop();
 	return S_OK;

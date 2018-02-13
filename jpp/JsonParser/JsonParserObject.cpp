@@ -4,23 +4,23 @@
 using namespace json_parser;
 
 CParserContext::CParserContext()
-	: Context(false), column(0)
+	: column(0)
 {
 }
 
-HRESULT CParserContext::start(std::tostream& out, const CJsonParser::Option& option, state_machine::State * initialState)
+HRESULT CParserContext::start(std::tostream& out, const CJsonParser::Option& option, CParserStateBase* initialState)
 {
 	previousCharacter = '\0';
 	this->outStream = &out;
 	this->option = &option;
 
-	return Context::start(initialState);
+	return Context::setup(initialState);
 }
 
 HRESULT CParserContext::stop()
 {
 	*outStream << std::ends;
-	return Context::stop();
+	return Context::shutdown();
 }
 
 /*
@@ -62,13 +62,11 @@ void CParserContext::out(TCHAR character)
 
 	This state is created as initial state on CParserContext::start().
 */
-HRESULT CParserState::handleEvent(state_machine::Context& _context, state_machine::Event & e, State & currentState, State ** nextState)
+HRESULT CParserState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
 {
-	auto context(_context.cast<CParserContext>());
 	auto option(context->option);
-	auto _e(e.cast<CParserEvent>());
 	auto isOut(true);
-	switch(_e->character) {
+	switch(e->character) {
 	case '*':
 		if(option->removeComment) {
 			if(context->previousCharacter == '/') {
@@ -109,7 +107,7 @@ HRESULT CParserState::handleEvent(state_machine::Context& _context, state_machin
 			// In case previous '/' is not start of comment.
 			context->out('/');
 		}
-		context->out(_e->character);
+		context->out(e->character);
 	}
 	return S_OK;
 }
@@ -121,24 +119,22 @@ HRESULT CParserState::handleEvent(state_machine::Context& _context, state_machin
 	Returns back to parent state on end of the comment.
 	Other characters than end of line(EOL) are ignored.
 */
-HRESULT CCommentState::handleEvent(state_machine::Context& _context, state_machine::Event & e, State & currentState, State ** nextState)
+HRESULT CCommentState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
 {
-	auto context(_context.cast<CParserContext>());
-	auto _e(e.cast<CParserEvent>());
-	switch(_e->character) {
+	switch(e->character) {
 	case '/':
 		if(context->previousCharacter == '*') {
 			// End of comment
-			*nextState = backToMaster();
+			*nextState = getMasterState();
 
 			// Avoid to out '/' when processing next caracter in CPerserState::handleEvent().
-			_e->character = '\0';
+			e->character = '\0';
 		}
 		break;
 	case '\r':
 	case '\n':
 		// EOL characters.
-		context->out(_e->character);
+		context->out(e->character);
 		break;
 	default:
 		break;
@@ -153,16 +149,14 @@ HRESULT CCommentState::handleEvent(state_machine::Context& _context, state_machi
 	Other characters than above are ignored.
 	Returns back to parent state on end of the comment.
 */
-HRESULT CSingleLineCommentState::handleEvent(state_machine::Context& _context, state_machine::Event & e, State & currentState, State ** nextState)
+HRESULT CSingleLineCommentState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
 {
-	auto context(_context.cast<CParserContext>());
-	auto _e(e.cast<CParserEvent>());
-	switch(_e->character) {
+	switch(e->character) {
 	case '\r':
 	case '\n':
 		// End of comment
-		*nextState = backToMaster();
-		context->out(_e->character);
+		*nextState = getMasterState();
+		context->out(e->character);
 		break;
 	}
 	return S_OK;
@@ -174,12 +168,10 @@ HRESULT CSingleLineCommentState::handleEvent(state_machine::Context& _context, s
 	Recognizes escape sequence '\x' and end of literal '"'.
 	Returns back to parent state on end of literal.
 */
-HRESULT CLiteralState::handleEvent(state_machine::Context& _context, state_machine::Event & e, State & currentState, State ** nextState)
+HRESULT CLiteralState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
 {
 	static const TCHAR escapeChar('\\');
-	auto context(_context.cast<CParserContext>());
-	auto _e(e.cast<CParserEvent>());
-	auto character(_e->character);
+	auto character(e->character);
 	if(context->previousCharacter == escapeChar) {
 		// Character following '\' is treated as ordinary character.
 		// e.g. '\"' is '\"' not end of literal.
@@ -190,7 +182,7 @@ HRESULT CLiteralState::handleEvent(state_machine::Context& _context, state_machi
 			return S_OK;
 		} else if(character == '\"') {
 			// End of literal string.
-			*nextState = backToMaster();
+			*nextState = getMasterState();
 		}
 	}
 	context->out(character);
