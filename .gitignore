@@ -14,3 +14,10 @@
 *.user
 /ipch
 /jpp/JsonParser/Debug
+/jpp/jpp/Debug
+/jpp/jpp/Release
+/jpp/JsonParser/Release/JsonParser.tlog
+/jpp/JsonParser/Release
+/Release
+/StateMachine/Release
+/public/lib/Release

@@ -11,8 +11,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StateMachineUnitTest", "Sta
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jpp", "jpp\jpp\jpp.vcxproj", "{13E1F4B6-CFE0-46CD-9AA1-6B187A4E6203}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5D559714-38BA-49C2-89BA-FFF1B69626B4} = {5D559714-38BA-49C2-89BA-FFF1B69626B4}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JsonParser", "jpp\JsonParser\JsonParser.vcxproj", "{5D559714-38BA-49C2-89BA-FFF1B69626B4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BD429D1D-B2CF-479C-A3BB-AD081C5C210F} = {BD429D1D-B2CF-479C-A3BB-AD081C5C210F}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jpp", "jpp", "{C28D57E5-B031-4FB9-ADF4-F8E86B446120}"
 EndProject
