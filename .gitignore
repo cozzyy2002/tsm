@@ -2,22 +2,20 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/Debug
-/public/lib/Debug
 /.vs/tsm/v14
-/ipch/STATEMACHINE-60d3a2f8
-/StateMachine/Debug
-/StateMachineUnitTest/Debug
 /tsm.VC.VC.opendb
 /tsm.VC.db
-/ipch/STATEMACHINEUNITTEST-78f2e538
 *.user
 /ipch
-/jpp/JsonParser/Debug
 /jpp/jpp/Debug
 /jpp/jpp/Release
-/jpp/JsonParser/Release/JsonParser.tlog
+/jpp/JsonParser/Debug
 /jpp/JsonParser/Release
 /Release
+/Debug
+/StateMachine/Debug
 /StateMachine/Release
+/public/lib/Debug
 /public/lib/Release
+/StateMachineUnitTest/Debug
+/StateMachineUnitTest/Release
