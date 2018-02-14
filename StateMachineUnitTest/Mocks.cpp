@@ -19,6 +19,11 @@ void TestStateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCo
 		ptr2str(context).c_str(), context, exitCode);
 }
 
+void mockOnAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
+{
+	LOG4CPLUS_ERROR_FMT(logger, _T("'%s' failed: HRESULT=0x%08x. at:\n%s:%d"), exp, hr, sourceFile, line);
+}
+
 TestUnknown::~TestUnknown()
 {
 	if(rcRef != 0) {

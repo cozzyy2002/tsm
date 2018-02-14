@@ -27,6 +27,8 @@ public:
 	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override;
 };
 
+extern void mockOnAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
+
 class MockContext : public tsm::Context<MockEvent, MockState<MockContext>>, public TestStateMonitor
 {
 public:
