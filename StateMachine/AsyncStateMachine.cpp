@@ -51,9 +51,7 @@ HRESULT AsyncStateMachine::shutdown(IContext * context, DWORD timeout)
 	auto asyncData = context->_getAsyncData();
 	if(asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
-		WIN32_ASSERT_OK(SetEvent(asyncData->hEventShutdown));
-		// Wait for worker thread to terminate.
-		DWORD wait = WaitForSingleObject(asyncData->hWorkerThread, timeout);
+		DWORD wait = SignalObjectAndWait(asyncData->hEventShutdown, asyncData->hWorkerThread, timeout, FALSE);
 		HR_ASSERT_OK(checkWaitResult(wait));
 	}
 
