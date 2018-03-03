@@ -3,6 +3,7 @@
 #include "Unknown.h"
 
 #include <deque>
+#include <map>
 #include <utility>
 #include <memory>
 #include <mutex>
@@ -79,6 +80,21 @@ public:
 #pragma endregion
 };
 
+class ITimerClient
+{
+public:
+	struct Timer {
+		ITimerClient* client;
+		HANDLE hTimer;
+		CComPtr<IEvent> event;
+	};
+
+	using timers_t = std::map<Timer*, Timer>;
+	virtual timers_t& getTimers() = 0;
+	virtual HANDLE getTimerQueue() = 0;
+	virtual void setTimerQueue(HANDLE hTimerQueue) = 0;
+};
+
 class IStateMachine
 {
 public:
@@ -89,6 +105,8 @@ public:
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) = 0;
 	virtual HRESULT shutdown(IContext* context, DWORD timeout) = 0;
 	virtual HRESULT triggerEvent(IContext* context, IEvent* event, int priority) = 0;
+	virtual HRESULT triggerDelayedEvent(ITimerClient* client, ITimerClient::Timer* pTimer, DWORD timeout, IEvent* event, int priority) = 0;
+	virtual HRESULT cancelDelayedEvent(ITimerClient* client, ITimerClient::Timer* pTimer) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
 };

@@ -82,8 +82,32 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event, int 
 		}
 		eventQueue.insert(it, std::make_pair(priority, event));
 	}
-	WIN32_ASSERT_OK(SetEvent(asyncData->hEventAvailable));
+	WIN32_ASSERT(SetEvent(asyncData->hEventAvailable));
 	return S_OK;
+}
+
+VOID AsyncStateMachine::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
+{
+}
+
+HRESULT AsyncStateMachine::triggerDelayedEvent(ITimerClient* client, ITimerClient::Timer * pTimer, DWORD timeout, IEvent * event, int priority)
+{
+	// Ensure to release object on error.
+	CComPtr<IEvent> _event(event);
+
+	auto hTimerQueue = client->getTimerQueue();
+	if(!hTimerQueue) {
+		WIN32_ASSERT(hTimerQueue = CreateTimerQueue());
+		client->setTimerQueue(hTimerQueue);
+	}
+	client->getTimers().push_back(ITimerClient::Timer { client, NULL, event });
+	CreateTimerQueueTimer(&timer.hTimer, hTimerQueue, timerCallback, , timeout, 0, 0);
+	return E_NOTIMPL;
+}
+
+HRESULT AsyncStateMachine::cancelDelayedEvent(ITimerClient* client, ITimerClient::Timer * pTimer)
+{
+	return E_NOTIMPL;
 }
 
 HRESULT AsyncStateMachine::handleEvent(IContext * context, IEvent * event)
@@ -111,7 +135,7 @@ HRESULT AsyncStateMachine::waitReady(IContext * context, DWORD timeout)
 		// Worker thread has been terminated.
 		{
 			DWORD exitCode;
-			hr = WIN32_EXPECT_OK(GetExitCodeThread(asyncData->hWorkerThread, &exitCode));
+			hr = WIN32_EXPECT(GetExitCodeThread(asyncData->hWorkerThread, &exitCode));
 			if(SUCCEEDED(hr)) {
 				// return exit code of worker thread.
 				hr = HRESULT_FROM_WIN32(exitCode);
@@ -160,7 +184,7 @@ HRESULT AsyncStateMachine::doWorkerThread(IContext* context)
 	do {
 		// Wait for event to be queued.
 		DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, INFINITE);
-		if(wait < eventsCount) WIN32_ASSERT_OK(ResetEvent(hEvents[wait]));
+		if(wait < eventsCount) WIN32_ASSERT(ResetEvent(hEvents[wait]));
 		HR_ASSERT_OK(checkWaitResult(wait, eventsCount));
 		if(wait == (WAIT_OBJECT_0 + 1)) break;
 		do {
@@ -186,7 +210,7 @@ HRESULT AsyncStateMachine::doWorkerThread(IContext* context)
 			if(firstEvent) {
 				// Set ready event after first event handled(AsyncContext::setup() is completed).
 				firstEvent = false;
-				WIN32_ASSERT_OK(SetEvent(asyncData->hEventReady));
+				WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 			}
 		} while(true);
 	} while(true);

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Interface.h"
+#include "TimerClient.h"
 
 #include <memory>
 namespace tsm {
 
 template<class E = IEvent, class S = IState>
-class Context : public IContext
+class Context : public IContext, public TimerClient
 {
 public:
 	virtual ~Context() {}
@@ -16,6 +17,10 @@ public:
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
 	HRESULT triggerEvent(E* event, int priority = DefaultEventPriority) { return _getStateMachine()->triggerEvent(this, event, priority); }
+	HRESULT triggerDelayedEvent(ITimerClient::Timer* pTimer, DWORD timeout, IEvent* event, int priority = DefaultEventPriority) override {
+		return _getStateMachine()->triggerDelayedEvent(this, pTimer, timeout, event, priority);
+	}
+	HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) override { return _getStateMachine()->cancelDelayedEvent(this, pTimer) }
 	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return _getStateMachine()->waitReady(this, timeout); }
 	S* getCurrentState() const { return (S*)m_currentState.p; }
