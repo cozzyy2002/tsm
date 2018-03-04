@@ -20,31 +20,13 @@ HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 
 namespace tsm {
 
-/*
- * State class for StateMachine::startup() method.
- */
-class StartupState : public State<>
-{
-public:
-	StartupState(IState* initialState) : m_initialState(initialState) {}
-
-	// Sets initial state as next state regardless of event.
-	HRESULT handleEvent(IContext* context, IEvent* event, IState** nextState) {
-		*nextState = m_initialState;
-		return S_OK;
-	}
-
-protected:
-	CComPtr<IState> m_initialState;
-};
-
-HRESULT StateMachine::setupInner(IContext* context, IState * initialState, IEvent* event)
+HRESULT StateMachine::setupInner(IContext* context, IState * initialState, IEvent* /*event*/)
 {
 	// Check if setup() has not been called.
 	HR_ASSERT(FAILED(setupCompleted(context)), E_ILLEGAL_METHOD_CALL);
 
 	// Set StartupState object as current state.
-	context->_setCurrentState(new StartupState(initialState));
+	context->_setCurrentState(initialState);
 
 	return S_OK;
 }
@@ -58,7 +40,8 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 	HR_ASSERT_OK(setupInner(context, initialState, event));
 
 	// Call entry() of initial state in the caller thread.
-	HR_ASSERT_OK(handleEvent(context, event));
+	// Pass nullptr as previous state to intial state.
+	HR_ASSERT_OK(initialState->_entry(context, event, nullptr));
 
 	return S_OK;
 }
@@ -80,7 +63,7 @@ HRESULT StateMachine::shutdown(IContext* context, DWORD timeout)
 	return S_OK;
 }
 
-HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event, int priority)
+HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 {
 	// Ensure to release object on error.
 	CComPtr<IEvent> _event(event);
@@ -94,6 +77,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	CComPtr<IEvent> _event(event);
 
 	HR_ASSERT_OK(setupCompleted(context));
+	HR_ASSERT(event, E_INVALIDARG);
 
 	std::unique_ptr<IContext::lock_t> _lock(context->_getHandleEventLock());
 
@@ -125,10 +109,9 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 			CComPtr<IState> previousState(currentState);
 			context->_setCurrentState(nextState);
 			if(!nextState->_hasEntryCalled()) {
-				nextState->_setEntryCalled(true);
 				HR_ASSERT_OK(nextState->_entry(context, event, previousState));
 			}
-			callStateMonitor(context, [&](IStateMonitor* stateMonitor)
+			callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
 			{
 				stateMonitor->onStateChanged(context, _event, previousState, nextState);
 			});
@@ -162,11 +145,11 @@ HRESULT StateMachine::forEachState(IState * state, std::function<HRESULT(IState*
 	return hr;
 }
 
-void StateMachine::callStateMonitor(IContext* context, std::function<void(IStateMonitor* stateMonitor)> caller)
+void StateMachine::callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller)
 {
 	auto stateMonitor = context->_getStateMonitor();
 	if(stateMonitor) {
-		caller(stateMonitor);
+		caller(context, stateMonitor);
 	}
 }
 

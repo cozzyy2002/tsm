@@ -9,7 +9,7 @@ class StateMachineAsyncUnitTest : public Test
 {
 public:
 	void SetUp() {
-		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
+		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
 		ASSERT_EQ(S_OK, mockContext.waitReady());
 	}
@@ -29,7 +29,7 @@ public:
 	MockState<MockAsyncContext> mockState0, mockState1;
 };
 
-// Idetify event object and manage it's life time
+// Identify event object and manage it's life time
 TEST_F(StateMachineAsyncUnitTest, 0)
 {
 	MockEvent e0, e1, e2;
@@ -47,18 +47,12 @@ TEST_F(StateMachineAsyncUnitTest, 0)
 		}))
 		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
 		{
-			EXPECT_EQ(nullptr, event);
-			return S_OK;
-		}))
-		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
-		{
 			EXPECT_EQ(&e2, event);
 			return S_OK;
 		}));
 
 		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e1));
-		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(nullptr));
 		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e2));
 		Sleep(100);
 
@@ -145,7 +139,8 @@ TEST_P(StateMachineAsyncPriorityUnitTest, sequence)
 	static const int eventCount = ARRAYSIZE(param.priorities);
 	createEvents(eventCount);
 	for(int i = 0; i < eventCount; i++) {
-		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(mockEvents[i], param.priorities[i]));
+		mockEvents[i]->setPriority(param.priorities[i]);
+		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(mockEvents[i]));
 		// Wait for 1st State::handleEvent() to be called.
 		if(i == 0) Sleep(5);
 	}

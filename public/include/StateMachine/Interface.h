@@ -17,18 +17,13 @@ class IStateMonitor;
 class IContext
 {
 public:
-	// Default event priority.
-	// This value is used by AsyncContext::triggerEvent().
-	// Context::triggerEvent() is not implemented.
-	static const int DefaultEventPriority = 0;
-
 	virtual ~IContext() {}
 
 	virtual bool isAsync() const = 0;
 
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
-		std::deque<std::pair<int, CComPtr<IEvent>>> eventQueue;		// FIFO of (priority, IEvent to be handled).
+		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of (priority, IEvent to be handled).
 		std::recursive_mutex eventQueueLock;		// Lock to modify IEvent queue.
 		CHandle hEventAvailable;					// Event handle set when IEvent is queued.
 		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
@@ -59,7 +54,6 @@ public:
 	virtual ~IEvent() {}
 
 	virtual int _getPriority() const = 0;
-	virtual void _setPriority(int priority) = 0;
 };
 
 class IState : public Unknown
@@ -72,10 +66,9 @@ public:
 	virtual HRESULT _entry(IContext* context, IEvent* event, IState* previousState) = 0;
 	virtual HRESULT _exit(IContext* context, IEvent* event, IState* nextState) = 0;
 
-	virtual IState* _getMasterState() = 0;
+	virtual IState* _getMasterState() const = 0;
 	virtual void _setMasterState(IState* state) = 0;
-	virtual bool _hasEntryCalled() = 0;
-	virtual void _setEntryCalled(bool value) = 0;
+	virtual bool _hasEntryCalled() const = 0;
 #pragma endregion
 };
 
@@ -88,7 +81,7 @@ public:
 
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) = 0;
 	virtual HRESULT shutdown(IContext* context, DWORD timeout) = 0;
-	virtual HRESULT triggerEvent(IContext* context, IEvent* event, int priority) = 0;
+	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
 };
@@ -97,7 +90,7 @@ public:
 class IStateMonitor
 {
 public:
-	virtual void onIdle(IContext* context, bool setupCompleted) = 0;
+	virtual void onIdle(IContext* context) = 0;
 	virtual void onStateChanged(IContext* context, IEvent* event, IState* previous, IState* next) = 0;
 	virtual void onWorkerThreadExit(IContext* context, HRESULT exitCode) = 0;
 };

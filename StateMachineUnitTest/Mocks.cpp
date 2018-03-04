@@ -4,9 +4,9 @@
 
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("UnitTest.Mocks"));
 
-void TestStateMonitor::onIdle(tsm::IContext* context, bool setupCompleted) {
-	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p)%s"),
-		ptr2str(context).c_str(), context, setupCompleted ? _T(" - Setup completed") : _T(""));
+void TestStateMonitor::onIdle(tsm::IContext* context) {
+	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p)"),
+		ptr2str(context).c_str(), context);
 }
 void TestStateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) {
 	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p): IEvent=%s(0x%p), %s(0x%p)->%s(0x%p)"),
