@@ -12,7 +12,7 @@ public:
 	// Context::triggerEvent() is not implemented.
 	static const int DefaultPriority = 0;
 
-	Event() : m_priority(DefaultPriority) {}
+	Event(int priority = DefaultPriority) : m_priority(priority) {}
 	virtual ~Event() {}
 
 	virtual int _getPriority() const override { return m_priority; }
