@@ -3,7 +3,6 @@
 #include "Unknown.h"
 
 #include <deque>
-#include <map>
 #include <utility>
 #include <memory>
 #include <mutex>
@@ -14,6 +13,9 @@ class IEvent;
 class IState;
 class IStateMachine;
 class IStateMonitor;
+
+using lock_object_t = std::recursive_mutex;
+using lock_t = std::lock_guard<lock_object_t>;
 
 class IContext
 {
@@ -42,8 +44,6 @@ public:
 	// Returns nullptr(Async operation is not supported).
 	virtual AsyncData* _getAsyncData() = 0;
 
-	using lock_object_t = std::recursive_mutex;
-	using lock_t = std::lock_guard<lock_object_t>;
 	virtual lock_t* _getHandleEventLock() = 0;
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
@@ -85,7 +85,6 @@ public:
 		CComPtr<IEvent> event;
 	};
 
-	using timers_t = std::map<Timer*, std::unique_ptr<Timer>>;
 	virtual HRESULT _triggerDelayedEvent(IContext* context, DWORD timeout, IEvent* event, ITimerClient::Timer** ppTimer) = 0;
 	virtual HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) = 0;
 	virtual HRESULT stopAllTimers() = 0;

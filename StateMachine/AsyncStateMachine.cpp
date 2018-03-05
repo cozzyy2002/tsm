@@ -10,6 +10,9 @@
 
 namespace tsm {
 
+/**
+ * Returns StateMachine object for Context and AsyncStateMachine object for AsyncContext respectively.
+ */
 /*static*/ IStateMachine* IStateMachine::create(IContext* context)
 {
 	return context->isAsync() ? new AsyncStateMachine() : new StateMachine();
@@ -76,7 +79,7 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	// deque::back() returns event with highest priority.
 	// Events with same priority are added by FIFO order(deque::back() returns event triggered first).
 	{
-		IContext::lock_t _lock(asyncData->eventQueueLock);
+		lock_t _lock(asyncData->eventQueueLock);
 		auto& eventQueue = asyncData->eventQueue;
 		auto it = eventQueue.begin();
 		for(; it != eventQueue.end(); it++) {
@@ -181,7 +184,7 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 			CComPtr<IEvent> event;
 			{
 				// Fetch event from the queue.
-				IContext::lock_t _lock(asyncData->eventQueueLock);
+				lock_t _lock(asyncData->eventQueueLock);
 				auto& eventQueue = asyncData->eventQueue;
 				if(eventQueue.empty()) {
 					callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)

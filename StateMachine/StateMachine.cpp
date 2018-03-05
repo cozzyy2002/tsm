@@ -79,7 +79,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	HR_ASSERT_OK(setupCompleted(context));
 	HR_ASSERT(event, E_INVALIDARG);
 
-	std::unique_ptr<IContext::lock_t> _lock(context->_getHandleEventLock());
+	std::unique_ptr<lock_t> _lock(context->_getHandleEventLock());
 
 	IState* nextState = nullptr;
 	auto currentState = context->_getCurrentState();

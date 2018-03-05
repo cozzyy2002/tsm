@@ -2,6 +2,8 @@
 
 #include "Interface.h"
 
+#include <map>
+
 namespace tsm {
 
 class TimerClient : public ITimerClient
@@ -12,9 +14,11 @@ public:
 	virtual HRESULT stopAllTimers() override;
 
 protected:
-	timers_t m_timers;
-	CHandle m_hTimerQueue;
-	IContext::lock_object_t m_lock;
+	std::map<Timer*, std::unique_ptr<Timer>> m_timers;
+
+	// Note: Closing handle of timer queue is not necessary.
+	HANDLE m_hTimerQueue;
+	lock_object_t m_lock;
 
 	static VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired);
 };
