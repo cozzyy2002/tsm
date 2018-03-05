@@ -22,7 +22,7 @@ log4cplus::tstring ptr2str(T* ptr)
 class TestStateMonitor : public tsm::IStateMonitor
 {
 public:
-	virtual void onIdle(tsm::IContext* context, bool setupCompleted) override;
+	virtual void onIdle(tsm::IContext* context) override;
 	virtual void onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
 	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override;
 };
@@ -68,6 +68,7 @@ class MockEvent : public tsm::Event, public TestUnknown
 public:
 	MockEvent(int id = 0) : TestUnknown(m_cRef), id(id) { setObject(this); }
 
+	void setPriority(int priority) { m_priority = priority; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
 
 	int id;

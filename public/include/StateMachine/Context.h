@@ -16,9 +16,9 @@ public:
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
-	HRESULT triggerEvent(E* event, int priority = DefaultEventPriority) { return _getStateMachine()->triggerEvent(this, event, priority); }
-	HRESULT triggerDelayedEvent(ITimerClient::Timer* pTimer, DWORD timeout, IEvent* event, int priority = DefaultEventPriority) override {
-		return _getStateMachine()->triggerDelayedEvent(this, pTimer, timeout, event, priority);
+	HRESULT triggerEvent(E* event) { return _getStateMachine()->triggerEvent(this, event); }
+	HRESULT triggerDelayedEvent(ITimerClient::Timer* pTimer, DWORD timeout, IEvent* event) override {
+		return _getStateMachine()->triggerDelayedEvent(this, pTimer, timeout, event);
 	}
 	HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) override { return _getStateMachine()->cancelDelayedEvent(this, pTimer) }
 	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }
