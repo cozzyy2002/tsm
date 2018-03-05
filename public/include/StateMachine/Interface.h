@@ -24,7 +24,7 @@ public:
 
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
-		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of (priority, IEvent to be handled).
+		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
 		std::recursive_mutex eventQueueLock;		// Lock to modify IEvent queue.
 		CHandle hEventAvailable;					// Event handle set when IEvent is queued.
 		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
@@ -77,15 +77,18 @@ class ITimerClient
 {
 public:
 	struct Timer {
+		Timer(IContext* context, ITimerClient* client, IEvent* event)
+			: context(context), client(client), event(event) {}
+		IContext* context;
 		ITimerClient* client;
-		HANDLE hTimer;
+		CHandle hTimer;
 		CComPtr<IEvent> event;
 	};
 
-	using timers_t = std::map<Timer*, Timer>;
-	virtual timers_t& getTimers() = 0;
-	virtual HANDLE getTimerQueue() = 0;
-	virtual void setTimerQueue(HANDLE hTimerQueue) = 0;
+	using timers_t = std::map<Timer*, std::unique_ptr<Timer>>;
+	virtual HRESULT _triggerDelayedEvent(IContext* context, DWORD timeout, IEvent* event, ITimerClient::Timer** ppTimer) = 0;
+	virtual HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) = 0;
+	virtual HRESULT stopAllTimers() = 0;
 };
 
 class IStateMachine
@@ -97,9 +100,7 @@ public:
 
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) = 0;
 	virtual HRESULT shutdown(IContext* context, DWORD timeout) = 0;
-	virtual HRESULT triggerEvent(IContext* context, IEvent* event, int priority) = 0;
-	virtual HRESULT triggerDelayedEvent(ITimerClient* client, ITimerClient::Timer* pTimer, DWORD timeout, IEvent* event) = 0;
-	virtual HRESULT cancelDelayedEvent(ITimerClient* client, ITimerClient::Timer* pTimer) = 0;
+	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
 };

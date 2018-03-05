@@ -71,19 +71,6 @@ HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 	return E_NOTIMPL;
 }
 
-HRESULT StateMachine::triggerDelayedEvent(ITimerClient* client, ITimerClient::Timer * pTimer, DWORD timeout, IEvent * event, int priority)
-{
-	// Ensure to release object on error.
-	CComPtr<IEvent> _event(event);
-
-	return E_NOTIMPL;
-}
-
-HRESULT StateMachine::cancelDelayedEvent(ITimerClient* client, ITimerClient::Timer * pTimer)
-{
-	return E_NOTIMPL;
-}
-
 HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 {
 	// Ensure to release object on error.

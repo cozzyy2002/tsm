@@ -88,30 +88,6 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	return S_OK;
 }
 
-VOID AsyncStateMachine::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
-{
-}
-
-HRESULT AsyncStateMachine::triggerDelayedEvent(ITimerClient* client, ITimerClient::Timer * pTimer, DWORD timeout, IEvent * event, int priority)
-{
-	// Ensure to release object on error.
-	CComPtr<IEvent> _event(event);
-
-	auto hTimerQueue = client->getTimerQueue();
-	if(!hTimerQueue) {
-		WIN32_ASSERT(hTimerQueue = CreateTimerQueue());
-		client->setTimerQueue(hTimerQueue);
-	}
-	client->getTimers().push_back(ITimerClient::Timer { client, NULL, event });
-	CreateTimerQueueTimer(&timer.hTimer, hTimerQueue, timerCallback, , timeout, 0, 0);
-	return E_NOTIMPL;
-}
-
-HRESULT AsyncStateMachine::cancelDelayedEvent(ITimerClient* client, ITimerClient::Timer * pTimer)
-{
-	return E_NOTIMPL;
-}
-
 HRESULT AsyncStateMachine::handleEvent(IContext * context, IEvent * event)
 {
 	// Ensure to release object on error.
@@ -189,7 +165,7 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 		// Call entry() of initial state.
 		HR_ASSERT_OK(context->_getCurrentState()->_entry(context, param->event, nullptr));
 		// Notify that setup completed.
-		WIN32_ASSERT_OK(SetEvent(asyncData->hEventReady));
+		WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 	}
 
 	HANDLE hEvents[] = { asyncData->hEventAvailable, asyncData->hEventShutdown };

@@ -17,10 +17,9 @@ public:
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
 	HRESULT triggerEvent(E* event) { return _getStateMachine()->triggerEvent(this, event); }
-	HRESULT triggerDelayedEvent(ITimerClient::Timer* pTimer, DWORD timeout, IEvent* event) override {
-		return _getStateMachine()->triggerDelayedEvent(this, pTimer, timeout, event);
+	HRESULT triggerDelayedEvent(DWORD timeout, IEvent* event, ITimerClient::Timer** ppTimer) {
+		return _triggerDelayedEvent(this, this, timeout, event, ppTimer);
 	}
-	HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) override { return _getStateMachine()->cancelDelayedEvent(this, pTimer) }
 	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return _getStateMachine()->waitReady(this, timeout); }
 	S* getCurrentState() const { return (S*)m_currentState.p; }

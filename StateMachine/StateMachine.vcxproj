@@ -153,6 +153,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncStateMachine.cpp" />
+    <ClCompile Include="TimerClient.cpp" />
     <ClCompile Include="Unknown.cpp" />
     <ClCompile Include="StateMachine.cpp" />
     <ClCompile Include="stdafx.cpp">
