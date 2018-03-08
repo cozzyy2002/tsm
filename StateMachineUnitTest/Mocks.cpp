@@ -58,19 +58,3 @@ void TestUnknown::setObject(IUnknown * _this)
 {
 	className = typeid(*_this).name();
 }
-
-HRESULT MockContext::waitReady(DWORD timeout /*= 100*/)
-{
-	auto hr = tsm::Context<MockEvent, MockState<MockContext>>::waitReady(timeout);
-	// Wait for TestStateMonitor to log message
-	Sleep(100);
-	return hr;
-}
-
-HRESULT MockAsyncContext::waitReady(DWORD timeout /*= 100*/)
-{
-	auto hr = tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>>::waitReady(timeout);
-	// Wait for TestStateMonitor to log message
-	Sleep(100);
-	return hr;
-}

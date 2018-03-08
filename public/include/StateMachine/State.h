@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Interface.h"
+#include "TimerClient.h"
+#include <StateMachine/Assert.h>
 
 namespace tsm {
 
 template<class C = IContext, class E = IEvent>
-class State : public IState
+class State : public IState, public TimerClient
 {
 public:
 	State(IState* masterState = nullptr) : m_masterState(masterState), m_entryCalled(false) {}
@@ -21,6 +23,7 @@ public:
 	}
 	HRESULT _exit(IContext* context, IEvent* event, IState* nextState) override {
 		m_entryCalled = false;
+		HR_ASSERT_OK(stopAllTimers());
 		return exit((C*)context, (E*)event, nextState);
 	}
 
@@ -35,6 +38,13 @@ public:
 	virtual HRESULT exit(C* context, E* event, IState* nextState) { return S_FALSE; }
 #pragma endregion
 
+	HRESULT handleDelayedEvent(IContext* context, IEvent* event, DWORD timeout = 0, ITimerClient::Timer** ppTimer = nullptr) {
+		return _handleDelayedEvent(context, event, timeout, ppTimer);
+	}
+	HRESULT triggerDelayedEvent(IContext* context, IEvent* event, DWORD timeout = 0, ITimerClient::Timer** ppTimer = nullptr) {
+		HR_ASSERT(context->isAsync(), E_ILLEGAL_METHOD_CALL);
+		return _triggerDelayedEvent(context, event, timeout, ppTimer);
+	}
 	State* getMasterState() { return (State*)m_masterState.p; }
 	State* getSubState() { return (State*)m_subState.p; }
 

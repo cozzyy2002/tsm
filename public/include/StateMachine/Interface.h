@@ -13,6 +13,7 @@ class IEvent;
 class IState;
 class IStateMachine;
 class IStateMonitor;
+class TimerClient;
 
 using lock_object_t = std::recursive_mutex;
 using lock_t = std::lock_guard<lock_object_t>;
@@ -76,16 +77,31 @@ public:
 class ITimerClient
 {
 public:
+	/**
+	 *   Created by handleDelayedEvent() and triggerDelayedEvent().
+	 *   Passed to timeout procedure.
+	 */
 	struct Timer {
-		Timer(IContext* context, ITimerClient* client, IEvent* event)
-			: context(context), client(client), event(event) {}
+		enum class Type {
+			Unknown,
+			HandleEvent,	// Call StateMachine::handleEvent() on timeout.
+			TriggerEvent,	// Call StateMachine::triggerEvent() on timeout.
+		};
+
+		Timer(Type type, IContext* context, TimerClient* client, IEvent* event)
+			: type(type), context(context), client(client), event(event) {}
+
+		Type type;
 		IContext* context;
-		ITimerClient* client;
-		CHandle hTimer;
+		TimerClient* client;
+		HANDLE hTimer;
 		CComPtr<IEvent> event;
 	};
 
-	virtual HRESULT _triggerDelayedEvent(IContext* context, DWORD timeout, IEvent* event, ITimerClient::Timer** ppTimer) = 0;
+	// Implementation of Context::handleDelayedEvent() and State::handleDelayedEvent()
+	virtual HRESULT _handleDelayedEvent(IContext* context, IEvent* event, DWORD timeout, ITimerClient::Timer** ppTimer) = 0;
+	// Implementation of Context::triggerDelayedEvent() and State::triggerDelayedEvent()
+	virtual HRESULT _triggerDelayedEvent(IContext* context, IEvent* event, DWORD timeout, ITimerClient::Timer** ppTimer) = 0;
 	virtual HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) = 0;
 	virtual HRESULT stopAllTimers() = 0;
 };

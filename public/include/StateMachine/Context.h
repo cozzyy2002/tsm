@@ -2,12 +2,13 @@
 
 #include "Interface.h"
 #include "TimerClient.h"
+#include <StateMachine/Assert.h>
 
 #include <memory>
 namespace tsm {
 
 template<class E = IEvent, class S = IState>
-class Context : public IContext
+class Context : public IContext, public TimerClient
 {
 public:
 	virtual ~Context() {}
@@ -15,7 +16,16 @@ public:
 	virtual bool isAsync() const { return false; }
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
-	virtual HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
+	HRESULT shutdown(DWORD timeout = 100) {
+		HR_EXPECT_OK(stopAllTimers());
+		return _getStateMachine()->shutdown(this, timeout);
+	}
+	HRESULT handleDelayedEvent(IEvent* event, DWORD timeout = 0, ITimerClient::Timer** ppTimer = nullptr) {
+		return _handleDelayedEvent(this, event, timeout, ppTimer);
+	}
+	HRESULT triggerDelayedEvent(IEvent* event, DWORD timeout = 0, ITimerClient::Timer** ppTimer = nullptr) {
+		return _triggerDelayedEvent(this, event, timeout, ppTimer);
+	}
 	HRESULT triggerEvent(E* event) { return _getStateMachine()->triggerEvent(this, event); }
 	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return _getStateMachine()->waitReady(this, timeout); }
@@ -42,18 +52,11 @@ protected:
 };
 
 template<class E = IEvent, class S = IState>
-class AsyncContext : public Context<E, S>, public TimerClient
+class AsyncContext : public Context<E, S>
 {
 public:
 	virtual ~AsyncContext() {}
 
-	virtual HRESULT shutdown(DWORD timeout = 100) override {
-		stopAllTimers();
-		return Context::shutdown(timeout);
-	}
-	HRESULT triggerDelayedEvent(DWORD timeout, IEvent* event, ITimerClient::Timer** ppTimer) {
-		return _triggerDelayedEvent(this, this, timeout, event, ppTimer);
-	}
 	virtual bool isAsync() const { return true; }
 
 	S* getCurrentState() const { return (S*)m_currentState.p; }

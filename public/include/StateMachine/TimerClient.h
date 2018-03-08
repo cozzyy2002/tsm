@@ -9,7 +9,10 @@ namespace tsm {
 class TimerClient : public ITimerClient
 {
 public:
-	virtual HRESULT _triggerDelayedEvent(IContext* context, DWORD timeout, IEvent* event, ITimerClient::Timer** ppTimer) override;
+	TimerClient() : m_hTimerQueue(NULL) {}
+
+	virtual HRESULT _handleDelayedEvent(IContext* context, IEvent* event, DWORD timeout, ITimerClient::Timer** ppTimer) override;
+	virtual HRESULT _triggerDelayedEvent(IContext* context, IEvent* event, DWORD timeout, ITimerClient::Timer** ppTimer) override;
 	virtual HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) override;
 	virtual HRESULT stopAllTimers() override;
 
@@ -20,6 +23,7 @@ protected:
 	HANDLE m_hTimerQueue;
 	lock_object_t m_lock;
 
+	HRESULT setDelayedEvent(Timer* timer, DWORD timeout, ITimerClient::Timer** ppTimer);
 	static VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired);
 };
 
