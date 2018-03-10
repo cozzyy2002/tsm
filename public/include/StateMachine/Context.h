@@ -53,8 +53,6 @@ public:
 
 	virtual bool isAsync() const { return true; }
 
-	S* getCurrentState() const { return (S*)m_currentState.p; }
-
 	// Returns AsyncData object.
 	virtual AsyncData* _getAsyncData() { return &m_asyncData; }
 

@@ -72,33 +72,36 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 
 /*static*/ VOID tsm::TimerClient::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 {
-	std::unique_ptr<Timer> timer((Timer*)lpParameter);
+	std::unique_ptr<Timer> _timer((Timer*)lpParameter);
+	auto timer = _timer.get();
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
 
-	bool timerExists = false;
 	{
 		lock_t _lock(timerClient->m_lock);
 
 		auto it = timerClient->m_timers.find(event);
 		if(it != timerClient->m_timers.end()) {
-			it->second.release();
-			timerClient->m_timers.erase(it);
-			timerExists = true;
+			if(event->_getIntervalTime() == 0) {
+				// Delete timer except for interval timer.
+				it->second.release();
+				timerClient->m_timers.erase(it);
+			} else {
+				_timer.release();
+			}
 		} else {
-			// Expired timer might have been canceled.
+			HR_EXPECT(!_T("Callback of canceled timer is called."), E_UNEXPECTED);
+			return;
 		}
 	}
 
-	if(timerExists) {
-		auto stateMachine = timer->context->_getStateMachine();
-		switch(timer->timerType) {
-		case TimerType::HandleEvent:
-			HR_EXPECT_OK(stateMachine->handleEvent(timer->context, event));
-			break;
-		case TimerType::TriggerEvent:
-			HR_EXPECT_OK(stateMachine->triggerEvent(timer->context, event));
-			break;
-		}
+	auto stateMachine = timer->context->_getStateMachine();
+	switch(timer->timerType) {
+	case TimerType::HandleEvent:
+		HR_EXPECT_OK(stateMachine->handleEvent(timer->context, event));
+		break;
+	case TimerType::TriggerEvent:
+		HR_EXPECT_OK(stateMachine->triggerEvent(timer->context, event));
+		break;
 	}
 }

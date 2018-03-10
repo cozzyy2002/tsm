@@ -63,22 +63,56 @@ TEST_F(StateMachineTriggerEventUnitTest, 1)
 	EXPECT_TRUE(e0.deleted());
 }
 
-// Cancel event timer of state on State::exit()
+// Cancel one-shot state timer
 TEST_F(StateMachineTriggerEventUnitTest, 2)
+{
+	EXPECT_CALL(mockState0, handleEvent(_, _, _)).Times(0);
+
+	e0.setTimer(&mockState0, 100);
+	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
+
+	ASSERT_EQ(1, mockState0.m_timers.size());
+	Sleep(50);
+	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
+	ASSERT_EQ(0, mockState0.m_timers.size());
+	EXPECT_TRUE(e0.deleted());
+}
+
+// Cancel interval state timer
+TEST_F(StateMachineTriggerEventUnitTest, 3)
+{
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, _)).Times(2);
+
+	e0.setTimer(&mockState0, 50, 30);
+	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
+
+	ASSERT_EQ(1, mockState0.m_timers.size());
+	Sleep(100);
+	ASSERT_EQ(1, mockState0.m_timers.size());
+	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
+	ASSERT_EQ(0, mockState0.m_timers.size());
+	EXPECT_TRUE(e0.deleted());
+}
+
+// Cancel event timer of state on State::exit()
+TEST_F(StateMachineTriggerEventUnitTest, 4)
 {
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, Not(nullptr)))
 		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
-	// triggerDelyedEvent(&e1) should be canceled.
-	EXPECT_CALL(mockState0, handleEvent(_, &e1, _)).Times(0);
+	// Interval timer of e1 should be canceled.
+	EXPECT_CALL(mockState0, handleEvent(_, &e1, _)).Times(2);
 	EXPECT_CALL(mockState0, exit(&mockContext, &e0, &mockState1)).WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState1, entry(&mockContext, &e0, &mockState0)).WillOnce(Return(S_OK));
 
-	// Start delayed event e1 to be canceled.
-	e1.setTimer(&mockState0, 100);
+	// Start interval timer to be canceled.
+	e1.setTimer(&mockState0, 50, 30);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e1));
-	Sleep(10);
+
 	ASSERT_EQ(1, mockState0.m_timers.size());
 	// mockState0 -> mockState1 -> Cancel delayed event e1 of mockState0.
-	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 	Sleep(100);
+	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
+	Sleep(10);
+	ASSERT_EQ(&mockState1, mockContext.getCurrentState());
+	ASSERT_EQ(0, mockState0.m_timers.size());
 }

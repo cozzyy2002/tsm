@@ -21,7 +21,16 @@ void TestStateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCo
 
 void mockOnAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 {
-	LOG4CPLUS_ERROR_FMT(logger, _T("'%s' failed: HRESULT=0x%08x. at:\n%s:%d"), exp, hr, sourceFile, line);
+	static const LPCTSTR format = _T("'%s' failed: HRESULT=0x%08x. at:\n%s:%d");
+	switch(hr) {
+	case E_ABORT:
+	case E_UNEXPECTED:
+		LOG4CPLUS_FATAL_FMT(logger, format, exp, hr, sourceFile, line);
+		break;
+	default:
+		LOG4CPLUS_ERROR_FMT(logger, format, exp, hr, sourceFile, line);
+		break;
+	}
 }
 
 TestUnknown::~TestUnknown()
