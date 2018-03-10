@@ -56,6 +56,13 @@ public:
 	virtual ~IEvent() {}
 
 	virtual int _getPriority() const = 0;
+
+#pragma region Definition for event timer
+	virtual DWORD _getDelayTime() const = 0;
+	virtual DWORD _getIntervalTime() const = 0;
+	virtual TimerClient* _getTimerClient() const = 0;
+	virtual void _setTimerClient(TimerClient* timerClient) = 0;
+#pragma endregion
 };
 
 class IState : public Unknown
@@ -72,38 +79,6 @@ public:
 	virtual void _setMasterState(IState* state) = 0;
 	virtual bool _hasEntryCalled() const = 0;
 #pragma endregion
-};
-
-class ITimerClient
-{
-public:
-	/**
-	 *   Created by handleDelayedEvent() and triggerDelayedEvent().
-	 *   Passed to timeout procedure.
-	 */
-	struct Timer {
-		enum class Type {
-			Unknown,
-			HandleEvent,	// Call StateMachine::handleEvent() on timeout.
-			TriggerEvent,	// Call StateMachine::triggerEvent() on timeout.
-		};
-
-		Timer(Type type, IContext* context, TimerClient* client, IEvent* event)
-			: type(type), context(context), client(client), event(event) {}
-
-		Type type;
-		IContext* context;
-		TimerClient* client;
-		HANDLE hTimer;
-		CComPtr<IEvent> event;
-	};
-
-	// Implementation of Context::handleDelayedEvent() and State::handleDelayedEvent()
-	virtual HRESULT _handleDelayedEvent(IContext* context, IEvent* event, DWORD timeout, ITimerClient::Timer** ppTimer) = 0;
-	// Implementation of Context::triggerDelayedEvent() and State::triggerDelayedEvent()
-	virtual HRESULT _triggerDelayedEvent(IContext* context, IEvent* event, DWORD timeout, ITimerClient::Timer** ppTimer) = 0;
-	virtual HRESULT cancelDelayedEvent(ITimerClient::Timer* pTimer) = 0;
-	virtual HRESULT stopAllTimers() = 0;
 };
 
 class IStateMachine

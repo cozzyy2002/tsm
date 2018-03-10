@@ -1,6 +1,7 @@
 #include <StateMachine/stdafx.h>
 
 #include <StateMachine/State.h>
+#include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
 
@@ -78,6 +79,12 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 	HR_ASSERT_OK(setupCompleted(context));
 	HR_ASSERT(event, E_INVALIDARG);
+
+	auto timerClient = event->_getTimerClient();
+	if(timerClient) {
+		// Event should be handled after delay time elapsed.
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
+	}
 
 	std::unique_ptr<lock_t> _lock(context->_getHandleEventLock());
 

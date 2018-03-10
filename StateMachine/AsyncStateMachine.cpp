@@ -73,6 +73,12 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	HR_ASSERT_OK(setupCompleted(context));
 	HR_ASSERT(event, E_INVALIDARG);
 
+	auto timerClient = event->_getTimerClient();
+	if(timerClient) {
+		// Event should be handled after delay time elapsed.
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
+	}
+
 	auto asyncData = context->_getAsyncData();
 	// Add the event to event queue and signal that event is available.
 	// Events are added to the queue by priority order.

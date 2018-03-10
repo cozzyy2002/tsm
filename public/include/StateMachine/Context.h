@@ -17,14 +17,8 @@ public:
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) {
-		HR_EXPECT_OK(stopAllTimers());
+		HR_EXPECT_OK(cancelAllEventTimers());
 		return _getStateMachine()->shutdown(this, timeout);
-	}
-	HRESULT handleDelayedEvent(IEvent* event, DWORD timeout = 0, ITimerClient::Timer** ppTimer = nullptr) {
-		return _handleDelayedEvent(this, event, timeout, ppTimer);
-	}
-	HRESULT triggerDelayedEvent(IEvent* event, DWORD timeout = 0, ITimerClient::Timer** ppTimer = nullptr) {
-		return _triggerDelayedEvent(this, event, timeout, ppTimer);
 	}
 	HRESULT triggerEvent(E* event) { return _getStateMachine()->triggerEvent(this, event); }
 	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }

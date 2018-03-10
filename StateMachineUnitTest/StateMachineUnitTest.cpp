@@ -300,10 +300,3 @@ TEST_F(StateMachineNotImplTest, 0)
 
 	EXPECT_TRUE(mockEvent.deleted());
 }
-
-TEST_F(StateMachineNotImplTest, 1)
-{
-	ASSERT_EQ(E_NOTIMPL, mockContext.triggerDelayedEvent(&mockEvent, 100));
-
-	EXPECT_TRUE(mockEvent.deleted());
-}
