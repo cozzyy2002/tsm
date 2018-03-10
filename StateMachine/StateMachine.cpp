@@ -81,7 +81,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	HR_ASSERT(event, E_INVALIDARG);
 
 	auto timerClient = event->_getTimerClient();
-	if(timerClient) {
+	if(timerClient && !event->_isTimerCreated()) {
 		// Event should be handled after delay time elapsed.
 		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
 	}

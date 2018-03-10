@@ -61,7 +61,8 @@ public:
 	virtual DWORD _getDelayTime() const = 0;
 	virtual DWORD _getIntervalTime() const = 0;
 	virtual TimerClient* _getTimerClient() const = 0;
-	virtual void _setTimerClient(TimerClient* timerClient) = 0;
+	virtual bool _isTimerCreated() const = 0;
+	virtual void _setTimerCreated(bool value) = 0;
 #pragma endregion
 };
 

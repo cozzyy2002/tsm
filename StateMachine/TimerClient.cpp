@@ -44,6 +44,10 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 	// Ensure that timer is required.
 	HR_ASSERT(event->_getTimerClient(), E_ILLEGAL_METHOD_CALL);
 
+	// State machine should not call this method with event whose timer is created already.
+	HR_ASSERT(!event->_isTimerCreated(), E_ILLEGAL_METHOD_CALL);
+	event->_setTimerCreated(true);
+
 	lock_t _lock(m_lock);
 
 	if(!m_hTimerQueue) {
@@ -69,13 +73,14 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 /*static*/ VOID tsm::TimerClient::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 {
 	std::unique_ptr<Timer> timer((Timer*)lpParameter);
-	auto timerClient = timer->event->_getTimerClient();
+	auto event = timer->event.p;
+	auto timerClient = event->_getTimerClient();
 
 	bool timerExists = false;
 	{
 		lock_t _lock(timerClient->m_lock);
 
-		auto it = timerClient->m_timers.find(timer->event);
+		auto it = timerClient->m_timers.find(event);
 		if(it != timerClient->m_timers.end()) {
 			it->second.release();
 			timerClient->m_timers.erase(it);
@@ -89,12 +94,10 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 		auto stateMachine = timer->context->_getStateMachine();
 		switch(timer->timerType) {
 		case TimerType::HandleEvent:
-			HR_EXPECT_OK(stateMachine->handleEvent(timer->context, timer->event));
+			HR_EXPECT_OK(stateMachine->handleEvent(timer->context, event));
 			break;
 		case TimerType::TriggerEvent:
-			timer->event->_setTimerClient(nullptr);
-			HR_EXPECT_OK(stateMachine->triggerEvent(timer->context, timer->event));
-			timer->event->_setTimerClient(timerClient);
+			HR_EXPECT_OK(stateMachine->triggerEvent(timer->context, event));
 			break;
 		}
 	}

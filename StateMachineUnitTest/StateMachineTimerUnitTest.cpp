@@ -42,7 +42,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 0)
 	e0.setTimer(&mockContext, 50);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 
-	//ASSERT_EQ(1, mockContext.m_timers.size());
+	ASSERT_EQ(1, mockContext.m_timers.size());
 	Sleep(110);
 	ASSERT_EQ(0, mockContext.m_timers.size());
 	EXPECT_TRUE(e0.deleted());
