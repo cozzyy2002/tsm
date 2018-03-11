@@ -26,7 +26,10 @@ public:
 	HandleOwner() : m_handle(nullptr) {}
 	virtual ~HandleOwner() { if(m_handle) _deleteHandle(m_handle); }
 
-	virtual H* _getHandle();
+	virtual H* _getHandle() {
+		if(!m_handle) m_handle = _createHandle(_getInstance());
+		return m_handle;
+	}
 
 protected:
 	H* _createHandle(T* handleOwner);

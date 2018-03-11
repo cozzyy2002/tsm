@@ -5,13 +5,6 @@
 namespace tsm {
 
 template<>
-EventHandle* HandleOwner<IEvent, EventHandle>::_getHandle()
-{
-	if(!m_handle) m_handle = _createHandle(_getInstance());
-	return m_handle;
-}
-
-template<>
 EventHandle* HandleOwner<IEvent, EventHandle>::_createHandle(IEvent*)
 {
 	auto handle = new EventHandle();
@@ -27,13 +20,6 @@ void HandleOwner<IEvent, EventHandle>::_deleteHandle(EventHandle* handle)
 }
 
 template<>
-StateHandle* HandleOwner<IState, StateHandle>::_getHandle()
-{
-	if(!m_handle) m_handle = _createHandle(_getInstance());
-	return m_handle;
-}
-
-template<>
 StateHandle* HandleOwner<IState, StateHandle>::_createHandle(IState*)
 {
 	auto handle = new StateHandle();
@@ -45,13 +31,6 @@ template<>
 void HandleOwner<IState, StateHandle>::_deleteHandle(StateHandle* handle)
 {
 	delete handle;
-}
-
-template<>
-ContextHandle* HandleOwner<IContext, ContextHandle>::_getHandle()
-{
-	if(!m_handle) m_handle = _createHandle(_getInstance());
-	return m_handle;
 }
 
 template<>
@@ -70,13 +49,6 @@ template<>
 void HandleOwner<IContext, ContextHandle>::_deleteHandle(ContextHandle* handle)
 {
 	delete handle;
-}
-
-template<>
-TimerHandle* HandleOwner<TimerClient, TimerHandle>::_getHandle()
-{
-	if(!m_handle) m_handle = _createHandle(_getInstance());
-	return m_handle;
 }
 
 template<>
