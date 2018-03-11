@@ -62,7 +62,10 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 	timer->event = event;
 
 	// Create timer-queue timer and pass timer object as parameter for timer callback function.
-	WIN32_ASSERT(CreateTimerQueueTimer(&timer->hTimer, m_hTimerQueue, timerCallback, timer.get(), event->_getDelayTime(), event->_getIntervalTime(), 0));
+	ULONG flags = 0;
+	flags |= ((timer->timerType == TimerType::HandleEvent) ? WT_EXECUTELONGFUNCTION : 0);
+	flags |= ((event->_getIntervalTime() == 0) ? WT_EXECUTEONLYONCE : 0);
+	WIN32_ASSERT(CreateTimerQueueTimer(&timer->hTimer, m_hTimerQueue, timerCallback, timer.get(), event->_getDelayTime(), event->_getIntervalTime(), flags));
 
 	// m_timers owns Timer object in unique_ptr<Timer>.
 	m_timers.insert(std::make_pair(event, std::move(timer)));
@@ -72,11 +75,12 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 
 /*static*/ VOID tsm::TimerClient::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
 {
-	std::unique_ptr<Timer> _timer((Timer*)lpParameter);
-	auto timer = _timer.get();
+	auto timer = (Timer*)lpParameter;
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
 
+	// Timer object might be deleted when out of this method.
+	std::unique_ptr<Timer> _timer;
 	{
 		lock_t _lock(timerClient->m_lock);
 
@@ -84,10 +88,8 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 		if(it != timerClient->m_timers.end()) {
 			if(event->_getIntervalTime() == 0) {
 				// Delete timer except for interval timer.
-				it->second.release();
+				_timer = std::move(it->second);
 				timerClient->m_timers.erase(it);
-			} else {
-				_timer.release();
 			}
 		} else {
 			HR_EXPECT(!_T("Callback of canceled timer is called."), E_UNEXPECTED);

@@ -49,6 +49,15 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 
 HRESULT StateMachine::shutdownInner(IContext* context, DWORD timeout)
 {
+	// Cleanup existing states and their pending event timers.
+	forEachState(context->_getCurrentState(), [context](IState* state)
+	{
+		if(state->_callExitOnShutdown()) {
+			HR_ASSERT_OK(state->_exit(context, nullptr, nullptr));
+		}
+		return S_OK;
+	});
+
 	context->_setCurrentState(nullptr);
 	return S_OK;
 }
