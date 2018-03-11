@@ -32,27 +32,19 @@ public:
 	virtual H* _getHandle();
 
 protected:
+	H* _createHandle(T* handleOwner);
 	void _deleteHandle(H* handle);
+	virtual T* _getInstance() { return nullptr; }
 
 	H* m_handle;
 };
 
-class IContext /*: public HandleOwner<IContext, ContextHandle>*/
+class IContext : public HandleOwner<IContext, ContextHandle>
 {
 public:
 	virtual ~IContext() {}
 
 	virtual bool isAsync() const = 0;
-
-	// Data for IAsyncContext used to perform async operation.
-	struct AsyncData {
-		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
-		std::recursive_mutex eventQueueLock;		// Lock to modify IEvent queue.
-		CHandle hEventAvailable;					// Event handle set when IEvent is queued.
-		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
-		CHandle hEventReady;						// Event handle set when ready to handle IEvent(entry() of Initial state completes).
-		CHandle hWorkerThread;						// Handle of worker thread.
-	};
 
 	virtual IStateMachine* _getStateMachine() = 0;
 	virtual IState* _getCurrentState() = 0;
@@ -61,12 +53,11 @@ public:
 	using OnAssertFailed = void(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
 	static OnAssertFailed* onAssertFailedProc;
 
-	// Returns nullptr(Async operation is not supported).
-	virtual AsyncData* _getAsyncData() = 0;
-
 	virtual lock_t* _getHandleEventLock() = 0;
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
+
+	virtual IContext* _getInstance() override { return this; }
 };
 
 class IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
@@ -83,7 +74,7 @@ public:
 #pragma endregion
 };
 
-class IState : public Unknown
+class IState : /*public HandleOwner<IState, StateHandle>,*/ public Unknown
 {
 public:
 	virtual ~IState() {}

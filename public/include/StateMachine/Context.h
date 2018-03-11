@@ -32,9 +32,6 @@ public:
 	virtual IState* _getCurrentState() { return m_currentState; }
 	virtual void _setCurrentState(IState* state) { m_currentState = state; }
 
-	// Returns nullptr(Async operation is not supported).
-	virtual AsyncData* _getAsyncData() { return nullptr; }
-
 	virtual lock_t* _getHandleEventLock() { return new lock_t(m_handleEventLock); }
 
 	virtual IStateMonitor* _getStateMonitor() { return nullptr; }
@@ -52,12 +49,6 @@ public:
 	virtual ~AsyncContext() {}
 
 	virtual bool isAsync() const { return true; }
-
-	// Returns AsyncData object.
-	virtual AsyncData* _getAsyncData() { return &m_asyncData; }
-
-protected:
-	AsyncData m_asyncData;
 };
 
 }

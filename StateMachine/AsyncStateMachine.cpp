@@ -7,7 +7,7 @@
 #include "Handles.h"
 
 // Make sure that IContext is instance of AsyncContext.
-#define ASSERT_ASYNC(c) HR_ASSERT(c->_getAsyncData(), E_INVALIDARG)
+#define ASSERT_ASYNC(c) HR_ASSERT(c->isAsync(), E_INVALIDARG)
 
 namespace tsm {
 
@@ -29,7 +29,7 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 
 	HR_ASSERT_OK(setupInner(context, initialState, event));
 
-	auto asyncData = context->_getAsyncData();
+	auto asyncData = context->_getHandle()->asyncData;
 
 	// Setup event queue.
 	asyncData->eventQueue.clear();
@@ -54,7 +54,7 @@ HRESULT AsyncStateMachine::shutdown(IContext * context, DWORD timeout)
 {
 	ASSERT_ASYNC(context);
 
-	auto asyncData = context->_getAsyncData();
+	auto asyncData = context->_getHandle()->asyncData;
 	if(asyncData->hEventShutdown) {
 		// Signal worker thread to shutdown and wait for it to terminate.
 		DWORD wait = SignalObjectAndWait(asyncData->hEventShutdown, asyncData->hWorkerThread, timeout, FALSE);
@@ -80,7 +80,7 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
 	}
 
-	auto asyncData = context->_getAsyncData();
+	auto asyncData = context->_getHandle()->asyncData;
 	// Add the event to event queue and signal that event is available.
 	// Events are added to the queue by priority order.
 	// deque::back() returns event with highest priority.
@@ -113,7 +113,7 @@ HRESULT AsyncStateMachine::waitReady(IContext * context, DWORD timeout)
 	ASSERT_ASYNC(context);
 
 	auto hr = S_OK;
-	auto asyncData = context->_getAsyncData();
+	auto asyncData = context->_getHandle()->asyncData;
 	HANDLE hEvents[] = { asyncData->hWorkerThread, asyncData->hEventReady, asyncData->hEventShutdown };
 	static const DWORD eventsCount = ARRAYSIZE(hEvents);
 	DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, timeout);
@@ -168,7 +168,7 @@ DWORD AsyncStateMachine::workerThreadProc(LPVOID lpParameter)
 HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 {
 	auto context = param->context;
-	auto asyncData = context->_getAsyncData();
+	auto asyncData = context->_getHandle()->asyncData;
 	{
 		// SetupParam object and objects in SetupParam will be deleted when out of this scope.
 		std::unique_ptr<SetupParam> _param(param);
