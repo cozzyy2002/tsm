@@ -5,6 +5,7 @@
 #include <StateMachine/Assert.h>
 
 #include <memory>
+
 namespace tsm {
 
 template<class E = IEvent, class S = IState>

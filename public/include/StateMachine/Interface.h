@@ -2,9 +2,6 @@
 
 #include "Unknown.h"
 
-#include <deque>
-#include <utility>
-#include <memory>
 #include <mutex>
 
 namespace tsm {
@@ -103,16 +100,6 @@ public:
 	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
-};
-
-class ITimerClient
-{
-public:
-	enum class TimerType {
-		None,			// Event is handled ASAP. This value is not used.
-		HandleEvent,	// Call StateMachine::handleEvent() when timer is elapsed.
-		TriggerEvent,	// Call StateMachine::triggerEvent() when timer is elapsed.
-	};
 };
 
 // Monitor interface

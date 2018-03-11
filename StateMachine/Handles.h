@@ -1,8 +1,10 @@
 #pragma once
 
 #include <StateMachine/Interface.h>
+#include <StateMachine/TimerClient.h>
 #include <memory>
 #include <map>
+#include <deque>
 
 namespace tsm {
 
@@ -38,7 +40,7 @@ protected:
 struct TimerHandle
 {
 	struct Timer {
-		ITimerClient::TimerType timerType;
+		TimerClient::TimerType timerType;
 		IContext* context;
 		CComPtr<IEvent> event;
 		HANDLE hTimer;				// Handle of timer-queue timer.
