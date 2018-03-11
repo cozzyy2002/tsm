@@ -27,6 +27,27 @@ void HandleOwner<IEvent, EventHandle>::_deleteHandle(EventHandle* handle)
 }
 
 template<>
+StateHandle* HandleOwner<IState, StateHandle>::_getHandle()
+{
+	if(!m_handle) m_handle = _createHandle(_getInstance());
+	return m_handle;
+}
+
+template<>
+StateHandle* HandleOwner<IState, StateHandle>::_createHandle(IState*)
+{
+	auto handle = new StateHandle();
+
+	return handle;
+}
+
+template<>
+void HandleOwner<IState, StateHandle>::_deleteHandle(StateHandle* handle)
+{
+	delete handle;
+}
+
+template<>
 ContextHandle* HandleOwner<IContext, ContextHandle>::_getHandle()
 {
 	if(!m_handle) m_handle = _createHandle(_getInstance());
@@ -47,6 +68,28 @@ ContextHandle* HandleOwner<IContext, ContextHandle>::_createHandle(IContext* con
 
 template<>
 void HandleOwner<IContext, ContextHandle>::_deleteHandle(ContextHandle* handle)
+{
+	delete handle;
+}
+
+template<>
+TimerHandle* HandleOwner<TimerClient, TimerHandle>::_getHandle()
+{
+	if(!m_handle) m_handle = _createHandle(_getInstance());
+	return m_handle;
+}
+
+template<>
+TimerHandle* HandleOwner<TimerClient, TimerHandle>::_createHandle(TimerClient*)
+{
+	auto handle = new TimerHandle();
+	handle->hTimerQueue = NULL;
+
+	return handle;
+}
+
+template<>
+void HandleOwner<TimerClient, TimerHandle>::_deleteHandle(TimerHandle* handle)
 {
 	delete handle;
 }

@@ -32,18 +32,12 @@ extern void mockOnAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int 
 class MockContext : public tsm::Context<MockEvent, MockState<MockContext>>, public TestStateMonitor
 {
 public:
-	using TimerClient::m_hTimerQueue;
-	using TimerClient::m_timers;
-
 	virtual IStateMonitor* _getStateMonitor() override { return this; }
 };
 
 class MockAsyncContext : public tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>>, public TestStateMonitor
 {
 public:
-	using TimerClient::m_hTimerQueue;
-	using TimerClient::m_timers;
-
 	virtual IStateMonitor* _getStateMonitor() override { return this; }
 };
 
@@ -84,9 +78,6 @@ class MockState : public tsm::State<C, MockEvent>, public TestUnknown
 public:
 	MockState() : TestUnknown(m_cRef) { setObject(this); }
 	virtual ~MockState() {}
-
-	using TimerClient::m_hTimerQueue;
-	using TimerClient::m_timers;
 
 	void setMasterState(MockState* masterState) { m_masterState = masterState; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) {

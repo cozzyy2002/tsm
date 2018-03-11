@@ -2,6 +2,7 @@
 
 #include <StateMachine/Interface.h>
 #include <memory>
+#include <map>
 
 namespace tsm {
 
@@ -32,6 +33,22 @@ protected:
 	friend class HandleOwner<IContext, ContextHandle>;
 
 	std::unique_ptr<AsyncData> _asyncData;
+};
+
+struct TimerHandle
+{
+	struct Timer {
+		ITimerClient::TimerType timerType;
+		IContext* context;
+		CComPtr<IEvent> event;
+		HANDLE hTimer;				// Handle of timer-queue timer.
+	};
+
+	std::map<IEvent*, std::unique_ptr<Timer>> timers;
+
+	// Note: Closing handle of timer queue is not necessary.
+	HANDLE hTimerQueue;
+	lock_object_t lock;
 };
 
 }
