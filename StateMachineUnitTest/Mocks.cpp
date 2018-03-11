@@ -21,7 +21,16 @@ void TestStateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCo
 
 void mockOnAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 {
-	LOG4CPLUS_ERROR_FMT(logger, _T("'%s' failed: HRESULT=0x%08x. at:\n%s:%d"), exp, hr, sourceFile, line);
+	static const LPCTSTR format = _T("'%s' failed: HRESULT=0x%08x. at:\n%s:%d");
+	switch(hr) {
+	case E_ABORT:
+	case E_UNEXPECTED:
+		LOG4CPLUS_FATAL_FMT(logger, format, exp, hr, sourceFile, line);
+		break;
+	default:
+		LOG4CPLUS_ERROR_FMT(logger, format, exp, hr, sourceFile, line);
+		break;
+	}
 }
 
 TestUnknown::~TestUnknown()
@@ -57,20 +66,4 @@ ULONG TestUnknown::Release()
 void TestUnknown::setObject(IUnknown * _this)
 {
 	className = typeid(*_this).name();
-}
-
-HRESULT MockContext::waitReady(DWORD timeout /*= 100*/)
-{
-	auto hr = tsm::Context<MockEvent, MockState<MockContext>>::waitReady(timeout);
-	// Wait for TestStateMonitor to log message
-	Sleep(100);
-	return hr;
-}
-
-HRESULT MockAsyncContext::waitReady(DWORD timeout /*= 100*/)
-{
-	auto hr = tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>>::waitReady(timeout);
-	// Wait for TestStateMonitor to log message
-	Sleep(100);
-	return hr;
 }

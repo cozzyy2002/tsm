@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Interface.h"
+#include "TimerClient.h"
+#include <StateMachine/Assert.h>
 
 namespace tsm {
 
 template<class C = IContext, class E = IEvent>
-class State : public IState
+class State : public IState, public TimerClient
 {
 public:
 	State(IState* masterState = nullptr) : m_masterState(masterState), m_entryCalled(false) {}
@@ -21,9 +23,11 @@ public:
 	}
 	HRESULT _exit(IContext* context, IEvent* event, IState* nextState) override {
 		m_entryCalled = false;
+		HR_ASSERT_OK(cancelAllEventTimers());
 		return exit((C*)context, (E*)event, nextState);
 	}
 
+	virtual bool _callExitOnShutdown() const override { return false; }
 	virtual IState* _getMasterState() const override { return m_masterState; }
 	virtual void _setMasterState(IState* state) override { m_masterState = state; }
 	virtual bool _hasEntryCalled() const override { return m_entryCalled; }

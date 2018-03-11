@@ -12,13 +12,29 @@ public:
 	// Context::triggerEvent() is not implemented.
 	static const int DefaultPriority = 0;
 
-	Event(int priority = DefaultPriority) : m_priority(priority) {}
+	Event(int priority = DefaultPriority)
+		: m_priority(priority), m_timerClient(nullptr), m_isTimerCreated(false) {}
 	virtual ~Event() {}
 
 	virtual int _getPriority() const override { return m_priority; }
+	virtual DWORD _getDelayTime() const override { return m_delayTime; }
+	virtual DWORD _getIntervalTime() const override { return m_intervalTime; }
+	virtual TimerClient* _getTimerClient() const override { return m_timerClient; }
+	virtual bool _isTimerCreated() const override { return m_isTimerCreated; }
+	virtual void _setTimerCreated(bool value) override { m_isTimerCreated = value; }
+
+	void setTimer(TimerClient* timerClient, DWORD delayTime, DWORD intervalTime = 0) {
+		m_delayTime = delayTime;
+		m_intervalTime = intervalTime;
+		m_timerClient = timerClient;
+	}
 
 protected:
 	int m_priority;
+	DWORD m_delayTime;
+	DWORD m_intervalTime;
+	TimerClient* m_timerClient;
+	bool m_isTimerCreated;
 };
 
 }

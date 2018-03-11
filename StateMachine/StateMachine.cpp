@@ -1,6 +1,7 @@
 #include <StateMachine/stdafx.h>
 
 #include <StateMachine/State.h>
+#include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
 
@@ -48,6 +49,15 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 
 HRESULT StateMachine::shutdownInner(IContext* context, DWORD timeout)
 {
+	// Cleanup existing states and their pending event timers.
+	forEachState(context->_getCurrentState(), [context](IState* state)
+	{
+		if(state->_callExitOnShutdown()) {
+			HR_ASSERT_OK(state->_exit(context, nullptr, nullptr));
+		}
+		return S_OK;
+	});
+
 	context->_setCurrentState(nullptr);
 	return S_OK;
 }
@@ -79,7 +89,13 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	HR_ASSERT_OK(setupCompleted(context));
 	HR_ASSERT(event, E_INVALIDARG);
 
-	std::unique_ptr<IContext::lock_t> _lock(context->_getHandleEventLock());
+	auto timerClient = event->_getTimerClient();
+	if(timerClient && !event->_isTimerCreated()) {
+		// Event should be handled after delay time elapsed.
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
+	}
+
+	std::unique_ptr<lock_t> _lock(context->_getHandleEventLock());
 
 	IState* nextState = nullptr;
 	auto currentState = context->_getCurrentState();

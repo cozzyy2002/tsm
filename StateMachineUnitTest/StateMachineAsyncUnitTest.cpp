@@ -126,7 +126,7 @@ TEST_P(StateMachineAsyncPriorityUnitTest, sequence)
 		{
 			auto index = actualEventCount++;
 			// Wait for all triggerEvent() to be called.
-			if(index == 0) Sleep(10);
+			if(index == 0) Sleep(100);
 
 			if(index < ARRAYSIZE(param.sequence)) {
 				EXPECT_EQ(param.sequence[index], event->id);
@@ -142,7 +142,7 @@ TEST_P(StateMachineAsyncPriorityUnitTest, sequence)
 		mockEvents[i]->setPriority(param.priorities[i]);
 		ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(mockEvents[i]));
 		// Wait for 1st State::handleEvent() to be called.
-		if(i == 0) Sleep(5);
+		if(i == 0) Sleep(50);
 	}
 
 	Sleep(100);

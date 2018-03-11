@@ -13,6 +13,10 @@ class IEvent;
 class IState;
 class IStateMachine;
 class IStateMonitor;
+class TimerClient;
+
+using lock_object_t = std::recursive_mutex;
+using lock_t = std::lock_guard<lock_object_t>;
 
 class IContext
 {
@@ -23,7 +27,7 @@ public:
 
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
-		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of (priority, IEvent to be handled).
+		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
 		std::recursive_mutex eventQueueLock;		// Lock to modify IEvent queue.
 		CHandle hEventAvailable;					// Event handle set when IEvent is queued.
 		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
@@ -41,8 +45,6 @@ public:
 	// Returns nullptr(Async operation is not supported).
 	virtual AsyncData* _getAsyncData() = 0;
 
-	using lock_object_t = std::recursive_mutex;
-	using lock_t = std::lock_guard<lock_object_t>;
 	virtual lock_t* _getHandleEventLock() = 0;
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
@@ -54,6 +56,14 @@ public:
 	virtual ~IEvent() {}
 
 	virtual int _getPriority() const = 0;
+
+#pragma region Definition for event timer
+	virtual DWORD _getDelayTime() const = 0;
+	virtual DWORD _getIntervalTime() const = 0;
+	virtual TimerClient* _getTimerClient() const = 0;
+	virtual bool _isTimerCreated() const = 0;
+	virtual void _setTimerCreated(bool value) = 0;
+#pragma endregion
 };
 
 class IState : public Unknown
@@ -66,6 +76,7 @@ public:
 	virtual HRESULT _entry(IContext* context, IEvent* event, IState* previousState) = 0;
 	virtual HRESULT _exit(IContext* context, IEvent* event, IState* nextState) = 0;
 
+	virtual bool _callExitOnShutdown() const = 0;
 	virtual IState* _getMasterState() const = 0;
 	virtual void _setMasterState(IState* state) = 0;
 	virtual bool _hasEntryCalled() const = 0;

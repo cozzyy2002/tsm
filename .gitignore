@@ -20,3 +20,4 @@
 /StateMachineUnitTest/Debug
 /StateMachineUnitTest/Release
 *.log
+/Log.log.*

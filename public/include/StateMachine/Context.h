@@ -1,12 +1,14 @@
 #pragma once
 
 #include "Interface.h"
+#include "TimerClient.h"
+#include <StateMachine/Assert.h>
 
 #include <memory>
 namespace tsm {
 
 template<class E = IEvent, class S = IState>
-class Context : public IContext
+class Context : public IContext, public TimerClient
 {
 public:
 	virtual ~Context() {}
@@ -14,7 +16,10 @@ public:
 	virtual bool isAsync() const { return false; }
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
-	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
+	HRESULT shutdown(DWORD timeout = 100) {
+		HR_EXPECT_OK(cancelAllEventTimers());
+		return _getStateMachine()->shutdown(this, timeout);
+	}
 	HRESULT triggerEvent(E* event) { return _getStateMachine()->triggerEvent(this, event); }
 	HRESULT handleEvent(E* event) { return _getStateMachine()->handleEvent(this, event); }
 	HRESULT waitReady(DWORD timeout = 100) { return _getStateMachine()->waitReady(this, timeout); }
@@ -47,8 +52,6 @@ public:
 	virtual ~AsyncContext() {}
 
 	virtual bool isAsync() const { return true; }
-
-	S* getCurrentState() const { return (S*)m_currentState.p; }
 
 	// Returns AsyncData object.
 	virtual AsyncData* _getAsyncData() { return &m_asyncData; }

@@ -10,6 +10,9 @@
 
 namespace tsm {
 
+/**
+ * Returns StateMachine object for Context and AsyncStateMachine object for AsyncContext respectively.
+ */
 /*static*/ IStateMachine* IStateMachine::create(IContext* context)
 {
 	return context->isAsync() ? new AsyncStateMachine() : new StateMachine();
@@ -70,13 +73,19 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	HR_ASSERT_OK(setupCompleted(context));
 	HR_ASSERT(event, E_INVALIDARG);
 
+	auto timerClient = event->_getTimerClient();
+	if(timerClient && !event->_isTimerCreated()) {
+		// Event should be handled after delay time elapsed.
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
+	}
+
 	auto asyncData = context->_getAsyncData();
 	// Add the event to event queue and signal that event is available.
 	// Events are added to the queue by priority order.
 	// deque::back() returns event with highest priority.
 	// Events with same priority are added by FIFO order(deque::back() returns event triggered first).
 	{
-		IContext::lock_t _lock(asyncData->eventQueueLock);
+		lock_t _lock(asyncData->eventQueueLock);
 		auto& eventQueue = asyncData->eventQueue;
 		auto it = eventQueue.begin();
 		for(; it != eventQueue.end(); it++) {
@@ -84,7 +93,7 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 		}
 		eventQueue.insert(it, event);
 	}
-	WIN32_ASSERT_OK(SetEvent(asyncData->hEventAvailable));
+	WIN32_ASSERT(SetEvent(asyncData->hEventAvailable));
 	return S_OK;
 }
 
@@ -113,7 +122,7 @@ HRESULT AsyncStateMachine::waitReady(IContext * context, DWORD timeout)
 		// Worker thread has been terminated.
 		{
 			DWORD exitCode;
-			hr = WIN32_EXPECT_OK(GetExitCodeThread(asyncData->hWorkerThread, &exitCode));
+			hr = WIN32_EXPECT(GetExitCodeThread(asyncData->hWorkerThread, &exitCode));
 			if(SUCCEEDED(hr)) {
 				// return exit code of worker thread.
 				hr = HRESULT_FROM_WIN32(exitCode);
@@ -165,7 +174,7 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 		// Call entry() of initial state.
 		HR_ASSERT_OK(context->_getCurrentState()->_entry(context, param->event, nullptr));
 		// Notify that setup completed.
-		WIN32_ASSERT_OK(SetEvent(asyncData->hEventReady));
+		WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 	}
 
 	HANDLE hEvents[] = { asyncData->hEventAvailable, asyncData->hEventShutdown };
@@ -174,14 +183,14 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 	do {
 		// Wait for event to be queued.
 		DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, INFINITE);
-		if(wait < eventsCount) WIN32_ASSERT_OK(ResetEvent(hEvents[wait]));
+		if(wait < eventsCount) WIN32_ASSERT(ResetEvent(hEvents[wait]));
 		HR_ASSERT_OK(checkWaitResult(wait, eventsCount));
 		if(wait == (WAIT_OBJECT_0 + 1)) break;
 		do {
 			CComPtr<IEvent> event;
 			{
 				// Fetch event from the queue.
-				IContext::lock_t _lock(asyncData->eventQueueLock);
+				lock_t _lock(asyncData->eventQueueLock);
 				auto& eventQueue = asyncData->eventQueue;
 				if(eventQueue.empty()) {
 					callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)
