@@ -148,11 +148,13 @@
     <ClInclude Include="..\public\include\StateMachine\TimerClient.h" />
     <ClInclude Include="..\public\include\StateMachine\Unknown.h" />
     <ClInclude Include="AsyncStateMachine.h" />
+    <ClInclude Include="Handles.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncStateMachine.cpp" />
+    <ClCompile Include="Handles.cpp" />
     <ClCompile Include="TimerClient.cpp" />
     <ClCompile Include="Unknown.cpp" />
     <ClCompile Include="StateMachine.cpp" />

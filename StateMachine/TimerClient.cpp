@@ -3,6 +3,8 @@
 #include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
 
+#include "Handles.h"
+
 HRESULT tsm::TimerClient::cancelEventTimer(IEvent* event)
 {
 	// Check if any timer has started by _triggerDelayedEvent() method.
@@ -45,8 +47,9 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 	HR_ASSERT(event->_getTimerClient(), E_ILLEGAL_METHOD_CALL);
 
 	// State machine should not call this method with event whose timer is created already.
-	HR_ASSERT(!event->_isTimerCreated(), E_ILLEGAL_METHOD_CALL);
-	event->_setTimerCreated(true);
+	auto eh = event->_getHandle();
+	HR_ASSERT(!eh->isTimerCreated, E_ILLEGAL_METHOD_CALL);
+	eh->isTimerCreated = true;
 
 	lock_t _lock(m_lock);
 

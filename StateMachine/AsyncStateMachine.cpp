@@ -4,6 +4,7 @@
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
 #include "AsyncStateMachine.h"
+#include "Handles.h"
 
 // Make sure that IContext is instance of AsyncContext.
 #define ASSERT_ASYNC(c) HR_ASSERT(c->_getAsyncData(), E_INVALIDARG)
@@ -74,7 +75,7 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	HR_ASSERT(event, E_INVALIDARG);
 
 	auto timerClient = event->_getTimerClient();
-	if(timerClient && !event->_isTimerCreated()) {
+	if(timerClient && !event->_getHandle()->isTimerCreated) {
 		// Event should be handled after delay time elapsed.
 		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
 	}

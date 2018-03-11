@@ -15,10 +15,29 @@ class IStateMachine;
 class IStateMonitor;
 class TimerClient;
 
+struct EventHandle;
+struct StateHandle;
+struct ContextHandle;
+
 using lock_object_t = std::recursive_mutex;
 using lock_t = std::lock_guard<lock_object_t>;
 
-class IContext
+template<class T, class H>
+class HandleOwner
+{
+public:
+	HandleOwner() : m_handle(nullptr) {}
+	virtual ~HandleOwner() { if(m_handle) _deleteHandle(m_handle); }
+
+	virtual H* _getHandle();
+
+protected:
+	void _deleteHandle(H* handle);
+
+	H* m_handle;
+};
+
+class IContext /*: public HandleOwner<IContext, ContextHandle>*/
 {
 public:
 	virtual ~IContext() {}
@@ -50,7 +69,7 @@ public:
 	virtual IStateMonitor* _getStateMonitor() = 0;
 };
 
-class IEvent : public Unknown
+class IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
 {
 public:
 	virtual ~IEvent() {}
@@ -61,8 +80,6 @@ public:
 	virtual DWORD _getDelayTime() const = 0;
 	virtual DWORD _getIntervalTime() const = 0;
 	virtual TimerClient* _getTimerClient() const = 0;
-	virtual bool _isTimerCreated() const = 0;
-	virtual void _setTimerCreated(bool value) = 0;
 #pragma endregion
 };
 
