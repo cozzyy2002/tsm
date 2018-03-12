@@ -4,6 +4,7 @@
 #include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
+#include "Handles.h"
 
 /*static*/ tsm::IContext::OnAssertFailed *tsm::IContext::onAssertFailedProc = nullptr;
 
@@ -58,6 +59,9 @@ HRESULT StateMachine::shutdownInner(IContext* context, DWORD timeout)
 		return S_OK;
 	});
 
+	// Cancel pending event timers of context.
+	HR_EXPECT_OK(context->_getTimerClient()->cancelAllEventTimers());
+
 	context->_setCurrentState(nullptr);
 	return S_OK;
 }
@@ -90,7 +94,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	HR_ASSERT(event, E_INVALIDARG);
 
 	auto timerClient = event->_getTimerClient();
-	if(timerClient && !event->_isTimerCreated()) {
+	if(timerClient && !event->_getHandle()->isTimerCreated) {
 		// Event should be handled after delay time elapsed.
 		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
 	}

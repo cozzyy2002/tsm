@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include <StateMachine/TimerClient.h>
+#include "../StateMachine/Handles.h"
 #include "Mocks.h"
 
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("UnitTest.StateMachineTimerUnitTest"));
@@ -20,6 +22,8 @@ public:
 		ASSERT_EQ(S_OK, mockContext.shutdown());
 		EXPECT_EQ(nullptr, mockContext._getCurrentState());
 	}
+
+	tsm::TimerHandle* getTimerHandle(tsm::TimerClient& timerClient) { return  timerClient._getHandle(); }
 
 	C mockContext;
 	MockEvent e0, e1;
@@ -42,9 +46,9 @@ TEST_F(StateMachineTriggerEventUnitTest, 0)
 	e0.setTimer(&mockContext, 50);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 
-	ASSERT_EQ(1, mockContext.m_timers.size());
+	ASSERT_EQ(1, getTimerHandle(mockContext)->timers.size());
 	Sleep(110);
-	ASSERT_EQ(0, mockContext.m_timers.size());
+	ASSERT_EQ(0, getTimerHandle(mockContext)->timers.size());
 	EXPECT_TRUE(e0.deleted());
 }
 
@@ -57,9 +61,9 @@ TEST_F(StateMachineTriggerEventUnitTest, 1)
 	e0.setTimer(&mockState0, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 
-	ASSERT_EQ(1, mockState0.m_timers.size());
+	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
 	Sleep(110);
-	ASSERT_EQ(0, mockState0.m_timers.size());
+	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
 	EXPECT_TRUE(e0.deleted());
 }
 
@@ -71,10 +75,10 @@ TEST_F(StateMachineTriggerEventUnitTest, 2)
 	e0.setTimer(&mockState0, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 
-	ASSERT_EQ(1, mockState0.m_timers.size());
+	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
 	Sleep(50);
 	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
-	ASSERT_EQ(0, mockState0.m_timers.size());
+	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
 	EXPECT_TRUE(e0.deleted());
 }
 
@@ -86,11 +90,11 @@ TEST_F(StateMachineTriggerEventUnitTest, 3)
 	e0.setTimer(&mockState0, 50, 30);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 
-	ASSERT_EQ(1, mockState0.m_timers.size());
+	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
 	Sleep(100);
-	ASSERT_EQ(1, mockState0.m_timers.size());
+	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
 	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
-	ASSERT_EQ(0, mockState0.m_timers.size());
+	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
 	EXPECT_TRUE(e0.deleted());
 }
 
@@ -108,11 +112,11 @@ TEST_F(StateMachineTriggerEventUnitTest, 4)
 	e1.setTimer(&mockState0, 50, 30);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e1));
 
-	ASSERT_EQ(1, mockState0.m_timers.size());
+	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
 	// mockState0 -> mockState1 -> Cancel delayed event e1 of mockState0.
 	Sleep(100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 	Sleep(10);
 	ASSERT_EQ(&mockState1, mockContext.getCurrentState());
-	ASSERT_EQ(0, mockState0.m_timers.size());
+	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
 }

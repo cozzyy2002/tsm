@@ -2,9 +2,6 @@
 
 #include "Unknown.h"
 
-#include <deque>
-#include <utility>
-#include <memory>
 #include <mutex>
 
 namespace tsm {
@@ -15,25 +12,42 @@ class IStateMachine;
 class IStateMonitor;
 class TimerClient;
 
+struct EventHandle;
+struct StateHandle;
+struct ContextHandle;
+
 using lock_object_t = std::recursive_mutex;
 using lock_t = std::lock_guard<lock_object_t>;
 
-class IContext
+template<class T, class H>
+class HandleOwner
+{
+public:
+	HandleOwner() : m_handle(nullptr) {}
+	virtual ~HandleOwner() { if(m_handle) _deleteHandle(m_handle); }
+
+	virtual H* _getHandle() {
+		if(!m_handle) m_handle = _createHandle(_getInstance());
+		return m_handle;
+	}
+
+protected:
+	H* _createHandle(T* instance);
+	void _deleteHandle(H* handle);
+
+	// Returns sub class instance.
+	// Override if _createHandle() method depends on the instance.
+	virtual T* _getInstance() { return nullptr; }
+
+	H* m_handle;
+};
+
+class IContext : public HandleOwner<IContext, ContextHandle>
 {
 public:
 	virtual ~IContext() {}
 
 	virtual bool isAsync() const = 0;
-
-	// Data for IAsyncContext used to perform async operation.
-	struct AsyncData {
-		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
-		std::recursive_mutex eventQueueLock;		// Lock to modify IEvent queue.
-		CHandle hEventAvailable;					// Event handle set when IEvent is queued.
-		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
-		CHandle hEventReady;						// Event handle set when ready to handle IEvent(entry() of Initial state completes).
-		CHandle hWorkerThread;						// Handle of worker thread.
-	};
 
 	virtual IStateMachine* _getStateMachine() = 0;
 	virtual IState* _getCurrentState() = 0;
@@ -42,15 +56,20 @@ public:
 	using OnAssertFailed = void(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
 	static OnAssertFailed* onAssertFailedProc;
 
-	// Returns nullptr(Async operation is not supported).
-	virtual AsyncData* _getAsyncData() = 0;
-
 	virtual lock_t* _getHandleEventLock() = 0;
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
+
+	// Returns TimerClient instance.
+	// Sub class may returns this pointer.
+	virtual TimerClient* _getTimerClient() = 0;
+
+	// Implementation of HandleOwner::_getInstance().
+	// Creating ContextHandle depends on value returned by isAsync() method.
+	virtual IContext* _getInstance() override { return this; }
 };
 
-class IEvent : public Unknown
+class IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
 {
 public:
 	virtual ~IEvent() {}
@@ -61,12 +80,10 @@ public:
 	virtual DWORD _getDelayTime() const = 0;
 	virtual DWORD _getIntervalTime() const = 0;
 	virtual TimerClient* _getTimerClient() const = 0;
-	virtual bool _isTimerCreated() const = 0;
-	virtual void _setTimerCreated(bool value) = 0;
 #pragma endregion
 };
 
-class IState : public Unknown
+class IState : public HandleOwner<IState, StateHandle>, public Unknown
 {
 public:
 	virtual ~IState() {}
@@ -81,6 +98,10 @@ public:
 	virtual void _setMasterState(IState* state) = 0;
 	virtual bool _hasEntryCalled() const = 0;
 #pragma endregion
+
+	// Returns TimerClient instance.
+	// Sub class may returns this pointer.
+	virtual TimerClient* _getTimerClient() = 0;
 };
 
 class IStateMachine
