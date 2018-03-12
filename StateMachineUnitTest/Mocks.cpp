@@ -8,6 +8,21 @@ void TestStateMonitor::onIdle(tsm::IContext* context) {
 	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p)"),
 		ptr2str(context).c_str(), context);
 }
+void TestStateMonitor::onEventTriggered(tsm::IContext * context, tsm::IEvent * event)
+{
+	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p): IEvent=%s(0x%p)"),
+		ptr2str(context).c_str(), context,
+		ptr2str(event).c_str(), event);
+}
+
+void TestStateMonitor::onEventHandling(tsm::IContext * context, tsm::IEvent * event, tsm::IState * current)
+{
+	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p): IEvent=%s(0x%p), %s(0x%p)"),
+		ptr2str(context).c_str(), context,
+		ptr2str(event).c_str(), event,
+		ptr2str(current).c_str(), current);
+}
+
 void TestStateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) {
 	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p): IEvent=%s(0x%p), %s(0x%p)->%s(0x%p)"),
 		ptr2str(context).c_str(), context,

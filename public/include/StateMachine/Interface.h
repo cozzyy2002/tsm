@@ -123,6 +123,8 @@ class IStateMonitor
 {
 public:
 	virtual void onIdle(IContext* context) = 0;
+	virtual void onEventTriggered(IContext* context, IEvent* event) = 0;
+	virtual void onEventHandling(IContext* context, IEvent* event, IState* current) = 0;
 	virtual void onStateChanged(IContext* context, IEvent* event, IState* previous, IState* next) = 0;
 	virtual void onWorkerThreadExit(IContext* context, HRESULT exitCode) = 0;
 };

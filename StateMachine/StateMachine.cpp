@@ -103,6 +103,12 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 	IState* nextState = nullptr;
 	auto currentState = context->_getCurrentState();
+
+	callStateMonitor(context, [event, currentState](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onEventHandling(context, event, currentState);
+	});
+
 	HRESULT hr = forEachState(currentState, [this, context, event, &nextState](IState* state)
 	{
 		HRESULT hr = HR_EXPECT_OK(state->_handleEvent(context, event, &nextState));

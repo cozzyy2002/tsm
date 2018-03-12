@@ -95,6 +95,11 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 		eventQueue.insert(it, event);
 	}
 	WIN32_ASSERT(SetEvent(asyncData->hEventAvailable));
+
+	callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onEventTriggered(context, event);
+	});
 	return S_OK;
 }
 
