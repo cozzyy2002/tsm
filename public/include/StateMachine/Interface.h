@@ -32,8 +32,11 @@ public:
 	}
 
 protected:
-	H* _createHandle(T* handleOwner);
+	H* _createHandle(T* instance);
 	void _deleteHandle(H* handle);
+
+	// Returns sub class instance.
+	// Override if _createHandle() method depends on the instance.
 	virtual T* _getInstance() { return nullptr; }
 
 	H* m_handle;
@@ -57,6 +60,12 @@ public:
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
 
+	// Returns TimerClient instance.
+	// Sub class may returns this pointer.
+	virtual TimerClient* _getTimerClient() = 0;
+
+	// Implementation of HandleOwner::_getInstance().
+	// Creating ContextHandle depends on value returned by isAsync() method.
 	virtual IContext* _getInstance() override { return this; }
 };
 
@@ -89,6 +98,10 @@ public:
 	virtual void _setMasterState(IState* state) = 0;
 	virtual bool _hasEntryCalled() const = 0;
 #pragma endregion
+
+	// Returns TimerClient instance.
+	// Sub class may returns this pointer.
+	virtual TimerClient* _getTimerClient() = 0;
 };
 
 class IStateMachine

@@ -31,6 +31,8 @@ public:
 	virtual IState* _getMasterState() const override { return m_masterState; }
 	virtual void _setMasterState(IState* state) override { m_masterState = state; }
 	virtual bool _hasEntryCalled() const override { return m_entryCalled; }
+
+	virtual TimerClient* _getTimerClient() override { return this; }
 #pragma endregion
 
 #pragma region Methods to be implemented by sub class.

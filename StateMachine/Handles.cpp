@@ -4,6 +4,8 @@
 
 namespace tsm {
 
+#pragma region Implementation of _createHandle() method
+
 template<>
 EventHandle* HandleOwner<IEvent, EventHandle>::_createHandle(IEvent*)
 {
@@ -14,23 +16,11 @@ EventHandle* HandleOwner<IEvent, EventHandle>::_createHandle(IEvent*)
 }
 
 template<>
-void HandleOwner<IEvent, EventHandle>::_deleteHandle(EventHandle* handle)
-{
-	delete handle;
-}
-
-template<>
 StateHandle* HandleOwner<IState, StateHandle>::_createHandle(IState*)
 {
 	auto handle = new StateHandle();
 
 	return handle;
-}
-
-template<>
-void HandleOwner<IState, StateHandle>::_deleteHandle(StateHandle* handle)
-{
-	delete handle;
 }
 
 template<>
@@ -46,12 +36,6 @@ ContextHandle* HandleOwner<IContext, ContextHandle>::_createHandle(IContext* con
 }
 
 template<>
-void HandleOwner<IContext, ContextHandle>::_deleteHandle(ContextHandle* handle)
-{
-	delete handle;
-}
-
-template<>
 TimerHandle* HandleOwner<TimerClient, TimerHandle>::_createHandle(TimerClient*)
 {
 	auto handle = new TimerHandle();
@@ -60,10 +44,18 @@ TimerHandle* HandleOwner<TimerClient, TimerHandle>::_createHandle(TimerClient*)
 	return handle;
 }
 
-template<>
-void HandleOwner<TimerClient, TimerHandle>::_deleteHandle(TimerHandle* handle)
-{
-	delete handle;
-}
+#pragma endregion
+
+#pragma region Implementation of _deleteHandle() method
+
+#define IMPLEMENT_DELETE_HANDLE(T, H) \
+	template<> void HandleOwner<T, H>::_deleteHandle(H* handle) { delete handle; }
+
+IMPLEMENT_DELETE_HANDLE(IEvent, EventHandle)
+IMPLEMENT_DELETE_HANDLE(IState, StateHandle)
+IMPLEMENT_DELETE_HANDLE(IContext, ContextHandle)
+IMPLEMENT_DELETE_HANDLE(TimerClient, TimerHandle)
+
+#pragma endregion
 
 }

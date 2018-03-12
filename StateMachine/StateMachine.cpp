@@ -59,6 +59,9 @@ HRESULT StateMachine::shutdownInner(IContext* context, DWORD timeout)
 		return S_OK;
 	});
 
+	// Cancel pending event timers of context.
+	HR_EXPECT_OK(context->_getTimerClient()->cancelAllEventTimers());
+
 	context->_setCurrentState(nullptr);
 	return S_OK;
 }
