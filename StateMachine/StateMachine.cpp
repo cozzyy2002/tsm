@@ -96,7 +96,14 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	auto timerClient = event->_getTimerClient();
 	if(timerClient && !event->_getHandle()->isTimerCreated) {
 		// Event should be handled after delay time elapsed.
-		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
+		auto hr = HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
+		if(SUCCEEDED(hr)) {
+			callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+			{
+				stateMonitor->onTimerStarted(context, event);
+			});
+		}
+		return hr;
 	}
 
 	std::unique_ptr<lock_t> _lock(context->_getHandleEventLock());

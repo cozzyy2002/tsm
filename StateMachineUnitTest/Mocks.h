@@ -26,6 +26,7 @@ public:
 	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override;
 	virtual void onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override;
 	virtual void onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
+	virtual void onTimerStarted(tsm::IContext* context, tsm::IEvent* event) override;
 	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override;
 };
 

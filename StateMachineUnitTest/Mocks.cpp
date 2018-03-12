@@ -29,6 +29,14 @@ void TestStateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event
 		ptr2str(event).c_str(), event,
 		ptr2str(previous).c_str(), previous, ptr2str(next).c_str(), next);
 }
+
+void TestStateMonitor::onTimerStarted(tsm::IContext * context, tsm::IEvent * event)
+{
+	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p): IEvent=%s(0x%p), delay=%d, interval=%d"),
+		ptr2str(context).c_str(), context,
+		ptr2str(event).c_str(), event, event->_getDelayTime(), event->_getIntervalTime());
+}
+
 void TestStateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) {
 	LOG4CPLUS_INFO_FMT(logger, _T(__FUNCTION__) _T(": %s(0x%p): HRESULT=0x%08x"),
 		ptr2str(context).c_str(), context, exitCode);
