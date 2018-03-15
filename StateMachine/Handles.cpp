@@ -26,27 +26,16 @@ TimerHandle::TimerHandle(TimerClient*)
 {
 }
 
-#pragma region Implementation of _createHandle() method
+#pragma region Implementation of HandleFactory class.
 
-#define IMPLEMTENT_CREATE_HANDLE(T, H) \
-	template<> H* HandleOwner<T, H>::_createHandle(T* instance) { return new H(instance); }
+#define IMPLEMTENT_HANDLE_FACTORY(T, H) \
+	template<> H* HandleOwner<T, H>::HandleFactory::create(T* instance) { return new H(instance); } \
+	template<> void HandleOwner<T, H>::HandleFactory::operator()(H* handle) const { delete handle; }
 
-IMPLEMTENT_CREATE_HANDLE(IEvent, EventHandle)
-IMPLEMTENT_CREATE_HANDLE(IState, StateHandle)
-IMPLEMTENT_CREATE_HANDLE(IContext, ContextHandle)
-IMPLEMTENT_CREATE_HANDLE(TimerClient, TimerHandle)
-
-#pragma endregion
-
-#pragma region Implementation of _deleteHandle() method
-
-#define IMPLEMENT_DELETE_HANDLE(T, H) \
-	template<> void HandleOwner<T, H>::_deleteHandle(H* handle) { delete handle; }
-
-IMPLEMENT_DELETE_HANDLE(IEvent, EventHandle)
-IMPLEMENT_DELETE_HANDLE(IState, StateHandle)
-IMPLEMENT_DELETE_HANDLE(IContext, ContextHandle)
-IMPLEMENT_DELETE_HANDLE(TimerClient, TimerHandle)
+IMPLEMTENT_HANDLE_FACTORY(IEvent, EventHandle)
+IMPLEMTENT_HANDLE_FACTORY(IState, StateHandle)
+IMPLEMTENT_HANDLE_FACTORY(IContext, ContextHandle)
+IMPLEMTENT_HANDLE_FACTORY(TimerClient, TimerHandle)
 
 #pragma endregion
 

@@ -23,23 +23,22 @@ template<class T, class H>
 class HandleOwner
 {
 public:
-	HandleOwner() : m_handle(nullptr) {}
-	virtual ~HandleOwner() { if(m_handle) _deleteHandle(m_handle); }
-
 	virtual H* _getHandle() {
-		if(!m_handle) m_handle = _createHandle(_getInstance());
-		return m_handle;
+		if(!m_handle) m_handle.reset(HandleFactory::create(_getInstance()));
+		return m_handle.get();
 	}
 
 protected:
-	H* _createHandle(T* instance);
-	void _deleteHandle(H* handle);
-
 	// Returns sub class instance.
-	// Override if _createHandle() method depends on the instance.
+	// Override if constructor of handle class depends on the instance.
 	virtual T* _getInstance() { return nullptr; }
 
-	H* m_handle;
+	struct HandleFactory {
+		static H* create(T* instance);
+		void operator()(H* handle) const;
+	};
+
+	std::unique_ptr<H, HandleFactory> m_handle;
 };
 
 class IContext : public HandleOwner<IContext, ContextHandle>
