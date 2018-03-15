@@ -10,15 +10,20 @@ namespace tsm {
 
 struct EventHandle
 {
+	EventHandle(IEvent*);
+
 	bool isTimerCreated;
 };
 
 struct StateHandle
 {
+	StateHandle(IState*);
 };
 
 struct ContextHandle
 {
+	ContextHandle(IContext*);
+
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
 		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
@@ -39,6 +44,8 @@ protected:
 
 struct TimerHandle
 {
+	TimerHandle(TimerClient*);
+
 	struct Timer {
 		TimerClient::TimerType timerType;
 		IContext* context;

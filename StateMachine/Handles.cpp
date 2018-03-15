@@ -4,45 +4,37 @@
 
 namespace tsm {
 
+EventHandle::EventHandle(IEvent*)
+	: isTimerCreated(false)
+{
+}
+
+StateHandle::StateHandle(IState*)
+{
+}
+
+ContextHandle::ContextHandle(IContext* context)
+{
+	if(context->isAsync()) {
+		_asyncData.reset(new AsyncData());
+	}
+	asyncData = _asyncData.get();
+}
+
+TimerHandle::TimerHandle(TimerClient*)
+	: hTimerQueue(NULL)
+{
+}
+
 #pragma region Implementation of _createHandle() method
 
-template<>
-EventHandle* HandleOwner<IEvent, EventHandle>::_createHandle(IEvent*)
-{
-	auto handle = new EventHandle();
-	handle->isTimerCreated = false;
+#define IMPLEMTENT_CREATE_HANDLE(T, H) \
+	template<> H* HandleOwner<T, H>::_createHandle(T* instance) { return new H(instance); }
 
-	return handle;
-}
-
-template<>
-StateHandle* HandleOwner<IState, StateHandle>::_createHandle(IState*)
-{
-	auto handle = new StateHandle();
-
-	return handle;
-}
-
-template<>
-ContextHandle* HandleOwner<IContext, ContextHandle>::_createHandle(IContext* context)
-{
-	auto handle = new ContextHandle();
-	if(context->isAsync()) {
-		handle->_asyncData.reset(new ContextHandle::AsyncData());
-	}
-	handle->asyncData = handle->_asyncData.get();
-
-	return handle;
-}
-
-template<>
-TimerHandle* HandleOwner<TimerClient, TimerHandle>::_createHandle(TimerClient*)
-{
-	auto handle = new TimerHandle();
-	handle->hTimerQueue = NULL;
-
-	return handle;
-}
+IMPLEMTENT_CREATE_HANDLE(IEvent, EventHandle)
+IMPLEMTENT_CREATE_HANDLE(IState, StateHandle)
+IMPLEMTENT_CREATE_HANDLE(IContext, ContextHandle)
+IMPLEMTENT_CREATE_HANDLE(TimerClient, TimerHandle)
 
 #pragma endregion
 
