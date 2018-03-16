@@ -24,7 +24,10 @@ public:
 	HRESULT _exit(IContext* context, IEvent* event, IState* nextState) override {
 		m_entryCalled = false;
 		HR_ASSERT_OK(cancelAllEventTimers());
-		return exit((C*)context, (E*)event, nextState);
+		// On shutdown, nextState is nullptr.
+		return ((nextState != nullptr) || _callExitOnShutdown()) ?
+			HR_EXPECT_OK(exit((C*)context, (E*)event, nextState)) :
+			S_OK;
 	}
 
 	virtual bool _callExitOnShutdown() const override { return false; }

@@ -53,10 +53,7 @@ HRESULT StateMachine::shutdownInner(IContext* context, DWORD timeout)
 	// Cleanup existing states and their pending event timers.
 	forEachState(context->_getCurrentState(), [context](IState* state)
 	{
-		if(state->_callExitOnShutdown()) {
-			HR_ASSERT_OK(state->_exit(context, nullptr, nullptr));
-		}
-		return S_OK;
+		return HR_EXPECT_OK(state->_exit(context, nullptr, nullptr));
 	});
 
 	// Cancel pending event timers of context.
