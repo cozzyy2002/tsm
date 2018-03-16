@@ -110,15 +110,15 @@ TEST_F(StateMachineTriggerEventUnitTest, 4)
 	EXPECT_CALL(mockState1, entry(&mockContext, &e0, &mockState0)).WillOnce(Return(S_OK));
 
 	// Start interval timer to be canceled.
-	e1.setTimer(&mockState0, 50, 30);
+	e1.setTimer(&mockState0, 50, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e1));
 
 	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
 	// mockState0 -> mockState1 -> Cancel delayed event e1 of mockState0.
-	Sleep(100);
+	Sleep(200);
 	EXPECT_FALSE(e1.deleted());
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
-	Sleep(100);
+	Sleep(200);
 	ASSERT_EQ(&mockState1, mockContext.getCurrentState());
 	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
 	EXPECT_TRUE(e1.deleted());

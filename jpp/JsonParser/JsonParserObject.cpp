@@ -62,7 +62,7 @@ void CParserContext::out(TCHAR character)
 
 	This state is created as initial state on CParserContext::start().
 */
-HRESULT CParserState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
+HRESULT CParserState::handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState)
 {
 	auto option(context->option);
 	auto isOut(true);
@@ -119,7 +119,7 @@ HRESULT CParserState::handleEvent(CParserContext* context, CParserEvent* e, tsm:
 	Returns back to parent state on end of the comment.
 	Other characters than end of line(EOL) are ignored.
 */
-HRESULT CCommentState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
+HRESULT CCommentState::handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState)
 {
 	switch(e->character) {
 	case '/':
@@ -149,7 +149,7 @@ HRESULT CCommentState::handleEvent(CParserContext* context, CParserEvent* e, tsm
 	Other characters than above are ignored.
 	Returns back to parent state on end of the comment.
 */
-HRESULT CSingleLineCommentState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
+HRESULT CSingleLineCommentState::handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState)
 {
 	switch(e->character) {
 	case '\r':
@@ -168,7 +168,7 @@ HRESULT CSingleLineCommentState::handleEvent(CParserContext* context, CParserEve
 	Recognizes escape sequence '\x' and end of literal '"'.
 	Returns back to parent state on end of literal.
 */
-HRESULT CLiteralState::handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState)
+HRESULT CLiteralState::handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState)
 {
 	static const TCHAR escapeChar('\\');
 	auto character(e->character);

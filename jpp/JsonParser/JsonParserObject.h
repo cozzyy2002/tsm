@@ -9,7 +9,11 @@ class CParserContext;
 class CParserEvent;
 class CParserState;
 
-using CParserStateBase = tsm::State<CParserContext, CParserEvent>;
+class CParserStateBase : public tsm::State<CParserContext, CParserEvent, CParserStateBase>
+{
+public:
+	CParserStateBase(CParserStateBase* masterState = nullptr) : State(masterState) {}
+};
 
 class CParserContext : public tsm::Context<CParserEvent, CParserStateBase>
 {
@@ -36,31 +40,31 @@ protected:
 class CParserState : public CParserStateBase
 {
 public:
-	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState) override;
 };
 
 // Comment state started by "/*" and ended by "*/"
 class CCommentState : public CParserStateBase
 {
 public:
-	CCommentState(CParserState* masterState) : State(masterState) {}
-	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
+	CCommentState(CParserState* masterState) : CParserStateBase(masterState) {}
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState) override;
 };
 
 // Comment state started by "//" and ended by end of line(EOL)
 class CSingleLineCommentState : public CParserStateBase
 {
 public:
-	CSingleLineCommentState(CParserState* masterState) : State(masterState) {}
-	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
+	CSingleLineCommentState(CParserState* masterState) : CParserStateBase(masterState) {}
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState) override;
 };
 
 // Literal state enclosed by single/double quotation mark.
 class CLiteralState : public CParserStateBase
 {
 public:
-	CLiteralState(CParserState* masterState) : State(masterState) {}
-	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, tsm::IState** nextState) override;
+	CLiteralState(CParserState* masterState) : CParserStateBase(masterState) {}
+	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState) override;
 };
 
 class CParserEvent : public tsm::Event
