@@ -95,7 +95,6 @@ public:
 	virtual bool _callExitOnShutdown() const = 0;
 	virtual IState* _getMasterState() const = 0;
 	virtual void _setMasterState(IState* state) = 0;
-	virtual bool _hasEntryCalled() const = 0;
 #pragma endregion
 
 	// Returns TimerClient instance.

@@ -43,7 +43,7 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 
 	// Call entry() of initial state in the caller thread.
 	// Pass nullptr as previous state to intial state.
-	HR_ASSERT_OK(initialState->_entry(context, event, nullptr));
+	HR_ASSERT_OK(callEntry(initialState, context, event, nullptr));
 
 	return S_OK;
 }
@@ -51,9 +51,9 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 HRESULT StateMachine::shutdownInner(IContext* context, DWORD timeout)
 {
 	// Cleanup existing states and their pending event timers.
-	forEachState(context->_getCurrentState(), [context](IState* state)
+	forEachState(context->_getCurrentState(), [this, context](IState* state)
 	{
-		return HR_EXPECT_OK(state->_exit(context, nullptr, nullptr));
+		return HR_EXPECT_OK(callExit(state, context, nullptr, nullptr));
 	});
 
 	// Cancel pending event timers of context.
@@ -115,7 +115,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 
 	HRESULT hr = forEachState(currentState, [this, context, event, &nextState](IState* state)
 	{
-		HRESULT hr = HR_EXPECT_OK(state->_handleEvent(context, event, &nextState));
+		HRESULT hr = HR_EXPECT_OK(callHandleEvent(state, context, event, &nextState));
 		switch(hr) {
 		case S_OK:		// Event is handled. -> Stop enumeration.
 			return S_FALSE;
@@ -131,16 +131,14 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 		hr = forEachState(currentState, [this, context, event, nextState](IState* state)
 		{
 			return ((state != nextState) && (state != nextState->_getMasterState())) ?
-				HR_EXPECT_OK(state->_exit(context, event, nextState)) :
+				HR_EXPECT_OK(callExit(state, context, event, nextState)) :
 				S_FALSE;
 		});
 		if(hr == S_FALSE) hr = S_OK;	// forEachState() exits successfully.
 		if(SUCCEEDED(hr)) {
 			CComPtr<IState> previousState(currentState);
 			context->_setCurrentState(nextState);
-			if(!nextState->_hasEntryCalled()) {
-				HR_ASSERT_OK(nextState->_entry(context, event, previousState));
-			}
+			HR_ASSERT_OK(callEntry(nextState, context, event, previousState));
 			callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
 			{
 				stateMonitor->onStateChanged(context, _event, previousState, nextState);
@@ -181,6 +179,33 @@ void StateMachine::callStateMonitor(IContext* context, std::function<void(IConte
 	if(stateMonitor) {
 		caller(context, stateMonitor);
 	}
+}
+
+HRESULT StateMachine::callHandleEvent(IState* state, IContext* context, IEvent* event, IState** nextState)
+{
+	return state->_handleEvent(context, event, nextState);
+}
+
+HRESULT StateMachine::callEntry(IState* state, IContext* context, IEvent* event, IState* previousState)
+{
+	auto sh = state->_getHandle();
+	if(!sh->entryCalled) {
+		sh->entryCalled = true;
+		return state->_entry(context, event, previousState);
+	} else {
+		return S_OK;
+	}
+}
+
+HRESULT StateMachine::callExit(IState* state, IContext* context, IEvent* event, IState* nextState)
+{
+	state->_getHandle()->entryCalled = false;
+	HR_ASSERT_OK(state->_getTimerClient()->cancelAllEventTimers());
+
+	// On shutdown, nextState is nullptr.
+	return ((nextState != nullptr) || state->_callExitOnShutdown()) ?
+		state->_exit(context, event, nextState) :
+		S_OK;
 }
 
 }

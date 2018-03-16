@@ -185,7 +185,7 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 		// SetupParam object and objects in SetupParam will be deleted when out of this scope.
 		std::unique_ptr<SetupParam> _param(param);
 		// Call entry() of initial state.
-		HR_ASSERT_OK(context->_getCurrentState()->_entry(context, param->event, nullptr));
+		HR_ASSERT_OK(callEntry(context->_getCurrentState(), context, param->event, nullptr));
 		// Notify that setup completed.
 		WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 	}

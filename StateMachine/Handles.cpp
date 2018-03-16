@@ -10,6 +10,7 @@ EventHandle::EventHandle(IEvent*)
 }
 
 StateHandle::StateHandle(IState*)
+	: entryCalled(false)
 {
 }
 

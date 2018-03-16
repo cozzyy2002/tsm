@@ -18,6 +18,8 @@ struct EventHandle
 struct StateHandle
 {
 	StateHandle(IState*);
+
+	bool entryCalled;
 };
 
 struct ContextHandle

@@ -23,6 +23,10 @@ protected:
 	HRESULT setupCompleted(IContext* context) const;
 	HRESULT forEachState(IState* state, std::function<HRESULT(IState*)> func);
 	void callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller);
+
+	HRESULT callHandleEvent(IState* state, IContext* context, IEvent* event, IState** nextState);
+	HRESULT callEntry(IState* state, IContext* context, IEvent* event, IState* previousState);
+	HRESULT callExit(IState* state, IContext* context, IEvent* event, IState* nextState);
 };
 
 }
