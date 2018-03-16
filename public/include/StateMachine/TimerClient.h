@@ -18,9 +18,6 @@ public:
 		TriggerEvent,	// Call StateMachine::triggerEvent() when the timer expires.
 	};
 	HRESULT _setEventTimer(TimerType timerType, IContext* context, IEvent* event);
-
-protected:
-	static VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired);
 };
 
 }

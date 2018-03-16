@@ -5,7 +5,11 @@
 
 #include "Handles.h"
 
-HRESULT tsm::TimerClient::cancelEventTimer(IEvent* event)
+namespace tsm {
+
+static VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired);
+
+HRESULT TimerClient::cancelEventTimer(IEvent* event)
 {
 	auto th = _getHandle();
 
@@ -26,7 +30,7 @@ HRESULT tsm::TimerClient::cancelEventTimer(IEvent* event)
 	}
 }
 
-HRESULT tsm::TimerClient::cancelAllEventTimers()
+HRESULT TimerClient::cancelAllEventTimers()
 {
 	auto th = _getHandle();
 
@@ -42,7 +46,7 @@ HRESULT tsm::TimerClient::cancelAllEventTimers()
 	return S_OK;
 }
 
-HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEvent* event)
+HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEvent* event)
 {
 	auto th = _getHandle();
 
@@ -82,38 +86,44 @@ HRESULT tsm::TimerClient::_setEventTimer(TimerType timerType, IContext* context,
 	return S_OK;
 }
 
-/*static*/ VOID tsm::TimerClient::timerCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
+/*static*/ VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired)
 {
 	auto timer = (TimerHandle::Timer*)lpParameter;
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
 	auto th = timerClient->_getHandle();
+	th->timerCallback(timerClient, timer, event);
+}
 
+HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event)
+{
 	// Timer object might be deleted when out of this method.
-	std::unique_ptr<TimerHandle::Timer> _timer;
+	std::unique_ptr<Timer> _timer;
 	{
-		lock_t _lock(th->lock);
+		lock_t _lock(lock);
 
-		auto it = th->timers.find(event);
-		if(it != th->timers.end()) {
+		auto it = timers.find(event);
+		if(it != timers.end()) {
 			if(event->_getIntervalTime() == 0) {
 				// Delete timer except for interval timer.
 				_timer = std::move(it->second);
-				th->timers.erase(it);
+				timers.erase(it);
 			}
 		} else {
-			HR_EXPECT(!_T("Callback of canceled timer is called."), E_UNEXPECTED);
-			return;
+			HR_ASSERT(!_T("Callback of canceled timer is called."), E_UNEXPECTED);
 		}
 	}
 
 	auto stateMachine = timer->context->_getStateMachine();
 	switch(timer->timerType) {
-	case TimerType::HandleEvent:
-		HR_EXPECT_OK(stateMachine->handleEvent(timer->context, event));
+	case TimerClient::TimerType::HandleEvent:
+		HR_ASSERT_OK(stateMachine->handleEvent(timer->context, event));
 		break;
-	case TimerType::TriggerEvent:
-		HR_EXPECT_OK(stateMachine->triggerEvent(timer->context, event));
+	case TimerClient::TimerType::TriggerEvent:
+		HR_ASSERT_OK(stateMachine->triggerEvent(timer->context, event));
 		break;
 	}
+	return S_OK;
+}
+
 }

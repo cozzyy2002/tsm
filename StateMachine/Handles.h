@@ -60,6 +60,8 @@ struct TimerHandle
 	// Note: Closing handle of timer queue is not necessary.
 	HANDLE hTimerQueue;
 	lock_object_t lock;
+
+	HRESULT timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event);
 };
 
 }
