@@ -2,7 +2,6 @@
 
 #include "Interface.h"
 #include "TimerClient.h"
-#include <StateMachine/Assert.h>
 
 namespace tsm {
 
