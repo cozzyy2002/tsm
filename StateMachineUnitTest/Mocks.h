@@ -42,6 +42,7 @@ class MockAsyncContext : public tsm::AsyncContext<MockEvent, MockState<MockAsync
 {
 public:
 	virtual IStateMonitor* _getStateMonitor() override { return this; }
+	HRESULT waitReady(DWORD timeout = 100);
 };
 
 /* Base class for Mock class inheriting IUnknown */

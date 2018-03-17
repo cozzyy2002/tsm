@@ -56,6 +56,15 @@ void mockOnAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 	}
 }
 
+HRESULT MockAsyncContext::waitReady(DWORD timeout)
+{
+	auto hr = tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>>::waitReady(timeout);
+	// Wait for worker thread to release objects including event object.
+	// Test might fail depending on execution order of test thread and state machine worker thread.
+	if(S_OK == hr) Sleep(10);
+	return hr;
+}
+
 TestUnknown::~TestUnknown()
 {
 	if(rcRef != 0) {
