@@ -93,14 +93,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	auto timerClient = event->_getTimerClient();
 	if(timerClient && !event->_getHandle()->isTimerCreated) {
 		// Event should be handled after delay time elapsed.
-		auto hr = HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
-		if(SUCCEEDED(hr)) {
-			callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
-			{
-				stateMonitor->onTimerStarted(context, event);
-			});
-		}
-		return hr;
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
 	}
 
 	std::unique_ptr<lock_t> _lock(context->_getHandleEventLock());
@@ -108,7 +101,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	IState* nextState = nullptr;
 	auto currentState = context->_getCurrentState();
 
-	callStateMonitor(context, [event, currentState](IContext* context, IStateMonitor* stateMonitor)
+	context->_getHandle()->callStateMonitor(context, [event, currentState](IContext* context, IStateMonitor* stateMonitor)
 	{
 		stateMonitor->onEventHandling(context, event, currentState);
 	});
@@ -139,7 +132,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 			CComPtr<IState> previousState(currentState);
 			context->_setCurrentState(nextState);
 			HR_ASSERT_OK(callEntry(nextState, context, event, previousState));
-			callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
+			context->_getHandle()->callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
 			{
 				stateMonitor->onStateChanged(context, _event, previousState, nextState);
 			});
@@ -171,14 +164,6 @@ HRESULT StateMachine::forEachState(IState * state, std::function<HRESULT(IState*
 		state = state->_getMasterState();
 	}
 	return hr;
-}
-
-void StateMachine::callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller)
-{
-	auto stateMonitor = context->_getStateMonitor();
-	if(stateMonitor) {
-		caller(context, stateMonitor);
-	}
 }
 
 HRESULT StateMachine::callHandleEvent(IState* state, IContext* context, IEvent* event, IState** nextState)

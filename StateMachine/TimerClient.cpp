@@ -94,6 +94,11 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	// m_timers owns Timer object in unique_ptr<Timer>.
 	th->timers.insert(std::make_pair(event, std::move(timer)));
 
+	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onTimerStarted(context, event);
+	});
+
 	return S_OK;
 }
 

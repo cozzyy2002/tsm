@@ -77,14 +77,7 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	auto timerClient = event->_getTimerClient();
 	if(timerClient && !event->_getHandle()->isTimerCreated) {
 		// Event should be handled after delay time elapsed.
-		auto hr = HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
-		if(SUCCEEDED(hr)) {
-			callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
-			{
-				stateMonitor->onTimerStarted(context, event);
-			});
-		}
-		return hr;
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
 	}
 
 	auto asyncData = context->_getHandle()->asyncData;
@@ -103,7 +96,7 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	}
 	WIN32_ASSERT(SetEvent(asyncData->hEventAvailable));
 
-	callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
 	{
 		stateMonitor->onEventTriggered(context, event);
 	});
@@ -170,7 +163,7 @@ DWORD AsyncStateMachine::workerThreadProc(LPVOID lpParameter)
 	auto hr = param->stateMachine->doWorkerThread(param);
 
 	// Notify that worker thread exits.
-	param->stateMachine->callStateMonitor(context, [hr](IContext* context, IStateMonitor* stateMonitor)
+	context->_getHandle()->callStateMonitor(context, [hr](IContext* context, IStateMonitor* stateMonitor)
 	{
 		stateMonitor->onWorkerThreadExit(context, hr);
 	});
@@ -206,7 +199,7 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 				lock_t _lock(asyncData->eventQueueLock);
 				auto& eventQueue = asyncData->eventQueue;
 				if(eventQueue.empty()) {
-					callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)
+					context->_getHandle()->callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)
 					{
 						stateMonitor->onIdle(context);
 					});

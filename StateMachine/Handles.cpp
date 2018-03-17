@@ -40,4 +40,12 @@ IMPLEMTENT_HANDLE_FACTORY(TimerClient, TimerHandle)
 
 #pragma endregion
 
+void ContextHandle::callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller)
+{
+	auto stateMonitor = context->_getStateMonitor();
+	if(stateMonitor) {
+		caller(context, stateMonitor);
+	}
+}
+
 }

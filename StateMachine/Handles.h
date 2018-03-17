@@ -38,6 +38,8 @@ struct ContextHandle
 
 	AsyncData* asyncData;
 
+	void callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller);
+
 protected:
 	friend class HandleOwner<IContext, ContextHandle>;
 
