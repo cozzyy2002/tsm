@@ -1,6 +1,9 @@
 #pragma once
 #include "StateMachine.h"
 
+// Make sure that IContext is instance of AsyncContext.
+#define ASSERT_ASYNC(c) HR_ASSERT(c->isAsync(), E_INVALIDARG)
+
 namespace tsm {
 
 class AsyncStateMachine : public StateMachine

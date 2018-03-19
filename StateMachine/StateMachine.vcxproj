@@ -151,6 +151,7 @@
     <ClInclude Include="Handles.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="WindowProcStateMachine.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AsyncStateMachine.cpp" />
@@ -164,6 +165,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="WindowProcStateMachine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

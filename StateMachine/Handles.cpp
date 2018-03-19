@@ -18,6 +18,8 @@ ContextHandle::ContextHandle(IContext* context)
 {
 	if(context->isAsync()) {
 		_asyncData.reset(new AsyncData());
+
+		_asyncData->hWnd = NULL;
 	}
 	asyncData = _asyncData.get();
 }

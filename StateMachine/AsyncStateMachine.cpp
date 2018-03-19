@@ -1,13 +1,10 @@
 #include "StateMachine/stdafx.h"
 
-#include <StateMachine/State.h>
+	#include <StateMachine/State.h>
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
 #include "AsyncStateMachine.h"
 #include "Handles.h"
-
-// Make sure that IContext is instance of AsyncContext.
-#define ASSERT_ASYNC(c) HR_ASSERT(c->isAsync(), E_INVALIDARG)
 
 namespace tsm {
 
