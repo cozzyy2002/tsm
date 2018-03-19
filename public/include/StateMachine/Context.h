@@ -22,16 +22,16 @@ public:
 	HRESULT waitReady(DWORD timeout = 100) { return _getStateMachine()->waitReady(this, timeout); }
 	S* getCurrentState() const { return (S*)m_currentState.p; }
 
-	IStateMachine* _getStateMachine() {
+	virtual IStateMachine* _getStateMachine() override {
 		if(!m_stateMachine) m_stateMachine.reset(IStateMachine::create(this));
 		return m_stateMachine.get();
 	}
-	virtual IState* _getCurrentState() { return m_currentState; }
-	virtual void _setCurrentState(IState* state) { m_currentState = state; }
+	virtual IState* _getCurrentState() override { return m_currentState; }
+	virtual void _setCurrentState(IState* state) override { m_currentState = state; }
 
-	virtual lock_t* _getHandleEventLock() { return new lock_t(m_handleEventLock); }
+	virtual lock_t* _getHandleEventLock() override { return new lock_t(m_handleEventLock); }
 
-	virtual IStateMonitor* _getStateMonitor() { return nullptr; }
+	virtual IStateMonitor* _getStateMonitor() override { return nullptr; }
 
 	// Implementation of IContext::_getTimerClient().
 	virtual TimerClient* _getTimerClient() override { return this; }
