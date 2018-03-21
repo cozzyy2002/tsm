@@ -21,9 +21,6 @@ public:
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) override;
 
 protected:
-	// Note: The following protected members are referenced by IStateMachine::WndProc().
-	friend class IStateMachine;
-
 	// Message type to be passed to the window procedure as WPARAM
 	enum class MessageType {
 		Setup,
@@ -42,6 +39,10 @@ protected:
 	HRESULT windowProc(MessageType type, Message* message);
 	HRESULT setupProc(IContext* context, IEvent* event);
 	HRESULT handleEventProc(IContext* context);
+
+	// Window procedure of WindowProcStateMachine that is called by app
+	// when app window proc receives state machine message.
+	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 
 }

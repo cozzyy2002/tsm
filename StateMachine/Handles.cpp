@@ -43,7 +43,7 @@ IMPLEMTENT_HANDLE_FACTORY(TimerClient, TimerHandle)
 #pragma endregion
 
 /**
- * Add the event to event queue and signal that event is available.
+ * Add the event to event queue.
  * Events are added to the queue by priority order.
  * deque::back() returns event with highest priority.
  * Events with same priority are added by FIFO order(deque::back() returns event triggered first).

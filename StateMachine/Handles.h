@@ -40,6 +40,7 @@ struct ContextHandle
 		// For WindowProcStateMachine
 		HWND hWnd;		// Window handle to which state machine message is sent.
 		UINT msg;		// Message ID used by state machine.
+		WNDPROC appWndProc;	// Window procedure of app.
 
 		HRESULT queueEvent(IEvent* event);
 	};

@@ -1,6 +1,6 @@
 #include "StateMachine/stdafx.h"
 
-	#include <StateMachine/State.h>
+#include <StateMachine/State.h>
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
 #include "AsyncStateMachine.h"
@@ -78,6 +78,8 @@ HRESULT AsyncStateMachine::triggerEvent(IContext* context, IEvent* event)
 	}
 
 	auto asyncData = context->_getHandle()->asyncData;
+
+	// Add the event to event queue and signal that event is available.
 	HR_ASSERT_OK(asyncData->queueEvent(event));
 	WIN32_ASSERT(SetEvent(asyncData->hEventAvailable));
 

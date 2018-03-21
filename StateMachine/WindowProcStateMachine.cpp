@@ -7,6 +7,8 @@
 
 namespace tsm {
 
+static const TCHAR windowPropertyName[] = _T("WindowProcStateMachine");
+
 HRESULT WindowProcStateMachine::setup(IContext* context, IState* initialState, IEvent* event)
 {
 	// Ensure to release object on error.
@@ -30,6 +32,10 @@ HRESULT WindowProcStateMachine::setup(HWND hWnd, UINT msg, IContext* context, IS
 	asyncData->hWnd = hWnd;
 	asyncData->msg = msg;
 
+	// Subclass the hWnd. 
+	WIN32_ASSERT(asyncData->appWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (LONG)WndProc));
+	WIN32_ASSERT(SetProp(hWnd, windowPropertyName, (HANDLE)context));
+
 	auto message = new Message();
 	message->event = event;
 	HR_ASSERT_OK(postMessage(context, MessageType::Setup, message));
@@ -38,7 +44,18 @@ HRESULT WindowProcStateMachine::setup(HWND hWnd, UINT msg, IContext* context, IS
 
 HRESULT WindowProcStateMachine::shutdown(IContext* context, DWORD timeout)
 {
-	return E_NOTIMPL;
+	ASSERT_ASYNC(context);
+
+	auto asyncData = context->_getHandle()->asyncData;
+
+	// Unsubclass the hWnd. 
+	if(asyncData->hWnd) {
+		WIN32_EXPECT(WndProc == (WNDPROC)SetWindowLong(asyncData->hWnd, GWL_WNDPROC, (LONG)asyncData->appWndProc));
+		WIN32_EXPECT(context == (IContext*)RemoveProp(asyncData->hWnd, windowPropertyName));
+	}
+
+	HR_ASSERT_OK(shutdownInner(context, timeout));
+	return S_OK;
 }
 
 HRESULT WindowProcStateMachine::triggerEvent(IContext* context, IEvent* event)
@@ -49,9 +66,15 @@ HRESULT WindowProcStateMachine::triggerEvent(IContext* context, IEvent* event)
 	ASSERT_ASYNC(context);
 
 	auto asyncData = context->_getHandle()->asyncData;
-	HR_ASSERT_OK(asyncData->queueEvent(event));
 
+	// Add the event to event queue and post message to handle event in the queue.
+	HR_ASSERT_OK(asyncData->queueEvent(event));
 	HR_ASSERT_OK(postMessage(context, MessageType::HandleEvent));
+
+	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onEventTriggered(context, event);
+	});
 	return S_OK;
 }
 
@@ -73,11 +96,22 @@ HRESULT WindowProcStateMachine::postMessage(IContext* context, MessageType type,
 	return hr;
 }
 
-LRESULT IStateMachine::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT WindowProcStateMachine::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	auto type = (WindowProcStateMachine::MessageType)wParam;
-	auto message = (WindowProcStateMachine::Message*)lParam;
-	HR_EXPECT_OK(message->_this->windowProc(type, message));
+	auto context = (IContext*)GetProp(hWnd, windowPropertyName);
+	if(context) {
+		auto asyncData = context->_getHandle()->asyncData;
+		if(asyncData->msg == msg) {
+			auto type = (MessageType)wParam;
+			auto message = (Message*)lParam;
+			HR_EXPECT_OK(message->_this->windowProc(type, message));
+		} else {
+			// Call app window procedure.
+			return CallWindowProc(asyncData->appWndProc, hWnd, msg, wParam, lParam);
+		}
+	} else {
+		checkHResult(E_UNEXPECTED, _T(__FUNCTION__) _T(" called with unknown HWND"), _T(__FILE__), __LINE__);
+	}
 
 	return 0L;
 }
