@@ -62,7 +62,7 @@ HRESULT AsyncStateMachine::shutdown(IContext * context, DWORD timeout)
 	return S_OK;
 }
 
-HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
+HRESULT AsyncStateMachine::triggerEvent(IContext* context, IEvent* event)
 {
 	// Ensure to release object on error.
 	CComPtr<IEvent> _event(event);
@@ -78,19 +78,7 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	}
 
 	auto asyncData = context->_getHandle()->asyncData;
-	// Add the event to event queue and signal that event is available.
-	// Events are added to the queue by priority order.
-	// deque::back() returns event with highest priority.
-	// Events with same priority are added by FIFO order(deque::back() returns event triggered first).
-	{
-		lock_t _lock(asyncData->eventQueueLock);
-		auto& eventQueue = asyncData->eventQueue;
-		auto it = eventQueue.begin();
-		for(; it != eventQueue.end(); it++) {
-			if(event->_getPriority() <= (*it)->_getPriority()) break;
-		}
-		eventQueue.insert(it, event);
-	}
+	HR_ASSERT_OK(asyncData->queueEvent(event));
 	WIN32_ASSERT(SetEvent(asyncData->hEventAvailable));
 
 	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)

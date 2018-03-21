@@ -114,6 +114,10 @@ public:
 	virtual HRESULT triggerEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT handleEvent(IContext* context, IEvent* event) = 0;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
+
+	// Window procedure of WindowProcStateMachine that is called by app
+	// when app window proc receives state machine message.
+	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 
 // Monitor interface

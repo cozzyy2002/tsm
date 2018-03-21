@@ -20,27 +20,28 @@ public:
 	//virtual HRESULT handleEvent(IContext* context, IEvent* event) override;
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) override;
 
-	// Window procedure that is called by app
-	// when app window proc receives state machine message.
-	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 protected:
+	// Note: The following protected members are referenced by IStateMachine::WndProc().
+	friend class IStateMachine;
+
+	// Message type to be passed to the window procedure as WPARAM
 	enum class MessageType {
 		Setup,
 		Shutdown,
-		TriggerEvent,
 		HandleEvent,
 	};
 
+	// Message structure to be passed to the window procedure as LPARAM
 	struct Message {
 		WindowProcStateMachine* _this;
-		IContext* context;				// type = Setup, Shutdown, TriggerEvent, HandleEvent
-		CComPtr<IState> initialState;	// type = Setup
-		CComPtr<IEvent> event;			// type = Setup, TriggerEvent, HandleEvent
+		IContext* context;				// type = Setup, Shutdown, HandleEvent
+		CComPtr<IEvent> event;			// type = Setup
 	};
 
-	HRESULT postMessage(IContext* context, MessageType type, Message* message);
+	HRESULT postMessage(IContext* context, MessageType type, Message* message = nullptr);
 	HRESULT windowProc(MessageType type, Message* message);
+	HRESULT setupProc(IContext* context, IEvent* event);
+	HRESULT handleEventProc(IContext* context);
 };
 
 }

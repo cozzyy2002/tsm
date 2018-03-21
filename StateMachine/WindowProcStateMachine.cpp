@@ -31,7 +31,6 @@ HRESULT WindowProcStateMachine::setup(HWND hWnd, UINT msg, IContext* context, IS
 	asyncData->msg = msg;
 
 	auto message = new Message();
-	message->initialState = initialState;
 	message->event = event;
 	HR_ASSERT_OK(postMessage(context, MessageType::Setup, message));
 	return S_OK;
@@ -49,9 +48,10 @@ HRESULT WindowProcStateMachine::triggerEvent(IContext* context, IEvent* event)
 
 	ASSERT_ASYNC(context);
 
-	auto message = new Message();
-	message->event = event;
-	HR_ASSERT_OK(postMessage(context, MessageType::TriggerEvent, message));
+	auto asyncData = context->_getHandle()->asyncData;
+	HR_ASSERT_OK(asyncData->queueEvent(event));
+
+	HR_ASSERT_OK(postMessage(context, MessageType::HandleEvent));
 	return S_OK;
 }
 
@@ -60,40 +60,85 @@ HRESULT WindowProcStateMachine::waitReady(IContext* context, DWORD timeout)
 	return E_NOTIMPL;
 }
 
-HRESULT WindowProcStateMachine::postMessage(IContext* context, MessageType type, Message* message)
+HRESULT WindowProcStateMachine::postMessage(IContext* context, MessageType type, Message* message /*= nullptr*/)
 {
-	auto asyncData = context->_getHandle()->asyncData;
+	if(!message) message = new Message();
+	message->_this = this;
 	message->context = context;
-	WIN32_ASSERT(PostMessage(asyncData->hWnd, asyncData->msg, (WPARAM)type, (LPARAM)message));
-	return S_OK;
+	auto asyncData = context->_getHandle()->asyncData;
+	auto hr = WIN32_EXPECT(PostMessage(asyncData->hWnd, asyncData->msg, (WPARAM)type, (LPARAM)message));
+	if(FAILED(hr)) {
+		delete message;
+	}
+	return hr;
 }
 
-LRESULT WindowProcStateMachine::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT IStateMachine::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	auto type = (MessageType)wParam;
-	auto message = (Message*)lParam;
+	auto type = (WindowProcStateMachine::MessageType)wParam;
+	auto message = (WindowProcStateMachine::Message*)lParam;
 	HR_EXPECT_OK(message->_this->windowProc(type, message));
 
 	return 0L;
 }
 
-HRESULT WindowProcStateMachine::windowProc(MessageType type, Message * message)
+HRESULT WindowProcStateMachine::windowProc(MessageType type, Message* message)
 {
+	// Message object and it's contents will be deleted when this method exits.
 	std::unique_ptr<Message> _message(message);
 
 	auto context = message->context;
 	switch(type) {
 	case MessageType::Setup:
-		HR_ASSERT_OK(message->initialState->_entry(context, message->event, nullptr));
+		setupProc(context, message->event);
 		break;
 	case MessageType::Shutdown:
 		break;
-	case MessageType::TriggerEvent:
-		break;
 	case MessageType::HandleEvent:
-		HR_ASSERT_OK(handleEvent(context, message->event));
+		handleEventProc(context);
 		break;
 	}
+	return S_OK;
+}
+
+HRESULT WindowProcStateMachine::setupProc(IContext* context, IEvent* event)
+{
+	auto asyncData = context->_getHandle()->asyncData;
+	// Call entry() of initial state.
+	HR_ASSERT_OK(callEntry(context->_getCurrentState(), context, event, nullptr));
+	// Notify that setup completed.
+	WIN32_ASSERT(SetEvent(asyncData->hEventReady));
+	return S_OK;
+}
+
+HRESULT WindowProcStateMachine::handleEventProc(IContext* context)
+{
+	CComPtr<IEvent> event;
+	size_t eventCountLeft = 0;
+	{
+		// Fetch event from the queue.
+		auto asyncData = context->_getHandle()->asyncData;
+		lock_t _lock(asyncData->eventQueueLock);
+		auto& eventQueue = asyncData->eventQueue;
+		HR_ASSERT(!eventQueue.empty(), E_UNEXPECTED);
+		event = eventQueue.back();
+		eventQueue.pop_back();
+		eventCountLeft = eventQueue.size();
+	}
+
+	// Handle the event.
+	HR_ASSERT_OK(handleEvent(context, event));
+	if(eventCountLeft) {
+		// Post message to handle next event in the queue.
+		// Do not loop to handle all events in the queue so that app can process own messages.
+		HR_ASSERT_OK(postMessage(context, MessageType::HandleEvent));
+	} else {
+		context->_getHandle()->callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)
+		{
+			stateMonitor->onIdle(context);
+		});
+	}
+
 	return S_OK;
 }
 
