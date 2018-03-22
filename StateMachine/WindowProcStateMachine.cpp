@@ -36,6 +36,8 @@ HRESULT WindowProcStateMachine::setup(HWND hWnd, UINT msg, IContext* context, IS
 	WIN32_ASSERT(asyncData->appWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (LONG)WndProc));
 	WIN32_ASSERT(SetProp(hWnd, windowPropertyName, (HANDLE)context));
 
+	asyncData->hEventReady.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
+	asyncData->hEventShutdown.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 	auto message = new Message();
 	message->event = event;
 	HR_ASSERT_OK(postMessage(context, MessageType::Setup, message));
@@ -47,6 +49,11 @@ HRESULT WindowProcStateMachine::shutdown(IContext* context, DWORD timeout)
 	ASSERT_ASYNC(context);
 
 	auto asyncData = context->_getHandle()->asyncData;
+
+	if(asyncData->hEventShutdown) {
+		// Signal shutdown.
+		WIN32_EXPECT(SetEvent(asyncData->hEventShutdown));
+	}
 
 	// Unsubclass the hWnd. 
 	if(asyncData->hWnd) {
@@ -64,6 +71,14 @@ HRESULT WindowProcStateMachine::triggerEvent(IContext* context, IEvent* event)
 	CComPtr<IEvent> _event(event);
 
 	ASSERT_ASYNC(context);
+	HR_ASSERT_OK(setupCompleted(context));
+	HR_ASSERT(event, E_INVALIDARG);
+
+	auto timerClient = event->_getTimerClient();
+	if(timerClient && !event->_getHandle()->isTimerCreated) {
+		// Event should be handled after delay time elapsed.
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
+	}
 
 	auto asyncData = context->_getHandle()->asyncData;
 
@@ -80,7 +95,30 @@ HRESULT WindowProcStateMachine::triggerEvent(IContext* context, IEvent* event)
 
 HRESULT WindowProcStateMachine::waitReady(IContext* context, DWORD timeout)
 {
-	return E_NOTIMPL;
+	ASSERT_ASYNC(context);
+
+	auto hr = S_OK;
+	auto asyncData = context->_getHandle()->asyncData;
+	HANDLE hEvents[] = { asyncData->hEventReady, asyncData->hEventShutdown };
+	static const DWORD eventsCount = ARRAYSIZE(hEvents);
+	DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, timeout);
+	HR_ASSERT_OK(checkWaitResult(wait, eventsCount));
+	switch(wait) {
+	case WAIT_OBJECT_0:
+		// Completed to setup.
+		hr = S_OK;
+		break;
+	case WAIT_OBJECT_0 + 1:
+		// shutdown() has been called.
+		hr = S_FALSE;
+		break;
+	default:
+		// Unreachable !
+		hr = E_UNEXPECTED;
+		break;
+	}
+
+	return hr;
 }
 
 HRESULT WindowProcStateMachine::postMessage(IContext* context, MessageType type, Message* message /*= nullptr*/)
@@ -154,17 +192,21 @@ HRESULT WindowProcStateMachine::handleEventProc(IContext* context)
 		auto asyncData = context->_getHandle()->asyncData;
 		lock_t _lock(asyncData->eventQueueLock);
 		auto& eventQueue = asyncData->eventQueue;
-		HR_ASSERT(!eventQueue.empty(), E_UNEXPECTED);
-		event = eventQueue.back();
-		eventQueue.pop_back();
+		if(!eventQueue.empty()) {
+			event = eventQueue.back();
+			eventQueue.pop_back();
+		}
 		eventCountLeft = eventQueue.size();
 	}
 
-	// Handle the event.
-	HR_ASSERT_OK(handleEvent(context, event));
+	if(event) {
+		// Handle the event.
+		HR_ASSERT_OK(handleEvent(context, event));
+	}
 	if(eventCountLeft) {
 		// Post message to handle next event in the queue.
-		// Do not loop to handle all events in the queue so that app can process own messages.
+		// Do not loop to handle all events in the queue
+		// so that handling event does not disturb app to process own messages.
 		HR_ASSERT_OK(postMessage(context, MessageType::HandleEvent));
 	} else {
 		context->_getHandle()->callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)
