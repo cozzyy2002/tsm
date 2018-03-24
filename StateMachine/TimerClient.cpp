@@ -16,25 +16,20 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 	// Check if any timer has started by _triggerDelayedEvent() method.
 	HR_ASSERT(th->hTimerQueue, E_ILLEGAL_METHOD_CALL);
 
-	HANDLE hTimer(NULL);	// Timer handle to be canceled.
 	auto hr = S_OK;
 	{
 		lock_t _lock(th->lock);
 
 		auto it = th->timers.find(event);
 		if(it != th->timers.end()) {
+			// Delete timer and wait for currently running timer callback function.
+			WIN32_ASSERT(DeleteTimerQueueTimer(th->hTimerQueue, it->second->hTimer, INVALID_HANDLE_VALUE));
 			// Remove timer.
-			hTimer = it->second->hTimer;
 			th->timers.erase(it);
 		} else {
 			// Timer specified might have expired already.
 			hr = S_FALSE;
 		}
-	}
-
-	if(hTimer) {
-		// Delete timer and wait for currently running timer callback function.
-		WIN32_ASSERT(DeleteTimerQueueTimer(th->hTimerQueue, hTimer, INVALID_HANDLE_VALUE));
 	}
 	return hr;
 }

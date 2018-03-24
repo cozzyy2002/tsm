@@ -185,25 +185,23 @@ HRESULT WindowProcStateMachine::setupProc(IContext* context, IEvent* event)
 
 HRESULT WindowProcStateMachine::handleEventProc(IContext* context)
 {
+	auto asyncData = context->_getHandle()->asyncData;
+	auto& eventQueue = asyncData->eventQueue;
 	CComPtr<IEvent> event;
-	size_t eventCountLeft = 0;
 	{
 		// Fetch event from the queue.
-		auto asyncData = context->_getHandle()->asyncData;
 		lock_t _lock(asyncData->eventQueueLock);
-		auto& eventQueue = asyncData->eventQueue;
 		if(!eventQueue.empty()) {
 			event = eventQueue.back();
 			eventQueue.pop_back();
 		}
-		eventCountLeft = eventQueue.size();
 	}
 
 	if(event) {
 		// Handle the event.
 		HR_ASSERT_OK(handleEvent(context, event));
 	}
-	if(eventCountLeft) {
+	if(!eventQueue.empty()) {
 		// Post message to handle next event in the queue.
 		// Do not loop to handle all events in the queue
 		// so that handling event does not disturb app to process own messages.

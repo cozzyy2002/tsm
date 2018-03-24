@@ -50,8 +50,6 @@ struct ContextHandle
 	void callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller);
 
 protected:
-	friend class HandleOwner<IContext, ContextHandle>;
-
 	std::unique_ptr<AsyncData> _asyncData;
 };
 
