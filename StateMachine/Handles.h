@@ -57,14 +57,14 @@ struct TimerHandle
 {
 	TimerHandle(TimerClient*);
 
-	struct Timer {
+	struct Timer : public Unknown {
 		TimerClient::TimerType timerType;
 		IContext* context;
 		CComPtr<IEvent> event;
 		HANDLE hTimer;				// Handle of timer-queue timer.
 	};
 
-	std::map<IEvent*, std::unique_ptr<Timer>> timers;
+	std::map<IEvent*, CComPtr<Timer>> timers;
 
 	// Note: Closing handle of timer queue is not necessary.
 	HANDLE hTimerQueue;

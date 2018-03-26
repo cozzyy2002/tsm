@@ -79,7 +79,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 2)
 	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
 	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
 	EXPECT_TRUE(e0.deleted());
-	Sleep(100);
+	Sleep(500);
 }
 
 // Cancel interval state timer
@@ -96,7 +96,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 3)
 	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
 	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
 	EXPECT_TRUE(e0.deleted());
-	Sleep(100);
+	Sleep(500);
 }
 
 // Cancel event timer of state on State::exit()

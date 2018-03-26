@@ -16,20 +16,24 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 	// Check if any timer has started by _triggerDelayedEvent() method.
 	HR_ASSERT(th->hTimerQueue, E_ILLEGAL_METHOD_CALL);
 
+	CComPtr<TimerHandle::Timer> timer;
 	auto hr = S_OK;
 	{
 		lock_t _lock(th->lock);
 
 		auto it = th->timers.find(event);
 		if(it != th->timers.end()) {
-			// Delete timer and wait for currently running timer callback function.
-			WIN32_ASSERT(DeleteTimerQueueTimer(th->hTimerQueue, it->second->hTimer, INVALID_HANDLE_VALUE));
+			timer = it->second;
 			// Remove timer.
 			th->timers.erase(it);
 		} else {
 			// Timer specified might have expired already.
 			hr = S_FALSE;
 		}
+	}
+	if(timer.p) {
+		// Delete timer and wait for currently running timer callback function.
+		WIN32_ASSERT(DeleteTimerQueueTimer(th->hTimerQueue, timer->hTimer, INVALID_HANDLE_VALUE));
 	}
 	return hr;
 }
@@ -75,7 +79,7 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	}
 
 	// Create timer object.
-	std::unique_ptr<TimerHandle::Timer> timer(new TimerHandle::Timer());
+	CComPtr<TimerHandle::Timer> timer(new TimerHandle::Timer());
 	timer->timerType = timerType;
 	timer->context = context;
 	timer->event = event;
@@ -84,10 +88,10 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	ULONG flags = 0;
 	flags |= ((timer->timerType == TimerType::HandleEvent) ? WT_EXECUTELONGFUNCTION : 0);
 	flags |= ((event->_getIntervalTime() == 0) ? WT_EXECUTEONLYONCE : 0);
-	WIN32_ASSERT(CreateTimerQueueTimer(&timer->hTimer, th->hTimerQueue, timerCallback, timer.get(), event->_getDelayTime(), event->_getIntervalTime(), flags));
+	WIN32_ASSERT(CreateTimerQueueTimer(&timer->hTimer, th->hTimerQueue, timerCallback, timer.p, event->_getDelayTime(), event->_getIntervalTime(), flags));
 
 	// m_timers owns Timer object in unique_ptr<Timer>.
-	th->timers.insert(std::make_pair(event, std::move(timer)));
+	th->timers.insert(std::make_pair(event, timer));
 
 	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
 	{
@@ -99,7 +103,7 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 
 /*static*/ VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired)
 {
-	auto timer = (TimerHandle::Timer*)lpParameter;
+	CComPtr<TimerHandle::Timer> timer = (TimerHandle::Timer*)lpParameter;
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
 	auto th = timerClient->_getHandle();
@@ -108,8 +112,6 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 
 HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event)
 {
-	// Timer object might be deleted when out of this method.
-	std::unique_ptr<Timer> _timer;
 	{
 		lock_t _lock(lock);
 
@@ -117,7 +119,6 @@ HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEven
 		if(it != timers.end()) {
 			if(event->_getIntervalTime() == 0) {
 				// Delete timer except for interval timer.
-				_timer = std::move(it->second);
 				timers.erase(it);
 			}
 		} else {
