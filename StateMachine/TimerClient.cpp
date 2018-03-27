@@ -46,13 +46,13 @@ HRESULT TimerClient::cancelAllEventTimers()
 	// In case TimerHandle::hTimerQueue is cleared in another thread.
 	auto hTimerQueue = th->hTimerQueue;
 	if(hTimerQueue) {
+		// Cancel and delete all pending timers and delete timer queue.
+		WIN32_EXPECT(DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE));
 		{
 			lock_t _lock(th->lock);
 			th->hTimerQueue = NULL;
 			th->timers.clear();
 		}
-		// Cancel and delete all pending timers and delete timer queue.
-		WIN32_EXPECT(DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE));
 	}
 
 	return S_OK;
