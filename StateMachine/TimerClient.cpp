@@ -16,6 +16,7 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 	// Check if any timer has started by _triggerDelayedEvent() method.
 	HR_ASSERT(th->hTimerQueue, E_ILLEGAL_METHOD_CALL);
 
+	// Preserve Timer object until callback will complete or will be canceled.
 	CComPtr<TimerHandle::Timer> timer;
 	auto hr = S_OK;
 	{
@@ -42,15 +43,16 @@ HRESULT TimerClient::cancelAllEventTimers()
 {
 	auto th = _getHandle();
 
-	if(th->hTimerQueue) {
-		// Cancel and delete all pending timers and delete timer queue.
-		WIN32_EXPECT(DeleteTimerQueueEx(th->hTimerQueue, INVALID_HANDLE_VALUE));
-
+	// In case TimerHandle::hTimerQueue is cleared in another thread.
+	auto hTimerQueue = th->hTimerQueue;
+	if(hTimerQueue) {
 		{
 			lock_t _lock(th->lock);
 			th->hTimerQueue = NULL;
 			th->timers.clear();
 		}
+		// Cancel and delete all pending timers and delete timer queue.
+		WIN32_EXPECT(DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE));
 	}
 
 	return S_OK;
@@ -122,7 +124,8 @@ HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEven
 				timers.erase(it);
 			}
 		} else {
-			HR_ASSERT(!_T("Callback of canceled timer is called."), E_UNEXPECTED);
+			// The timer has been canceled.
+			return S_FALSE;
 		}
 	}
 
