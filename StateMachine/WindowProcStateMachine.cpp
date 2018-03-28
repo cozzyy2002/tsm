@@ -148,7 +148,7 @@ LRESULT WindowProcStateMachine::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
 			return CallWindowProc(asyncData->appWndProc, hWnd, msg, wParam, lParam);
 		}
 	} else {
-		checkHResult(E_UNEXPECTED, _T(__FUNCTION__) _T(" called with unknown HWND"), _T(__FILE__), __LINE__);
+		HR_ERROR(_T(__FUNCTION__) _T(" called with unknown HWND"), E_UNEXPECTED);
 	}
 
 	return 0L;
