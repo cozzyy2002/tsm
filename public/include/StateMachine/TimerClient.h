@@ -2,6 +2,8 @@
 
 #include <StateMachine/Interface.h>
 
+#include <vector>
+
 namespace tsm {
 
 struct TimerHandle;
@@ -11,6 +13,7 @@ class TimerClient : public HandleOwner<TimerClient, TimerHandle>
 public:
 	HRESULT cancelEventTimer(IEvent* event);
 	HRESULT cancelAllEventTimers();
+	std::vector<CComPtr<IEvent>> getPendingEvents();
 
 	enum class TimerType {
 		None,			// Event is handled ASAP. This value is not used.

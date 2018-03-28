@@ -58,6 +58,18 @@ HRESULT TimerClient::cancelAllEventTimers()
 	return S_OK;
 }
 
+std::vector<CComPtr<IEvent>> TimerClient::getPendingEvents()
+{
+	auto th = _getHandle();
+	lock_t _lock(th->lock);
+
+	std::vector<CComPtr<IEvent>> events;
+	for(auto& pair : th->timers) {
+		events.push_back(pair.first);
+	}
+	return events;
+}
+
 HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEvent* event)
 {
 	auto th = _getHandle();
