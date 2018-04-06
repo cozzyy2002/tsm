@@ -4,6 +4,10 @@
 #include "stdafx.h"
 #include "StateMachineManualTest.h"
 
+#include <memory>
+
+static MyContext context;
+
 #define MAX_LOADSTRING 100
 
 // Global Variables:
@@ -16,6 +20,7 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+static INT_PTR CALLBACK    triggerEventDialogProc(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -42,6 +47,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
+	HR_ASSERT_OK(context.setup(new InitialState()));
+
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -51,6 +58,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
+
+	HR_ASSERT_OK(context.shutdown());
 
     return (int) msg.wParam;
 }
@@ -131,6 +140,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Parse the menu selections:
             switch (wmId)
             {
+			case IDM_TRIGGER_EVENT:
+				DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_EVENT), hWnd, triggerEventDialogProc);
+				break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -158,6 +170,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
+
+INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	UNREFERENCED_PARAMETER(lParam);
+	switch(message)
+	{
+	case WM_INITDIALOG:
+		return (INT_PTR)TRUE;
+
+	case WM_COMMAND:
+		switch(LOWORD(wParam)) {
+		case IDC_BUTTON_TRIGGER_EVENT:
+			break;
+		case IDOK:
+		case IDCANCEL:
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		break;
+	}
+	return (INT_PTR)FALSE;
+}
+
 
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

@@ -30,12 +30,18 @@
     <ClInclude Include="StateMachineManualTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MyLogger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StateMachineManualTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MyLogger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
