@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "StateMachineManualTest.h"
 
+#include <log4cplus/configurator.h>
 #include <memory>
 
 static MyContext context;
@@ -31,6 +32,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
+	log4cplus::PropertyConfigurator::doConfigure(_T("log4cplus.properties"));
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
