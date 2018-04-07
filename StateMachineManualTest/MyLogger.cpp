@@ -39,5 +39,5 @@ void MyLogger::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 
 void MyLogger::onAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 {
-	LOG4CPLUS_ERROR(logger, exp << " failed. HRESULT=0x" << std::hex << hr << ". at:\n" << sourceFile << "#L" << line);
+	LOG4CPLUS_ERROR(logger, exp << " failed. HRESULT=0x" << std::hex << hr << ". at:\n" << sourceFile << "#L" << std::dec << line);
 }

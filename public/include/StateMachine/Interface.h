@@ -106,6 +106,7 @@ class IStateMachine
 {
 public:
 	static IStateMachine* create(IContext* context);
+	static IStateMachine* create(HWND hWnd, UINT msg);
 
 	virtual ~IStateMachine() {}
 

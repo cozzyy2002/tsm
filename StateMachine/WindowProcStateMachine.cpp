@@ -9,16 +9,12 @@ namespace tsm {
 
 static const TCHAR windowPropertyName[] = _T("WindowProcStateMachine");
 
-HRESULT WindowProcStateMachine::setup(IContext* context, IState* initialState, IEvent* event)
+/*static*/ IStateMachine* IStateMachine::create(HWND hWnd, UINT msg)
 {
-	// Ensure to release object on error.
-	CComPtr<IState> _initialState(initialState);
-	CComPtr<IEvent> _event(event);
-
-	return E_NOTIMPL;
+	return new WindowProcStateMachine(hWnd, msg);
 }
 
-HRESULT WindowProcStateMachine::setup(HWND hWnd, UINT msg, IContext* context, IState* initialState, IEvent* event)
+HRESULT WindowProcStateMachine::setup(IContext* context, IState* initialState, IEvent* event)
 {
 	// Ensure to release object on error.
 	CComPtr<IState> _initialState(initialState);
@@ -29,12 +25,12 @@ HRESULT WindowProcStateMachine::setup(HWND hWnd, UINT msg, IContext* context, IS
 	HR_ASSERT_OK(setupInner(context, initialState, event));
 
 	auto asyncData = context->_getHandle()->asyncData;
-	asyncData->hWnd = hWnd;
-	asyncData->msg = msg;
+	asyncData->hWnd = m_hWnd;
+	asyncData->msg = m_msg;
 
 	// Subclass the hWnd. 
-	WIN32_ASSERT(asyncData->appWndProc = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (LONG)WndProc));
-	WIN32_ASSERT(SetProp(hWnd, windowPropertyName, (HANDLE)context));
+	WIN32_ASSERT(asyncData->appWndProc = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)WndProc));
+	WIN32_ASSERT(SetProp(m_hWnd, windowPropertyName, (HANDLE)context));
 
 	asyncData->hEventReady.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 	asyncData->hEventShutdown.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));

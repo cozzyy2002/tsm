@@ -6,13 +6,10 @@ namespace tsm {
 class WindowProcStateMachine : public AsyncStateMachine
 {
 public:
-	WindowProcStateMachine() {}
+	WindowProcStateMachine(HWND hWnd, UINT msg) : m_hWnd(hWnd), m_msg(msg) {}
 	virtual ~WindowProcStateMachine() {}
 
-	// This method is not implemented.
-	// Use non virtual setup() method that accept HWND and UINT parameters.
 	virtual HRESULT setup(IContext* context, IState* initialState, IEvent* event) override;
-	HRESULT setup(HWND hWnd, UINT msg, IContext* context, IState* initialState, IEvent* event);
 
 	virtual HRESULT shutdown(IContext* context, DWORD timeout) override;
 	virtual HRESULT triggerEvent(IContext* context, IEvent* event) override;
@@ -43,6 +40,11 @@ protected:
 	// Window procedure of WindowProcStateMachine that is called by app
 	// when app window proc receives state machine message.
 	static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#pragma region Parameters passed to constructor.
+	HWND m_hWnd;
+	UINT m_msg;
+#pragma endregion
 };
 
 }

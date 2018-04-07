@@ -61,8 +61,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-	HR_ASSERT_OK(context.shutdown());
-
     return (int) msg.wParam;
 }
 
@@ -136,6 +134,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+	case WM_CREATE:
+		context.createStateMachine(hWnd, WM_USER);
+		break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -165,7 +166,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
-        PostQuitMessage(0);
+		HR_EXPECT_OK(context.shutdown());
+		PostQuitMessage(0);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);

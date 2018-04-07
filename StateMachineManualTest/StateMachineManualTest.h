@@ -21,6 +21,7 @@ public:
 
 	virtual tsm::IStateMonitor* _getStateMonitor() override { return &m_logger; }
 
+	void createStateMachine(HWND hWnd, UINT msg) { m_stateMachine.reset(tsm::IStateMachine::create(hWnd, msg)); }
 protected:
 	MyLogger m_logger;
 };
