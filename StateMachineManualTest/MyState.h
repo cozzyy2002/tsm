@@ -5,19 +5,30 @@
 
 class MyContext;
 class MyEvent;
+class MyState;
 
-class MyState : public tsm::State<MyContext, MyEvent, MyState>, public MyObject
+using MyStateBase = tsm::State<MyContext, MyEvent, MyState>;
+
+class MyState : public MyStateBase, public MyObject
 {
+public:
+	MyState(LPCTSTR name, MyState* masterState = nullptr) : MyStateBase(masterState), MyObject(name) {}
+
+	virtual HRESULT handleEvent(MyContext*, MyEvent* event, MyState** nextState) override;
+	virtual HRESULT entry(MyContext* context, MyEvent* event, MyState* previousState) override;
+	virtual HRESULT exit(MyContext* context, MyEvent* event, MyState* nextState) override;
 };
 
 class StateA : public MyState
 {
 public:
+	StateA() : MyState(_T("State A")) {}
 };
 
 class InitialState : public MyState
 {
 public:
-	virtual HRESULT handleEvent(MyContext*, MyEvent* event, MyState** nextState);
+	InitialState() : MyState(_T("Initial")) {}
+	virtual HRESULT handleEvent(MyContext*, MyEvent* event, MyState** nextState) override;
 	virtual HRESULT entry(MyContext* context, MyEvent* event, MyState* previousState) override;
 };

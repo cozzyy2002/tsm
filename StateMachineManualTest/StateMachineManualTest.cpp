@@ -27,6 +27,9 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 static INT_PTR CALLBACK    triggerEventDialogProc(HWND, UINT, WPARAM, LPARAM);
+static HRESULT triggerEvent(HWND hDlg);
+static MyEvent* createEvent(HWND hDlg);
+static std::tstring getEditText(HWND hDlg, int id);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -53,8 +56,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_STATEMACHINEMANUALTEST));
 
     MSG msg;
-
-	HR_ASSERT_OK(context.setup(new InitialState()));
 
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -190,7 +191,14 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 
 	case WM_COMMAND:
 		switch(LOWORD(wParam)) {
+		case IDC_BUTTON_SETUP:
+			HR_EXPECT_OK(context.setup(new MyState(_T("Initial"))));
+			break;
+		case IDC_BUTTON_SHUTDOWN:
+			HR_EXPECT_OK(context.shutdown());
+			break;
 		case IDC_BUTTON_TRIGGER_EVENT:
+			HR_EXPECT_OK(triggerEvent(hDlg));
 			break;
 		case IDOK:
 		case IDCANCEL:
@@ -202,6 +210,31 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 	return (INT_PTR)FALSE;
 }
 
+/*static*/ HRESULT triggerEvent(HWND hDlg)
+{
+	return context.triggerEvent(createEvent(hDlg));
+}
+
+/*static*/ MyEvent* createEvent(HWND hDlg)
+{
+	auto eventName = getEditText(hDlg, IDC_EDIT_EVENT_NAME);
+	auto event = new MyEvent(eventName);
+	return event;
+}
+
+std::tstring getEditText(HWND hDlg, int id)
+{
+	std::tstring text;
+	auto hEdit = GetDlgItem(hDlg, IDC_EDIT_EVENT_NAME);
+	auto textLen = Edit_GetTextLength(hEdit);
+	if(0 < textLen) {
+		textLen++;
+		std::unique_ptr<TCHAR[]> buff(new TCHAR[textLen]);
+		Edit_GetText(hEdit, buff.get(), textLen);
+		text = buff.get();
+	}
+	return text;
+}
 
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

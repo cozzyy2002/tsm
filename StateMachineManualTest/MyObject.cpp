@@ -2,7 +2,7 @@
 #include "MyObject.h"
 
 MyObject::MyObject(LPCTSTR name /*= nullptr*/)
-	: m_name(name ? name : _T("<unnamed>"))
+	: m_name(name ? name : _T(""))
 {
 }
 
@@ -14,10 +14,14 @@ MyObject::~MyObject()
 LPCTSTR MyObject::toString() const
 {
 	if(m_string.empty()) {
-		CA2T typeName(typeid(*this).name());
 		std::tostringstream stream;
-		stream << m_name << _T(":") << (LPCTSTR)typeName
-			<< _T("(0x") << std::hex << (void*)this << _T(")");
+		if(m_name.empty()) {
+			CA2T typeName(typeid(*this).name());
+			stream << (LPCTSTR)typeName;
+		} else {
+			stream << m_name;
+		}
+		stream << _T("(0x") << std::hex << (void*)this << _T(")");
 		m_string = stream.str();
 	}
 	return m_string.c_str();
