@@ -1,12 +1,15 @@
 #include "stdafx.h"
+
+#include "MyObject.h"
 #include "MyLogger.h"
 
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("Logger"));
 
 template<class T>
-LPCSTR getClassName(T* obj)
+LPCTSTR MyLogger::toString(T* obj)
 {
-	return obj ? typeid(*obj).name() : "<nullptr>";
+	auto _obj = dynamic_cast<MyObject*>(obj);
+	return _obj ? _obj->toString() : _T("<nullptr>");
 }
 
 void MyLogger::onIdle(tsm::IContext* context)
@@ -20,12 +23,12 @@ void MyLogger::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
 
 void MyLogger::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
 {
-	LOG4CPLUS_INFO(logger, "Handling event " << getClassName(event) << " in state " << getClassName(current));
+	LOG4CPLUS_INFO(logger, "Handling event " << toString(event) << " in state " << toString(current));
 }
 
 void MyLogger::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
-	LOG4CPLUS_INFO(logger, "State changed from " << getClassName(previous) << " to " << getClassName(next));
+	LOG4CPLUS_INFO(logger, "State changed from " << toString(previous) << " to " << toString(next));
 }
 
 void MyLogger::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)

@@ -23,3 +23,9 @@
 
 #include <log4cplus/logger.h>
 #include <log4cplus/loggingmacros.h>
+
+namespace std {
+using tstring = basic_string<TCHAR>;
+using tostream = basic_ostream<TCHAR>;
+using tostringstream = basic_ostringstream<TCHAR>;
+}

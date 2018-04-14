@@ -3,6 +3,11 @@
 
 #include "stdafx.h"
 #include "StateMachineManualTest.h"
+#include "MyContext.h"
+#include "MyEvent.h"
+#include "MyState.h"
+
+#include <StateMachine/Assert.h>
 
 #include <log4cplus/configurator.h>
 #include <memory>

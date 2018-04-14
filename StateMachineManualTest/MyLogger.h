@@ -12,4 +12,7 @@ public:
 	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override;
 
 	static void onAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
+
+	template<class T>
+	static LPCTSTR toString(T* obj);
 };
