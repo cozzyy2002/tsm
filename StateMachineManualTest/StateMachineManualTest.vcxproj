@@ -153,7 +153,6 @@
   <ItemGroup>
     <ClInclude Include="MyContext.h" />
     <ClInclude Include="MyEvent.h" />
-    <ClInclude Include="MyLogger.h" />
     <ClInclude Include="MyObject.h" />
     <ClInclude Include="MyState.h" />
     <ClInclude Include="Resource.h" />
@@ -164,7 +163,6 @@
   <ItemGroup>
     <ClCompile Include="MyContext.cpp" />
     <ClCompile Include="MyEvent.cpp" />
-    <ClCompile Include="MyLogger.cpp" />
     <ClCompile Include="MyObject.cpp" />
     <ClCompile Include="MyState.cpp" />
     <ClCompile Include="StateMachineManualTest.cpp" />
