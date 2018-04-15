@@ -29,6 +29,7 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 static INT_PTR CALLBACK    triggerEventDialogProc(HWND, UINT, WPARAM, LPARAM);
 static HRESULT triggerEvent(HWND hDlg);
 static MyEvent* createEvent(HWND hDlg);
+static DWORD getEditNumeric(HWND hDlg, int id);
 static std::tstring getEditText(HWND hDlg, int id);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -217,15 +218,31 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 
 /*static*/ MyEvent* createEvent(HWND hDlg)
 {
-	auto eventName = getEditText(hDlg, IDC_EDIT_EVENT_NAME);
-	auto event = new MyEvent(eventName);
+	auto event = new MyEvent(getEditText(hDlg, IDC_EDIT_EVENT_NAME));
+	auto text = getEditText(hDlg, IDC_EDIT_NEXT_STATE_NAME);
+	if(!text.empty()) {
+		event->nextState = new MyState(text);
+	}
+	event->hrHandleEvent = getEditNumeric(hDlg, IDC_EDIT_HR_HANDLE_EVENT);
+	event->hrEntry = getEditNumeric(hDlg, IDC_EDIT_HR_ENTRY);
+	event->hrExit = getEditNumeric(hDlg, IDC_EDIT_HR_EXIT);
 	return event;
+}
+
+DWORD getEditNumeric(HWND hDlg, int id)
+{
+	auto text = getEditText(hDlg, id);
+	if(!text.empty()) {
+		TCHAR *endptr;
+		return (DWORD)_tcstoul(text.c_str(), &endptr, 0);
+	}
+	return 0;
 }
 
 std::tstring getEditText(HWND hDlg, int id)
 {
 	std::tstring text;
-	auto hEdit = GetDlgItem(hDlg, IDC_EDIT_EVENT_NAME);
+	auto hEdit = GetDlgItem(hDlg, id);
 	auto textLen = Edit_GetTextLength(hEdit);
 	if(0 < textLen) {
 		textLen++;
