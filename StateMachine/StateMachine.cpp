@@ -45,6 +45,12 @@ HRESULT StateMachine::setup(IContext* context, IState * initialState, IEvent* ev
 	// Pass nullptr as previous state to intial state.
 	HR_ASSERT_OK(callEntry(initialState, context, event, nullptr));
 
+	// Call StateMonitor::onStateChanged() with nullptr as previous state.
+	context->_getHandle()->callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onStateChanged(context, event, nullptr, context->_getCurrentState());
+	});
+
 	return S_OK;
 }
 

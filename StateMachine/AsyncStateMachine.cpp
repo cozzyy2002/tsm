@@ -166,6 +166,12 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 		std::unique_ptr<SetupParam> _param(param);
 		// Call entry() of initial state.
 		HR_ASSERT_OK(callEntry(context->_getCurrentState(), context, param->event, nullptr));
+
+		// Call StateMonitor::onStateChanged() with nullptr as previous state.
+		context->_getHandle()->callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
+		{
+			stateMonitor->onStateChanged(context, param->event, nullptr, context->_getCurrentState());
+		});
 		// Notify that setup completed.
 		WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 	}

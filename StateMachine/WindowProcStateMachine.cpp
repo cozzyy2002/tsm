@@ -174,6 +174,12 @@ HRESULT WindowProcStateMachine::setupProc(IContext* context, IEvent* event)
 	auto asyncData = context->_getHandle()->asyncData;
 	// Call entry() of initial state.
 	HR_ASSERT_OK(callEntry(context->_getCurrentState(), context, event, nullptr));
+
+	// Call StateMonitor::onStateChanged() with nullptr as previous state.
+	context->_getHandle()->callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onStateChanged(context, event, nullptr, context->_getCurrentState());
+	});
 	// Notify that setup completed.
 	WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 	return S_OK;
