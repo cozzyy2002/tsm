@@ -27,4 +27,8 @@ public:
 
 	template<class T>
 	static LPCTSTR toString(T* obj);
+
+protected:
+	// Window handle to process window messages.
+	HWND m_hWnd;
 };

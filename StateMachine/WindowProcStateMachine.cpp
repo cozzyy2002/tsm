@@ -55,6 +55,7 @@ HRESULT WindowProcStateMachine::shutdown(IContext* context, DWORD timeout)
 	if(asyncData->hWnd) {
 		WIN32_EXPECT(WndProc == (WNDPROC)SetWindowLong(asyncData->hWnd, GWL_WNDPROC, (LONG)asyncData->appWndProc));
 		WIN32_EXPECT(context == (IContext*)RemoveProp(asyncData->hWnd, windowPropertyName));
+		asyncData->hWnd = NULL;
 	}
 
 	HR_ASSERT_OK(shutdownInner(context, timeout));

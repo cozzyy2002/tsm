@@ -27,6 +27,7 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 static INT_PTR CALLBACK    triggerEventDialogProc(HWND, UINT, WPARAM, LPARAM);
+static HRESULT onStateChanged(HWND hDlg);
 static HRESULT triggerEvent(HWND hDlg);
 static MyEvent* createEvent(HWND hDlg);
 static DWORD getEditNumeric(HWND hDlg, int id);
@@ -141,9 +142,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-	case WM_CREATE:
-		context.createStateMachine(hWnd, WM_USER);
-		break;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -173,7 +171,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
-		HR_EXPECT_OK(context.shutdown());
 		PostQuitMessage(0);
         break;
     default:
@@ -188,8 +185,11 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 	switch(message)
 	{
 	case WM_INITDIALOG:
+		context.createStateMachine(hDlg, WM_STATE_MACHINE);
 		return (INT_PTR)TRUE;
-
+	case WM_STATE_CHANGED:
+		onStateChanged(hDlg);
+		break;
 	case WM_COMMAND:
 		switch(LOWORD(wParam)) {
 		case IDC_BUTTON_SETUP:
@@ -203,12 +203,19 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 			break;
 		case IDOK:
 		case IDCANCEL:
+			HR_EXPECT_OK(context.shutdown());
 			EndDialog(hDlg, LOWORD(wParam));
 			return (INT_PTR)TRUE;
 		}
 		break;
 	}
 	return (INT_PTR)FALSE;
+}
+
+/*static*/ HRESULT onStateChanged(HWND hDlg)
+{
+	auto states = GetDlgItem(hDlg, IDC_LIST_STATES);
+	return S_OK;
 }
 
 /*static*/ HRESULT triggerEvent(HWND hDlg)

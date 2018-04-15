@@ -2,6 +2,7 @@
 
 #include <StateMachine/Assert.h>
 #include "MyContext.h"
+#include "StateMachineManualTest.h"
 
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext"));
 
@@ -13,6 +14,7 @@ MyContext::MyContext()
 void MyContext::createStateMachine(HWND hWnd, UINT msg)
 {
 	m_stateMachine.reset(tsm::IStateMachine::create(hWnd, msg));
+	m_hWnd = hWnd;
 }
 
 
@@ -40,6 +42,8 @@ void MyContext::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm:
 void MyContext::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
 	LOG4CPLUS_INFO(logger, "State changed from " << toString(previous) << " to " << toString(next));
+
+	PostMessage(m_hWnd, WM_STATE_CHANGED, 0, 0);
 }
 
 void MyContext::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
