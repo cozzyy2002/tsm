@@ -13,6 +13,7 @@ public:
 
 	virtual tsm::IStateMonitor* _getStateMonitor() override { return this; }
 	void createStateMachine(HWND hWnd, UINT msg);
+	MyState* findState(const std::tstring& name) const;
 
 #pragma region Implementation of IStateMonitor
 	virtual void onIdle(tsm::IContext* context) override;

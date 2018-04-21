@@ -18,6 +18,16 @@ void MyContext::createStateMachine(HWND hWnd, UINT msg)
 	m_hWnd = hWnd;
 }
 
+MyState* MyContext::findState(const std::tstring& name) const
+{
+	auto state = getCurrentState();
+	while(state) {
+		if(state->getName() == name) break;
+		state = state->getMasterState();
+	}
+	return state;
+}
+
 
 template<class T>
 LPCTSTR MyContext::toString(T* obj)

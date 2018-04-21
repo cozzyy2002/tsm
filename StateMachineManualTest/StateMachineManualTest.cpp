@@ -188,6 +188,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
 	context.createStateMachine(hwnd, WM_STATE_MACHINE);
+
+	// Disable trigger event button until event name will be entered.
+	Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_TRIGGER_EVENT), FALSE);
 	return TRUE;
 }
 
@@ -207,7 +210,31 @@ static void OnDlgCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		HR_EXPECT_OK(context.shutdown());
 		EndDialog(hwnd, id);
 		break;
+	case IDC_EDIT_EVENT_NAME:
+		switch(codeNotify) {
+		case EN_CHANGE:
+			// Enable trigger event button if next state name is entered.
+			Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_TRIGGER_EVENT), 0 < Edit_GetTextLength(hwndCtl));
+			break;
+		}
+		break;
 	case IDC_EDIT_NEXT_STATE_NAME:
+		switch(codeNotify) {
+		case EN_CHANGE:
+			{
+				// If master state of next state exist, set it's name to master state edit box.
+				auto state = context.findState(getEditText(hwnd, IDC_EDIT_NEXT_STATE_NAME));
+				auto masterStateEneble = TRUE;
+				auto hWndMasterState = GetDlgItem(hwnd, IDC_EDIT_MASTER_STATE_NAME);
+				if(state && state->getMasterState()) {
+					Edit_SetText(hWndMasterState, state->getMasterState()->getName().c_str());
+					masterStateEneble = FALSE;
+				}
+				Edit_Enable(hWndMasterState, masterStateEneble);
+			}
+			return;
+		}
+		// Go below
 	case IDC_EDIT_MASTER_STATE_NAME:
 		//LOG4CPLUS_INFO(logger, "id=" << id << ", codeNotify=" << codeNotify);
 		onWmNotify(hwnd, id, hwndCtl, codeNotify);
@@ -238,36 +265,37 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 
 /*static*/ HRESULT triggerEvent(HWND hDlg)
 {
-	return context.triggerEvent(createEvent(hDlg));
+	auto event = createEvent(hDlg);
+	return event ? context.triggerEvent(createEvent(hDlg)) : S_FALSE;
 }
 
 /*static*/ MyEvent* createEvent(HWND hDlg)
 {
-	auto event = new MyEvent(getEditText(hDlg, IDC_EDIT_EVENT_NAME));
-	auto text = getEditText(hDlg, IDC_EDIT_NEXT_STATE_NAME);
-	if(!text.empty()) {
-		event->nextState = new MyState(text);
-		text = getEditText(hDlg, IDC_EDIT_MASTER_STATE_NAME);
-		if(!text.empty()) {
-			for(auto state = context.getCurrentState(); state; state = state->getMasterState()) {
-				if(state->getName() == text) {
-					event->nextState->setMasterState(state);
-					break;
-				}
-			}
+	CComPtr<MyEvent> event = new MyEvent(getEditText(hDlg, IDC_EDIT_EVENT_NAME));
+	auto stateName = getEditText(hDlg, IDC_EDIT_NEXT_STATE_NAME);
+	if(!stateName.empty()) {
+		// Set next state.
+		auto state = context.findState(stateName);
+		event->nextState = state ? state : new MyState(stateName);
+		stateName = getEditText(hDlg, IDC_EDIT_MASTER_STATE_NAME);
+		if(!stateName.empty()) {
+			// Set master state of next state.
+			auto masterState = context.findState(stateName);
+			event->nextState->setMasterState(
+				masterState ? masterState : new MyState(stateName));
 		}
 	}
 	event->hrHandleEvent = getEditNumeric(hDlg, IDC_EDIT_HR_HANDLE_EVENT);
 	event->hrEntry = getEditNumeric(hDlg, IDC_EDIT_HR_ENTRY);
 	event->hrExit = getEditNumeric(hDlg, IDC_EDIT_HR_EXIT);
-	return event;
+	return event.Detach();
 }
 
 /*static*/ HRESULT onWmNotify(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
 	auto handleMessage = false;
 	switch(codeNotify) {
-	case 256:		// Got focus
+	case EN_SETFOCUS:
 		switch(id) {
 		case IDC_EDIT_NEXT_STATE_NAME:
 		case IDC_EDIT_MASTER_STATE_NAME:
