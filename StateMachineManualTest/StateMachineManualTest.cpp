@@ -221,14 +221,17 @@ static LRESULT OnDlgNotify(HWND hWnd, int idForm, NMHDR* nmhdr)
 	return onWmNotify(hWnd, nmhdr->idFrom, nmhdr->hwndFrom, nmhdr->code);
 }
 
+#define HANDLE_DLG_MSG(hwnd, msg, fn) \
+	case msg: return SetDlgMsgResult(hwnd, msg, HANDLE_##msg(hwnd, wParam, lParam, fn));
+
 INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UNREFERENCED_PARAMETER(lParam);
 	switch(message)
 	{
-		HANDLE_MSG(hDlg, WM_INITDIALOG, OnInitDialog);
-		HANDLE_MSG(hDlg, WM_COMMAND, OnDlgCommand);
-		HANDLE_MSG(hDlg, WM_NOTIFY, OnDlgNotify);
+		HANDLE_DLG_MSG(hDlg, WM_INITDIALOG, OnInitDialog);
+		HANDLE_DLG_MSG(hDlg, WM_COMMAND, OnDlgCommand);
+		HANDLE_DLG_MSG(hDlg, WM_NOTIFY, OnDlgNotify);
 	}
 	return (INT_PTR)FALSE;
 }
