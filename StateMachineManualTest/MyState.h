@@ -17,6 +17,8 @@ public:
 	virtual HRESULT handleEvent(MyContext*, MyEvent* event, MyState** nextState) override;
 	virtual HRESULT entry(MyContext* context, MyEvent* event, MyState* previousState) override;
 	virtual HRESULT exit(MyContext* context, MyEvent* event, MyState* nextState) override;
+
+	void setMasterState(MyState* masterState) { m_masterState = masterState; }
 };
 
 class StateA : public MyState

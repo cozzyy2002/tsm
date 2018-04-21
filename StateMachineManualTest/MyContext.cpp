@@ -2,6 +2,7 @@
 
 #include <StateMachine/Assert.h>
 #include "MyContext.h"
+#include "MyState.h"
 #include "StateMachineManualTest.h"
 
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext"));
@@ -43,7 +44,13 @@ void MyContext::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::
 {
 	LOG4CPLUS_INFO(logger, "State changed from " << toString(previous) << " to " << toString(next));
 
-	PostMessage(m_hWnd, WM_STATE_CHANGED, 0, 0);
+	//PostMessage(m_hWnd, WM_STATE_CHANGED, 0, 0);
+	auto states = GetDlgItem(m_hWnd, IDC_LIST_STATES);
+	ListBox_ResetContent(states);
+	for(auto state = ((MyContext*)context)->getCurrentState(); state; state = state->getMasterState()) {
+		auto index = ListBox_AddString(states, state->MyObject::toString());
+		ListBox_SetItemData(states, index, state);
+	}
 }
 
 void MyContext::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)

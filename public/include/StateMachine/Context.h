@@ -36,6 +36,8 @@ public:
 	// Implementation of IContext::_getTimerClient().
 	virtual TimerClient* _getTimerClient() override { return this; }
 
+	S* getCurrentState() { return (S*)_getCurrentState(); }
+
 protected:
 	std::unique_ptr<IStateMachine> m_stateMachine;
 	CComPtr<IState> m_currentState;

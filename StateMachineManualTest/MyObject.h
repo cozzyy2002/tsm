@@ -6,6 +6,7 @@ public:
 	MyObject(LPCTSTR name = nullptr);
 	virtual ~MyObject();
 
+	const std::tstring& getName() const { return m_name; }
 	virtual LPCTSTR toString() const;
 
 protected:
