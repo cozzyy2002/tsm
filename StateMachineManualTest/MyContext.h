@@ -32,4 +32,7 @@ public:
 protected:
 	// Window handle to process window messages.
 	HWND m_hWnd;
+
+	// Window handle to which log message is written.
+	HWND m_hWndLog;
 };

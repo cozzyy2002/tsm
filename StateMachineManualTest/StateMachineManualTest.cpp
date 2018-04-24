@@ -13,6 +13,8 @@
 #include <memory>
 #include <CommCtrl.h>
 
+#pragma comment(lib, "Comctl32.lib")
+
 static MyContext context;
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("App main"));
 
@@ -129,6 +131,33 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    return TRUE;
 }
+
+static BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
+{
+	INITCOMMONCONTROLSEX icc = { sizeof(INITCOMMONCONTROLSEX), ICC_LISTVIEW_CLASSES };
+	WIN32_EXPECT(InitCommonControlsEx(&icc));
+
+	RECT rect;
+	WIN32_EXPECT(GetClientRect(hwnd, &rect));
+	auto hWndLog = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | WS_CHILD | WS_VISIBLE,
+		0, 0, rect.right - rect.left, rect.bottom - rect.top, hwnd, (HMENU)NULL, hInst, NULL);
+	WIN32_EXPECT(hWndLog);
+	HR_EXPECT(IsWindow(hWndLog), E_UNEXPECTED);
+	LVCOLUMN col = { 0 };
+	col.mask = LVCF_FMT | /*LVCF_SUBITEM |*/ LVCF_TEXT | LVCF_WIDTH;
+	col.fmt = LVCFMT_RIGHT;
+	//col.iSubItem = 0;
+	col.pszText = _T("Function");
+	col.cx = 200;
+	WIN32_EXPECT(0 <= ListView_InsertColumn(hWndLog, 0, &col));
+	LV_ITEM item = { LVFIF_TEXT, 0, 0, 0, 0, _T(__FUNCTION__) };
+	HR_EXPECT(item.iItem == ListView_InsertItem(hWndLog, &item), E_UNEXPECTED);
+	item.iItem++;
+	HR_EXPECT(item.iItem == ListView_InsertItem(hWndLog, &item), E_UNEXPECTED);
+
+	return TRUE;
+}
+
 static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
 	// Parse the menu selections:
@@ -176,6 +205,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+		HANDLE_MSG(hWnd, WM_CREATE, OnCreate);
 		HANDLE_MSG(hWnd, WM_COMMAND, OnCommand);
 		HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
 		HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
@@ -191,6 +221,8 @@ static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 
 	// Disable trigger event button until event name will be entered.
 	Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_TRIGGER_EVENT), FALSE);
+
+	Button_SetCheck(GetDlgItem(hwnd, IDC_RADIO_TIMER_STATE), TRUE);
 	return TRUE;
 }
 
@@ -271,7 +303,7 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 
 /*static*/ MyEvent* createEvent(HWND hDlg)
 {
-	CComPtr<MyEvent> event = new MyEvent(getEditText(hDlg, IDC_EDIT_EVENT_NAME));
+	auto event = new MyEvent(getEditText(hDlg, IDC_EDIT_EVENT_NAME));
 	auto stateName = getEditText(hDlg, IDC_EDIT_NEXT_STATE_NAME);
 	if(!stateName.empty()) {
 		// Set next state.
@@ -288,7 +320,14 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 	event->hrHandleEvent = getEditNumeric(hDlg, IDC_EDIT_HR_HANDLE_EVENT);
 	event->hrEntry = getEditNumeric(hDlg, IDC_EDIT_HR_ENTRY);
 	event->hrExit = getEditNumeric(hDlg, IDC_EDIT_HR_EXIT);
-	return event.Detach();
+	auto delay = getEditNumeric(hDlg, IDC_EDIT_DELAY_TIME);
+	if(delay) {
+		auto interval = getEditNumeric(hDlg, IDC_EDIT_INTERVAL_TIME);
+		bool isContextTimer = (BST_CHECKED == Button_GetCheck(GetDlgItem(hDlg, IDC_RADIO_TIMER_CONTEXT)));
+		auto timerClient = isContextTimer ? (tsm::TimerClient*)&context : context.getCurrentState();
+		event->setTimer(timerClient, delay, interval);
+	}
+	return event;
 }
 
 /*static*/ HRESULT onWmNotify(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
