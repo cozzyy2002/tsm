@@ -6,14 +6,13 @@
 #include "MyContext.h"
 #include "MyEvent.h"
 #include "MyState.h"
+#include "ReportView.h"
 
 #include <StateMachine/Assert.h>
 
 #include <log4cplus/configurator.h>
 #include <memory>
 #include <CommCtrl.h>
-
-#pragma comment(lib, "Comctl32.lib")
 
 static MyContext context;
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("App main"));
@@ -134,27 +133,17 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 static BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
-	INITCOMMONCONTROLSEX icc = { sizeof(INITCOMMONCONTROLSEX), ICC_LISTVIEW_CLASSES };
-	WIN32_EXPECT(InitCommonControlsEx(&icc));
+	static const CReportView::Column columns[] = {
+		{ CReportView::Column::Type::String, L"String", 100 },
+		{ CReportView::Column::Type::Number, L"Number", 100 },
+	};
 
-	RECT rect;
-	WIN32_EXPECT(GetClientRect(hwnd, &rect));
-	auto hWndLog = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | WS_CHILD | WS_VISIBLE,
-		0, 0, rect.right - rect.left, rect.bottom - rect.top, hwnd, (HMENU)NULL, hInst, NULL);
-	WIN32_EXPECT(hWndLog);
-	HR_EXPECT(IsWindow(hWndLog), E_UNEXPECTED);
-	LVCOLUMN col = { 0 };
-	col.mask = LVCF_FMT | /*LVCF_SUBITEM |*/ LVCF_TEXT | LVCF_WIDTH;
-	col.fmt = LVCFMT_RIGHT;
-	//col.iSubItem = 0;
-	col.pszText = _T("Function");
-	col.cx = 200;
-	WIN32_EXPECT(0 <= ListView_InsertColumn(hWndLog, 0, &col));
-	LV_ITEM item = { LVFIF_TEXT, 0, 0, 0, 0, _T(__FUNCTION__) };
-	HR_EXPECT(item.iItem == ListView_InsertItem(hWndLog, &item), E_UNEXPECTED);
-	item.iItem++;
-	HR_EXPECT(item.iItem == ListView_InsertItem(hWndLog, &item), E_UNEXPECTED);
+	CReportView reportView;
+	reportView.create(hInst, hwnd);
+	reportView.setColumns(columns);
 
+	reportView.setItem(0, _T(""));
+	reportView.setItem(0, _T(""));
 	return TRUE;
 }
 

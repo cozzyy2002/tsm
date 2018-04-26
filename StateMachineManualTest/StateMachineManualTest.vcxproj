@@ -155,6 +155,7 @@
     <ClInclude Include="MyEvent.h" />
     <ClInclude Include="MyObject.h" />
     <ClInclude Include="MyState.h" />
+    <ClInclude Include="ReportView.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StateMachineManualTest.h" />
     <ClInclude Include="stdafx.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="MyEvent.cpp" />
     <ClCompile Include="MyObject.cpp" />
     <ClCompile Include="MyState.cpp" />
+    <ClCompile Include="ReportView.cpp" />
     <ClCompile Include="StateMachineManualTest.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
