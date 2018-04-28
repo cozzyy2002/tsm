@@ -1,5 +1,20 @@
 #pragma once
 
+class CVar
+{
+public:
+	CVar(LPCTSTR str) : str(str) {}
+	CVar(int num, int radix = 10) {
+		TCHAR str[40];
+		_itot_s(num, str, radix);
+		this->str = str;
+	}
+	LPCTSTR toString() const { return str.c_str(); }
+
+protected:
+	std::tstring str;
+};
+
 class CReportView
 {
 public:
@@ -23,8 +38,12 @@ public:
 	template<int ColumnCount>
 	HRESULT setColumns(HWND hWnd, const Column(&columns)[ColumnCount]);
 	HRESULT setColumns(HWND hWnd, const Column* columns, int columnCount);
-	HRESULT setItem(int iCol, LPCTSTR str) const;
-	HRESULT setItem(int iCol, int num, int radix = 10) const;
+
+	template<int ItemCount>
+	HRESULT addItems(const CVar(&items)[ItemCount]);
+	HRESULT addItems(const CVar* items, int itemCount);
+
+	HRESULT clear();
 
 protected:
 	HWND m_hWnd;
@@ -55,4 +74,10 @@ template<int ColumnCount>
 inline HRESULT CReportView::setColumns(HWND hWnd, const Column(&columns)[ColumnCount])
 {
 	return setColumns(hWnd, &(columns[0]), ColumnCount);
+}
+
+template<int ItemCount>
+inline HRESULT CReportView::addItems(const CVar(&items)[ItemCount])
+{
+	return addItems(&items[0], ItemCount);
 }

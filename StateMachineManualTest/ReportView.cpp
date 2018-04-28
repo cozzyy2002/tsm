@@ -51,6 +51,10 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column * columns, int columnCou
 
 	LVCOLUMN col = { 0 };
 	col.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH;
+	RECT rect;
+	WIN32_ASSERT(GetClientRect(m_hWnd, &rect));
+	auto width = rect.right - rect.left;
+	auto remainingWidth = width;
 	for(int iCol = 0; iCol < columnCount; iCol++) {
 		auto& column = columns[iCol];
 		switch(column.type) {
@@ -58,27 +62,53 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column * columns, int columnCou
 			col.fmt = LVCFMT_LEFT;
 			break;
 		case Column::Type::Number:
-			col.fmt = LVCFMT_RIGHT;
+			col.fmt = LVCFMT_RIGHT | LVCFMT_FIXED_WIDTH;
 			break;
 		}
 		col.iSubItem = iCol;
 		col.pszText = (LPTSTR)column.title;
-		col.cx = (int)column.width;
-		WIN32_ASSERT(iCol <= ListView_InsertColumn(m_hWnd, 0, &col));
+		if(1 < column.width) {
+			// Width specifies pixel length.
+			col.cx = (int)column.width;
+		} else if(0 < column.width) {
+			// Width specifies percentage of width of List View.
+			col.cx = (int)(width * column.width);
+		} else if(0 == column.width) {
+			// TODO: Implement automatic width setting.
+			return E_NOTIMPL;
+		} else {
+			// Width is remaning length.
+			col.cx = (0 < remainingWidth) ? remainingWidth : 0;
+		}
+		remainingWidth -= col.cx;
+		WIN32_ASSERT(iCol == ListView_InsertColumn(m_hWnd, iCol, &col));
 	}
 
 	return S_OK;
 }
 
-HRESULT CReportView::setItem(int iCol, LPCTSTR str) const
+HRESULT CReportView::addItems(const CVar * items, int itemCount)
 {
-	HR_ASSERT(iCol < m_columnCount, E_INVALIDARG);
+	HR_ASSERT(m_hWnd, E_ILLEGAL_METHOD_CALL);
+	HR_ASSERT(itemCount <= m_columnCount, E_INVALIDARG);
+
+	auto iItem = ListView_GetItemCount(m_hWnd);
+	LVITEM item = { LVIF_TEXT, iItem, 0 };
+	item.pszText = (LPTSTR)items->toString();
+	HR_ASSERT(iItem == ListView_InsertItem(m_hWnd, &item), E_UNEXPECTED);
+	for(int iCol = 1; iCol < itemCount; iCol++) {
+		item.iSubItem++;
+		item.pszText = (LPTSTR)(++items)->toString();
+		HR_ASSERT(ListView_SetItem(m_hWnd, &item), E_UNEXPECTED);
+	}
+
 	return S_OK;
 }
 
-HRESULT CReportView::setItem(int iCol, int num, int radix /*= 10*/) const
+HRESULT CReportView::clear()
 {
-	TCHAR str[40];
-	_itot_s(num, str, radix);
-	return setItem(iCol, str);
+	HR_ASSERT(m_hWnd, E_ILLEGAL_METHOD_CALL);
+
+	HR_ASSERT(ListView_DeleteAllItems(m_hWnd), E_UNEXPECTED);
+	return S_OK;
 }

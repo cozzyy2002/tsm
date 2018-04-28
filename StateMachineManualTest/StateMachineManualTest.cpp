@@ -142,8 +142,14 @@ static BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 	reportView.create(hInst, hwnd);
 	reportView.setColumns(columns);
 
-	reportView.setItem(0, _T(""));
-	reportView.setItem(0, _T(""));
+	CVar items[][2] = {
+		{ CVar(_T("1st")), CVar(123) },
+		{ CVar(_T("2nd")), CVar(2048) },
+	};
+	for(auto& item : items) {
+		reportView.addItems(item);
+	}
+
 	return TRUE;
 }
 
