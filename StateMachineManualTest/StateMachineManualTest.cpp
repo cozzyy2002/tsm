@@ -133,24 +133,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 static BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
-	static const CReportView::Column columns[] = {
-		{ CReportView::Column::Type::Number, L"Number", 80 },
-		{ CReportView::Column::Type::Number, L"Integer", 80 },
-		{ CReportView::Column::Type::String, L"String", 200 },
-		{ CReportView::Column::Type::String, L"String 2", CReportView::remainingColumnWidth },
-	};
-
-	CReportView reportView;
-	reportView.create(hInst, hwnd);
-	reportView.setColumns(columns);
-
-	CVar items[][ARRAYSIZE(columns)] = {
-		{ CVar(123), CVar(1000), CVar(_T("1st message")), CVar(_T("1st message 2")) },
-		{ CVar(456), CVar(9999), CVar(_T("2nd message")), CVar(_T("2nd message 2")) },
-	};
-	for(auto& item : items) {
-		reportView.addItems(item);
-	}
+	context.setLogWindow(hInst, hwnd);
 
 	return TRUE;
 }

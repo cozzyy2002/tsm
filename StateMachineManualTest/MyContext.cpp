@@ -5,9 +5,16 @@
 #include "MyState.h"
 #include "StateMachineManualTest.h"
 
+/*static*/ const CReportView::Column MyContext::m_logColumns[] = {
+	{ CReportView::Column::Type::Number, _T("Time"), 80 },
+	{ CReportView::Column::Type::Number, _T("Thread"), 80 },
+	{ CReportView::Column::Type::String, _T("Message"), CReportView::remainingColumnWidth },
+};
+
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext"));
 
 MyContext::MyContext()
+	: m_hWndLog(NULL)
 {
 	tsm::IContext::onAssertFailedProc = MyContext::onAssertFailed;
 }
@@ -28,6 +35,30 @@ MyState* MyContext::findState(const std::tstring& name) const
 	return state;
 }
 
+void MyContext::setLogWindow(HINSTANCE hInst, HWND hWndLog)
+{
+	m_hWndLog = hWndLog;
+
+	HR_EXPECT_OK(m_reportView.create(hInst, hWndLog));
+	HR_EXPECT_OK(m_reportView.setColumns(m_logColumns));
+}
+
+void MyContext::log(LPCTSTR fmt, ...)
+{
+	if(!m_hWndLog) return;
+
+	static TCHAR msg[0x100];
+	va_list args;
+	va_start(args, fmt);
+	_vstprintf_s(msg, fmt, args);
+
+	auto time = GetTickCount();
+	auto thread = GetCurrentThreadId();
+	const CVar items[ARRAYSIZE(m_logColumns)] = {
+		CVar(time), CVar(thread), CVar(msg)
+	};
+	m_reportView.addItems(items);
+}
 
 template<class T>
 LPCTSTR MyContext::toString(T* obj)
@@ -38,21 +69,35 @@ LPCTSTR MyContext::toString(T* obj)
 
 void MyContext::onIdle(tsm::IContext* context)
 {
-	LOG4CPLUS_INFO(logger, "StateMachined is idle.");
+	LPCTSTR msg = _T("StateMachined is idle.");
+	if(m_hWndLog) {
+		log(msg);
+	} else {
+		LOG4CPLUS_INFO(logger, msg);
+	}
 }
 
 void MyContext::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
 {
+	log(_T("Trigger event %s, delay=%d, interval=%d"), toString(event), event->_getPriority(), event->_getDelayTime(), event->_getIntervalTime());
 }
 
 void MyContext::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
 {
-	LOG4CPLUS_INFO(logger, "Handling event " << toString(event) << " in state " << toString(current));
+	if(m_hWndLog) {
+		log(_T("Handling event %s in state %s"), toString(event), toString(current));
+	} else {
+		LOG4CPLUS_INFO(logger, "Handling event " << toString(event) << " in state " << toString(current));
+	}
 }
 
 void MyContext::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
-	LOG4CPLUS_INFO(logger, "State changed from " << toString(previous) << " to " << toString(next));
+	if(m_hWndLog) {
+		log(_T("State changed from %s to %s"), toString(previous), toString(next));
+	} else {
+		LOG4CPLUS_INFO(logger, "State changed from " << toString(previous) << " to " << toString(next));
+	}
 
 	//PostMessage(m_hWnd, WM_STATE_CHANGED, 0, 0);
 	auto states = GetDlgItem(m_hWnd, IDC_LIST_STATES);
@@ -65,14 +110,15 @@ void MyContext::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::
 
 void MyContext::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
 {
+	log(_T("Timer started of event %s"), toString(event));
 }
 
 void MyContext::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 {
-	LOG4CPLUS_INFO(logger, "Worker thread exit. Code=0x" << std::hex << exitCode);
+	//LOG4CPLUS_INFO(logger, "Worker thread exit. Code=0x" << std::hex << exitCode);
 }
 
-void MyContext::onAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
+/*static*/ void MyContext::onAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 {
 	LOG4CPLUS_ERROR(logger, exp << " failed. HRESULT=0x" << std::hex << hr << ". at:\n" << sourceFile << "#L" << std::dec << line);
 }

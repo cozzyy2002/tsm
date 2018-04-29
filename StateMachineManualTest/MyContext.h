@@ -2,6 +2,7 @@
 
 #include <StateMachine/Context.h>
 #include "MyObject.h"
+#include "ReportView.h"
 
 class MyState;
 class MyEvent;
@@ -15,7 +16,7 @@ public:
 	void createStateMachine(HWND hWnd, UINT msg);
 	MyState* findState(const std::tstring& name) const;
 
-	void setLogWindow(HWND hWndLog) { m_hWndLog = hWndLog; }
+	void setLogWindow(HINSTANCE hInst, HWND hWndLog);
 	void log(LPCTSTR fmt, ...);
 
 #pragma region Implementation of IStateMonitor
@@ -38,4 +39,7 @@ protected:
 
 	// Window handle to which log message is written.
 	HWND m_hWndLog;
+
+	CReportView m_reportView;
+	static const CReportView::Column m_logColumns[];
 };
