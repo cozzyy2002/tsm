@@ -49,6 +49,7 @@ protected:
 	HWND m_hWnd;
 	const Column* m_columns;
 	int m_columnCount;
+	int m_leftMostColumnIndex;
 	static bool m_commonControlInitialized;
 };
 

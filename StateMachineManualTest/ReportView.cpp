@@ -9,7 +9,7 @@
 /*static*/ bool CReportView::m_commonControlInitialized = false;
 
 CReportView::CReportView(HWND hWnd /*= NULL*/)
-	: m_hWnd(hWnd), m_columns(nullptr)
+	: m_hWnd(hWnd), m_columns(nullptr), m_columnCount(0), m_leftMostColumnIndex(0)
 {
 }
 
@@ -40,7 +40,7 @@ HRESULT CReportView::create(HINSTANCE hInst, HWND hWndParent, HWND* phWnd /*= nu
 	return S_OK;
 }
 
-HRESULT CReportView::setColumns(HWND hWnd, const Column * columns, int columnCount)
+HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCount)
 {
 	// m_hWnd should be set by create() or this method.
 	if(hWnd) m_hWnd = hWnd;
@@ -49,15 +49,30 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column * columns, int columnCou
 	m_columns = columns;
 	m_columnCount = columnCount;
 
+	// Find string type column that will be located leftmost.
+	m_leftMostColumnIndex = 0;
+	for(int i = 0; i < columnCount; i++) {
+		if(columns[i].type == Column::Type::String) {
+			m_leftMostColumnIndex = i;
+			break;
+		}
+	}
+
 	LVCOLUMN col = { 0 };
-	col.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH;
+	col.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH | LVCF_ORDER;
 	RECT rect;
 	WIN32_ASSERT(GetClientRect(m_hWnd, &rect));
 	auto width = rect.right - rect.left;
 	auto remainingWidth = width;
-	for(int iCol = 0; iCol < columnCount; iCol++) {
-		auto& column = columns[iCol];
-		switch(column.type) {
+	for(int i = 0; i < columnCount; i++) {
+		col.iSubItem = col.iOrder = i;
+		if(0 == i) {
+			col.iOrder = m_leftMostColumnIndex;
+		} else if(i <= m_leftMostColumnIndex) {
+			col.iOrder = i - 1;
+		}
+		auto pCol = &columns[col.iOrder];
+		switch(pCol->type) {
 		case Column::Type::String:
 			col.fmt = LVCFMT_LEFT;
 			break;
@@ -65,15 +80,14 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column * columns, int columnCou
 			col.fmt = LVCFMT_RIGHT | LVCFMT_FIXED_WIDTH;
 			break;
 		}
-		col.iSubItem = iCol;
-		col.pszText = (LPTSTR)column.title;
-		if(1 < column.width) {
+		col.pszText = (LPTSTR)pCol->title;
+		if(1 < pCol->width) {
 			// Width specifies pixel length.
-			col.cx = (int)column.width;
-		} else if(0 < column.width) {
+			col.cx = (int)pCol->width;
+		} else if(0 < pCol->width) {
 			// Width specifies percentage of width of List View.
-			col.cx = (int)(width * column.width);
-		} else if(0 == column.width) {
+			col.cx = (int)(width * pCol->width);
+		} else if(0 == pCol->width) {
 			// TODO: Implement automatic width setting.
 			return E_NOTIMPL;
 		} else {
@@ -81,25 +95,36 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column * columns, int columnCou
 			col.cx = (0 < remainingWidth) ? remainingWidth : 0;
 		}
 		remainingWidth -= col.cx;
-		WIN32_ASSERT(iCol == ListView_InsertColumn(m_hWnd, iCol, &col));
+		WIN32_ASSERT(i == ListView_InsertColumn(m_hWnd, i, &col));
 	}
 
 	return S_OK;
 }
 
-HRESULT CReportView::addItems(const CVar * items, int itemCount)
+HRESULT CReportView::addItems(const CVar* items, int itemCount)
 {
 	HR_ASSERT(m_hWnd, E_ILLEGAL_METHOD_CALL);
 	HR_ASSERT(itemCount <= m_columnCount, E_INVALIDARG);
 
 	auto iItem = ListView_GetItemCount(m_hWnd);
-	LVITEM item = { LVIF_TEXT, iItem, 0 };
-	item.pszText = (LPTSTR)items->toString();
-	HR_ASSERT(iItem == ListView_InsertItem(m_hWnd, &item), E_UNEXPECTED);
-	for(int iCol = 1; iCol < itemCount; iCol++) {
-		item.iSubItem++;
-		item.pszText = (LPTSTR)(++items)->toString();
-		HR_ASSERT(ListView_SetItem(m_hWnd, &item), E_UNEXPECTED);
+	for(int i = 0; i < itemCount; i++) {
+		auto pItem = &items[i];
+		LVITEM item = { LVIF_TEXT, iItem, i };
+		if(0 == i) {
+			// Insert leftmost item.
+			if(m_leftMostColumnIndex < itemCount) {
+				pItem = &items[m_leftMostColumnIndex];
+			}
+			item.pszText = (LPTSTR)pItem->toString();
+			HR_ASSERT(iItem == ListView_InsertItem(m_hWnd, &item), E_UNEXPECTED);
+		} else {
+			// Set remaining items as sub item.
+			if(i <= m_leftMostColumnIndex) {
+				pItem = &items[i - 1];
+			}
+			item.pszText = (LPTSTR)pItem->toString();
+			HR_ASSERT(ListView_SetItem(m_hWnd, &item), E_UNEXPECTED);
+		}
 	}
 
 	return S_OK;

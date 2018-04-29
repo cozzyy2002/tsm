@@ -15,6 +15,9 @@ public:
 	void createStateMachine(HWND hWnd, UINT msg);
 	MyState* findState(const std::tstring& name) const;
 
+	void setLogWindow(HWND hWndLog) { m_hWndLog = hWndLog; }
+	void log(LPCTSTR fmt, ...);
+
 #pragma region Implementation of IStateMonitor
 	virtual void onIdle(tsm::IContext* context) override;
 	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override;
