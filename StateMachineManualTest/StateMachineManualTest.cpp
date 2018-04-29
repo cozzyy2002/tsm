@@ -23,6 +23,7 @@ static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("App main"))
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HWND hWndTriggerEventDlg = NULL;				// Window hande of trigger event dialog.
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -144,7 +145,10 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	switch(id)
 	{
 	case IDM_TRIGGER_EVENT:
-		DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_EVENT), hwnd, triggerEventDialogProc);
+		if(!hWndTriggerEventDlg) {
+			hWndTriggerEventDlg = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_EVENT), hwnd, triggerEventDialogProc);
+		}
+		WIN32_EXPECT(ShowWindow(hWndTriggerEventDlg, SW_SHOW));
 		break;
 	case IDM_VIEW_CLEAR_LOG:
 		context.getReportView()->clear();
@@ -230,8 +234,8 @@ static void OnDlgCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		HR_EXPECT_OK(triggerEvent(hwnd));
 		break;
 	case IDCANCEL:
-		HR_EXPECT_OK(context.shutdown());
-		EndDialog(hwnd, id);
+		// [Close] button is pressed.
+		ShowWindow(hwnd, SW_HIDE);
 		break;
 	case IDC_EDIT_EVENT_NAME:
 		switch(codeNotify) {
