@@ -47,6 +47,8 @@ public:
 
 	HRESULT clear();
 
+	void resize(int width, int height);
+
 protected:
 	HWND m_hWnd;
 	const Column* m_columns;

@@ -18,6 +18,7 @@ public:
 
 	void setLogWindow(HINSTANCE hInst, HWND hWndLog);
 	void log(LPCTSTR fmt, ...);
+	CReportView* getReportView() { return &m_reportView; }
 
 #pragma region Implementation of IStateMonitor
 	virtual void onIdle(tsm::IContext* context) override;

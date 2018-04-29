@@ -32,7 +32,7 @@ HRESULT CReportView::create(HINSTANCE hInst, HWND hWndParent, HWND* phWnd /*= nu
 
 	RECT rect;
 	WIN32_ASSERT(GetClientRect(hWndParent, &rect));
-	m_hWnd = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | WS_CHILD | WS_VISIBLE,
+	m_hWnd = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE,
 		0, 0, rect.right - rect.left, rect.bottom - rect.top, hWndParent, (HMENU)NULL, hInst, NULL);
 	WIN32_ASSERT(m_hWnd);
 
@@ -141,4 +141,12 @@ HRESULT CReportView::clear()
 
 	HR_ASSERT(ListView_DeleteAllItems(m_hWnd), E_UNEXPECTED);
 	return S_OK;
+}
+
+void CReportView::resize(int width, int height)
+{
+	// Note: Prvent resizing until main windows appears.
+	if(m_hWnd && ListView_GetItemCount(m_hWnd)) {
+		WIN32_EXPECT(MoveWindow(m_hWnd, 0, 0, width, height, TRUE));
+	}
 }

@@ -146,6 +146,9 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	case IDM_TRIGGER_EVENT:
 		DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG_EVENT), hwnd, triggerEventDialogProc);
 		break;
+	case IDM_VIEW_CLEAR_LOG:
+		context.getReportView()->clear();
+		break;
 	case IDM_ABOUT:
 		DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, About);
 		break;
@@ -164,6 +167,13 @@ static void OnPaint(HWND hwnd)
 	HDC hdc = BeginPaint(hwnd, &ps);
 	// TODO: Add any drawing code that uses hdc here...
 	EndPaint(hwnd, &ps);
+}
+
+static void OnSize(HWND hwnd, UINT state, int cx, int cy)
+{
+	RECT rect;
+	GetClientRect(hwnd, &rect);
+	context.getReportView()->resize(rect.right - rect.left, rect.bottom - rect.top);
 }
 
 static void OnDestroy(HWND hwnd)
@@ -188,6 +198,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		HANDLE_MSG(hWnd, WM_CREATE, OnCreate);
 		HANDLE_MSG(hWnd, WM_COMMAND, OnCommand);
 		HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
+		HANDLE_MSG(hWnd, WM_SIZE, OnSize);
 		HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
