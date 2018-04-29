@@ -50,20 +50,38 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 	m_columnCount = columnCount;
 
 	// Find string type column that will be located leftmost.
-	m_leftMostColumnIndex = 0;
-	for(int i = 0; i < columnCount; i++) {
-		if(columns[i].type == Column::Type::String) {
-			m_leftMostColumnIndex = i;
-			break;
-		}
-	}
-
-	LVCOLUMN col = { 0 };
-	col.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH | LVCF_ORDER;
+	// And calculate width of columns.
+	m_leftMostColumnIndex = -1;
 	RECT rect;
 	WIN32_ASSERT(GetClientRect(m_hWnd, &rect));
 	auto width = rect.right - rect.left;
 	auto remainingWidth = width;
+	std::unique_ptr<int[]> columnWidth(new int[columnCount]);
+	for(int i = 0; i < columnCount; i++) {
+		if((m_leftMostColumnIndex < 0) && (columns[i].type == Column::Type::String)) {
+			m_leftMostColumnIndex = i;
+		}
+		auto pCol = &columns[i];
+		auto& width = columnWidth[i];
+		if(1 < pCol->width) {
+			// Width specifies pixel length.
+			width = (int)pCol->width;
+		} else if(0 < pCol->width) {
+			// Width specifies percentage of width of List View.
+			width = (int)(width * pCol->width);
+		} else if(0 == pCol->width) {
+			// autoColumnWidth = automatic width.
+			return E_NOTIMPL;
+		} else {
+			// remainingColumnWidth = Width is remaning length.
+			width = (0 < remainingWidth) ? remainingWidth : 0;
+		}
+		remainingWidth -= width;
+	}
+	if(m_leftMostColumnIndex < 0) m_leftMostColumnIndex = 0;
+
+	LVCOLUMN col = { 0 };
+	col.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH | LVCF_ORDER;
 	for(int i = 0; i < columnCount; i++) {
 		col.iSubItem = col.iOrder = i;
 		if(0 == i) {
@@ -72,6 +90,7 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 			col.iOrder = i - 1;
 		}
 		auto pCol = &columns[col.iOrder];
+		col.cx = columnWidth[col.iOrder];
 		switch(pCol->type) {
 		case Column::Type::String:
 			col.fmt = LVCFMT_LEFT;
@@ -81,20 +100,6 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 			break;
 		}
 		col.pszText = (LPTSTR)pCol->title;
-		if(1 < pCol->width) {
-			// Width specifies pixel length.
-			col.cx = (int)pCol->width;
-		} else if(0 < pCol->width) {
-			// Width specifies percentage of width of List View.
-			col.cx = (int)(width * pCol->width);
-		} else if(0 == pCol->width) {
-			// TODO: Implement automatic width setting.
-			return E_NOTIMPL;
-		} else {
-			// Width is remaning length.
-			col.cx = (0 < remainingWidth) ? remainingWidth : 0;
-		}
-		remainingWidth -= col.cx;
 		WIN32_ASSERT(i == ListView_InsertColumn(m_hWnd, i, &col));
 	}
 

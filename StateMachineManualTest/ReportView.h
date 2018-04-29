@@ -32,6 +32,8 @@ public:
 		LPCTSTR title;
 		float width;
 	};
+	static const int autoColumnWidth = 0;
+	static const int remainingColumnWidth = -1;
 
 	template<int ColumnCount>
 	HRESULT setColumns(const Column (&columns)[ColumnCount]);

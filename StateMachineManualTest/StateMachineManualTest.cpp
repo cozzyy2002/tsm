@@ -137,7 +137,7 @@ static BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 		{ CReportView::Column::Type::Number, L"Number", 80 },
 		{ CReportView::Column::Type::Number, L"Integer", 80 },
 		{ CReportView::Column::Type::String, L"String", 200 },
-		{ CReportView::Column::Type::String, L"String 2", 200 },
+		{ CReportView::Column::Type::String, L"String 2", CReportView::remainingColumnWidth },
 	};
 
 	CReportView reportView;
