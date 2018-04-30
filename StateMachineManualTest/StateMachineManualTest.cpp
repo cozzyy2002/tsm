@@ -134,7 +134,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 static BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
-	context.setLogWindow(hInst, hwnd);
+	context.setLogWindow(hInst, hwnd, WM_LOG);
 
 	return TRUE;
 }
@@ -185,6 +185,10 @@ static void OnDestroy(HWND hwnd)
 	PostQuitMessage(0);
 }
 
+// Message cracker for WM_LOG to call MyContext::onLogMsg().
+#define HANDLE_WM_LOG(hwnd, wParam, lParam, fn) \
+	((fn)((hwnd), (wParam), (lParam)), 0L)
+
 //
 //  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
 //
@@ -204,6 +208,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
 		HANDLE_MSG(hWnd, WM_SIZE, OnSize);
 		HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
+		HANDLE_MSG(hWnd, WM_LOG, context.onLogMsg);
+		break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }

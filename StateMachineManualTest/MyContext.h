@@ -16,8 +16,9 @@ public:
 	void createStateMachine(HWND hWnd, UINT msg);
 	MyState* findState(const std::tstring& name) const;
 
-	void setLogWindow(HINSTANCE hInst, HWND hWndLog);
+	void setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg);
 	void log(LPCTSTR fmt, ...);
+	LRESULT onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	CReportView* getReportView() { return &m_reportView; }
 
 #pragma region Implementation of IStateMonitor
@@ -40,6 +41,8 @@ protected:
 
 	// Window handle to which log message is written.
 	HWND m_hWndLog;
+
+	UINT m_logMsg;
 
 	DWORD m_startTime;
 	CReportView m_reportView;

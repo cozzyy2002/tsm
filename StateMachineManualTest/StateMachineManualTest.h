@@ -2,4 +2,7 @@
 
 #include "resource.h"
 
-#define WM_STATE_MACHINE WM_APP
+enum {
+	WM_STATE_MACHINE = WM_APP,
+	WM_LOG
+};

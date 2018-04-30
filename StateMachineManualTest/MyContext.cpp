@@ -35,29 +35,50 @@ MyState* MyContext::findState(const std::tstring& name) const
 	return state;
 }
 
-void MyContext::setLogWindow(HINSTANCE hInst, HWND hWndLog)
+void MyContext::setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg)
 {
 	m_hWndLog = hWndLog;
+	m_logMsg = logMsg;
 
 	HR_EXPECT_OK(m_reportView.create(hInst, hWndLog));
 	HR_EXPECT_OK(m_reportView.setColumns(m_logColumns));
 }
 
+struct LogMessage
+{
+	float time;
+	DWORD thread;
+	std::tstring msg;
+};
+
 void MyContext::log(LPCTSTR fmt, ...)
 {
 	if(!m_hWndLog) return;
+
+	std::unique_ptr<LogMessage> logMessage(new LogMessage());
 
 	static TCHAR msg[0x100];
 	va_list args;
 	va_start(args, fmt);
 	_vstprintf_s(msg, fmt, args);
+	logMessage->msg = msg;
 
-	auto time = (float)(GetTickCount() - m_startTime) / 1000;
-	auto thread = GetCurrentThreadId();
+	logMessage->time = (float)(GetTickCount() - m_startTime) / 1000;
+	logMessage->thread = GetCurrentThreadId();
+
+	auto hr = WIN32_EXPECT(PostMessage(m_hWndLog, m_logMsg, 0, (LPARAM)logMessage.get()));
+	if(SUCCEEDED(hr)) logMessage.release();
+}
+
+LRESULT MyContext::onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+	std::unique_ptr<LogMessage> logMessage((LogMessage*)lParam);
 	const CVar items[ARRAYSIZE(m_logColumns)] = {
-		CVar(time), CVar((int)thread), CVar(msg)
+		CVar(logMessage->time), CVar((int)logMessage->thread), CVar(logMessage->msg)
 	};
 	m_reportView.addItems(items);
+
+	return 0;
 }
 
 template<class T>
