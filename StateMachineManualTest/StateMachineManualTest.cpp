@@ -148,7 +148,7 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		if(!hWndTriggerEventDlg) {
 			hWndTriggerEventDlg = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_EVENT), hwnd, triggerEventDialogProc);
 		}
-		WIN32_EXPECT(ShowWindow(hWndTriggerEventDlg, SW_SHOW));
+		ShowWindow(hWndTriggerEventDlg, SW_SHOW);
 		break;
 	case IDM_VIEW_CLEAR_LOG:
 		context.getReportView()->clear();
