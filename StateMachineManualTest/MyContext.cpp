@@ -6,7 +6,7 @@
 #include "StateMachineManualTest.h"
 
 /*static*/ const CReportView::Column MyContext::m_logColumns[] = {
-	{ CReportView::Column::Type::Number, _T("Time"), 80 },
+	{ CReportView::Column::Type::Number, _T("Time(Sec)"), 80 },
 	{ CReportView::Column::Type::Number, _T("Thread"), 80 },
 	{ CReportView::Column::Type::String, _T("Message"), CReportView::remainingColumnWidth },
 };
@@ -14,7 +14,7 @@
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext"));
 
 MyContext::MyContext()
-	: m_hWndLog(NULL)
+	: m_hWndLog(NULL), m_startTime(GetTickCount())
 {
 	tsm::IContext::onAssertFailedProc = MyContext::onAssertFailed;
 }
@@ -52,10 +52,10 @@ void MyContext::log(LPCTSTR fmt, ...)
 	va_start(args, fmt);
 	_vstprintf_s(msg, fmt, args);
 
-	auto time = GetTickCount();
+	auto time = (float)(GetTickCount() - m_startTime) / 1000;
 	auto thread = GetCurrentThreadId();
 	const CVar items[ARRAYSIZE(m_logColumns)] = {
-		CVar(time), CVar(thread), CVar(msg)
+		CVar(time), CVar((int)thread), CVar(msg)
 	};
 	m_reportView.addItems(items);
 }
@@ -79,7 +79,8 @@ void MyContext::onIdle(tsm::IContext* context)
 
 void MyContext::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
 {
-	log(_T("Trigger event %s, delay=%d, interval=%d"), toString(event), event->_getPriority(), event->_getDelayTime(), event->_getIntervalTime());
+	log(_T("Trigger event %s, priority=%d, delay=%d, interval=%d"),
+		toString(event), event->_getPriority(), event->_getDelayTime(), event->_getIntervalTime());
 }
 
 void MyContext::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)

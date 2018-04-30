@@ -9,6 +9,12 @@ public:
 		_itot_s(num, str, radix);
 		this->str = str;
 	}
+	CVar(float num, LPCTSTR fmt = _T("%.3f")) {
+		TCHAR str[40];
+		_stprintf_s(str, fmt, num);
+		this->str = str;
+	}
+
 	LPCTSTR toString() const { return str.c_str(); }
 
 protected:

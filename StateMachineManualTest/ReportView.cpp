@@ -35,6 +35,7 @@ HRESULT CReportView::create(HINSTANCE hInst, HWND hWndParent, HWND* phWnd /*= nu
 	m_hWnd = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE,
 		0, 0, rect.right - rect.left, rect.bottom - rect.top, hWndParent, (HMENU)NULL, hInst, NULL);
 	WIN32_ASSERT(m_hWnd);
+	ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT);
 
 	if(phWnd) *phWnd = m_hWnd;
 	return S_OK;
@@ -131,6 +132,8 @@ HRESULT CReportView::addItems(const CVar* items, int itemCount)
 			HR_ASSERT(ListView_SetItem(m_hWnd, &item), E_UNEXPECTED);
 		}
 	}
+	// Make item just added visible.
+	ListView_EnsureVisible(m_hWnd, iItem, FALSE);
 
 	return S_OK;
 }

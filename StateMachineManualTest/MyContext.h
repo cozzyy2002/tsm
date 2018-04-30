@@ -41,6 +41,7 @@ protected:
 	// Window handle to which log message is written.
 	HWND m_hWndLog;
 
+	DWORD m_startTime;
 	CReportView m_reportView;
 	static const CReportView::Column m_logColumns[];
 };
