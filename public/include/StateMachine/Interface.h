@@ -94,7 +94,6 @@ public:
 
 	virtual bool _callExitOnShutdown() const = 0;
 	virtual IState* _getMasterState() const = 0;
-	virtual void _setMasterState(IState* state) = 0;
 #pragma endregion
 
 	// Returns TimerClient instance.
@@ -106,6 +105,7 @@ class IStateMachine
 {
 public:
 	static IStateMachine* create(IContext* context);
+	static IStateMachine* create(HWND hWnd, UINT msg);
 
 	virtual ~IStateMachine() {}
 
@@ -123,6 +123,11 @@ public:
 	virtual void onIdle(IContext* context) = 0;
 	virtual void onEventTriggered(IContext* context, IEvent* event) = 0;
 	virtual void onEventHandling(IContext* context, IEvent* event, IState* current) = 0;
+
+	/**
+	 * When setup(), previous is nullptr.
+	 * When shutdown(), next is nullptr.
+	 */
 	virtual void onStateChanged(IContext* context, IEvent* event, IState* previous, IState* next) = 0;
 	virtual void onTimerStarted(IContext* context, IEvent* event) = 0;
 	virtual void onWorkerThreadExit(IContext* context, HRESULT exitCode) = 0;

@@ -16,25 +16,25 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 	// Check if any timer has started by _triggerDelayedEvent() method.
 	HR_ASSERT(th->hTimerQueue, E_ILLEGAL_METHOD_CALL);
 
-	HANDLE hTimer(NULL);	// Timer handle to be canceled.
+	// Preserve Timer object until callback will complete or will be canceled.
+	CComPtr<TimerHandle::Timer> timer;
 	auto hr = S_OK;
 	{
 		lock_t _lock(th->lock);
 
 		auto it = th->timers.find(event);
 		if(it != th->timers.end()) {
+			timer = it->second;
 			// Remove timer.
-			hTimer = it->second->hTimer;
 			th->timers.erase(it);
 		} else {
 			// Timer specified might have expired already.
 			hr = S_FALSE;
 		}
 	}
-
-	if(hTimer) {
+	if(timer.p) {
 		// Delete timer and wait for currently running timer callback function.
-		WIN32_ASSERT(DeleteTimerQueueTimer(th->hTimerQueue, hTimer, INVALID_HANDLE_VALUE));
+		WIN32_ASSERT(DeleteTimerQueueTimer(th->hTimerQueue, timer->hTimer, INVALID_HANDLE_VALUE));
 	}
 	return hr;
 }
@@ -43,10 +43,11 @@ HRESULT TimerClient::cancelAllEventTimers()
 {
 	auto th = _getHandle();
 
-	if(th->hTimerQueue) {
+	// In case TimerHandle::hTimerQueue is cleared in another thread.
+	auto hTimerQueue = th->hTimerQueue;
+	if(hTimerQueue) {
 		// Cancel and delete all pending timers and delete timer queue.
-		WIN32_EXPECT(DeleteTimerQueueEx(th->hTimerQueue, INVALID_HANDLE_VALUE));
-
+		WIN32_EXPECT(DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE));
 		{
 			lock_t _lock(th->lock);
 			th->hTimerQueue = NULL;
@@ -55,6 +56,18 @@ HRESULT TimerClient::cancelAllEventTimers()
 	}
 
 	return S_OK;
+}
+
+std::vector<CComPtr<IEvent>> TimerClient::getPendingEvents()
+{
+	auto th = _getHandle();
+	lock_t _lock(th->lock);
+
+	std::vector<CComPtr<IEvent>> events;
+	for(auto& pair : th->timers) {
+		events.push_back(pair.first);
+	}
+	return events;
 }
 
 HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEvent* event)
@@ -80,7 +93,7 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	}
 
 	// Create timer object.
-	std::unique_ptr<TimerHandle::Timer> timer(new TimerHandle::Timer());
+	CComPtr<TimerHandle::Timer> timer(new TimerHandle::Timer());
 	timer->timerType = timerType;
 	timer->context = context;
 	timer->event = event;
@@ -89,17 +102,22 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	ULONG flags = 0;
 	flags |= ((timer->timerType == TimerType::HandleEvent) ? WT_EXECUTELONGFUNCTION : 0);
 	flags |= ((event->_getIntervalTime() == 0) ? WT_EXECUTEONLYONCE : 0);
-	WIN32_ASSERT(CreateTimerQueueTimer(&timer->hTimer, th->hTimerQueue, timerCallback, timer.get(), event->_getDelayTime(), event->_getIntervalTime(), flags));
+	WIN32_ASSERT(CreateTimerQueueTimer(&timer->hTimer, th->hTimerQueue, timerCallback, timer.p, event->_getDelayTime(), event->_getIntervalTime(), flags));
 
 	// m_timers owns Timer object in unique_ptr<Timer>.
-	th->timers.insert(std::make_pair(event, std::move(timer)));
+	th->timers.insert(std::make_pair(event, timer));
+
+	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onTimerStarted(context, event);
+	});
 
 	return S_OK;
 }
 
 /*static*/ VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired)
 {
-	auto timer = (TimerHandle::Timer*)lpParameter;
+	CComPtr<TimerHandle::Timer> timer = (TimerHandle::Timer*)lpParameter;
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
 	auto th = timerClient->_getHandle();
@@ -108,8 +126,6 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 
 HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event)
 {
-	// Timer object might be deleted when out of this method.
-	std::unique_ptr<Timer> _timer;
 	{
 		lock_t _lock(lock);
 
@@ -117,11 +133,11 @@ HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEven
 		if(it != timers.end()) {
 			if(event->_getIntervalTime() == 0) {
 				// Delete timer except for interval timer.
-				_timer = std::move(it->second);
 				timers.erase(it);
 			}
 		} else {
-			HR_ASSERT(!_T("Callback of canceled timer is called."), E_UNEXPECTED);
+			// The timer has been canceled.
+			return S_FALSE;
 		}
 	}
 

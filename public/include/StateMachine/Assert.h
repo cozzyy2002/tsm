@@ -1,5 +1,6 @@
 #pragma once
 
+#define HR_ERROR(msg, hr) checkHResult(hr, msg, _T(__FILE__), __LINE__)
 #define HR_ASSERT(exp, hr) do { auto _hr(HR_EXPECT(exp, hr)); if(FAILED(_hr)) return _hr; } while(false)
 #define HR_EXPECT(exp, hr) checkHResult((exp) ? S_OK : hr, _T(#exp), _T(__FILE__), __LINE__)
 #define HR_ASSERT_OK(exp) do { auto _hr(HR_EXPECT_OK(exp)); if(FAILED(_hr)) return _hr; } while(false)

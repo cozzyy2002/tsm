@@ -25,7 +25,6 @@ public:
 
 	virtual bool _callExitOnShutdown() const override { return false; }
 	virtual IState* _getMasterState() const override { return m_masterState; }
-	virtual void _setMasterState(IState* state) override { m_masterState = state; }
 
 	virtual TimerClient* _getTimerClient() override { return this; }
 #pragma endregion

@@ -6,9 +6,6 @@
 #include "AsyncStateMachine.h"
 #include "Handles.h"
 
-// Make sure that IContext is instance of AsyncContext.
-#define ASSERT_ASYNC(c) HR_ASSERT(c->isAsync(), E_INVALIDARG)
-
 namespace tsm {
 
 /**
@@ -65,7 +62,7 @@ HRESULT AsyncStateMachine::shutdown(IContext * context, DWORD timeout)
 	return S_OK;
 }
 
-HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
+HRESULT AsyncStateMachine::triggerEvent(IContext* context, IEvent* event)
 {
 	// Ensure to release object on error.
 	CComPtr<IEvent> _event(event);
@@ -77,33 +74,16 @@ HRESULT AsyncStateMachine::triggerEvent(IContext * context, IEvent * event)
 	auto timerClient = event->_getTimerClient();
 	if(timerClient && !event->_getHandle()->isTimerCreated) {
 		// Event should be handled after delay time elapsed.
-		auto hr = HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
-		if(SUCCEEDED(hr)) {
-			callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
-			{
-				stateMonitor->onTimerStarted(context, event);
-			});
-		}
-		return hr;
+		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::TriggerEvent, context, event));
 	}
 
 	auto asyncData = context->_getHandle()->asyncData;
+
 	// Add the event to event queue and signal that event is available.
-	// Events are added to the queue by priority order.
-	// deque::back() returns event with highest priority.
-	// Events with same priority are added by FIFO order(deque::back() returns event triggered first).
-	{
-		lock_t _lock(asyncData->eventQueueLock);
-		auto& eventQueue = asyncData->eventQueue;
-		auto it = eventQueue.begin();
-		for(; it != eventQueue.end(); it++) {
-			if(event->_getPriority() <= (*it)->_getPriority()) break;
-		}
-		eventQueue.insert(it, event);
-	}
+	HR_ASSERT_OK(asyncData->queueEvent(event));
 	WIN32_ASSERT(SetEvent(asyncData->hEventAvailable));
 
-	callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
 	{
 		stateMonitor->onEventTriggered(context, event);
 	});
@@ -170,7 +150,7 @@ DWORD AsyncStateMachine::workerThreadProc(LPVOID lpParameter)
 	auto hr = param->stateMachine->doWorkerThread(param);
 
 	// Notify that worker thread exits.
-	param->stateMachine->callStateMonitor(context, [hr](IContext* context, IStateMonitor* stateMonitor)
+	context->_getHandle()->callStateMonitor(context, [hr](IContext* context, IStateMonitor* stateMonitor)
 	{
 		stateMonitor->onWorkerThreadExit(context, hr);
 	});
@@ -186,6 +166,12 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 		std::unique_ptr<SetupParam> _param(param);
 		// Call entry() of initial state.
 		HR_ASSERT_OK(callEntry(context->_getCurrentState(), context, param->event, nullptr));
+
+		// Call StateMonitor::onStateChanged() with nullptr as previous state.
+		context->_getHandle()->callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
+		{
+			stateMonitor->onStateChanged(context, param->event, nullptr, context->_getCurrentState());
+		});
 		// Notify that setup completed.
 		WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 	}
@@ -206,7 +192,7 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 				lock_t _lock(asyncData->eventQueueLock);
 				auto& eventQueue = asyncData->eventQueue;
 				if(eventQueue.empty()) {
-					callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)
+					context->_getHandle()->callStateMonitor(context, [](IContext* context, IStateMonitor* stateMonitor)
 					{
 						stateMonitor->onIdle(context);
 					});

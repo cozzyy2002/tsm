@@ -24,6 +24,15 @@ public:
 	}
 
 	tsm::TimerHandle* getTimerHandle(tsm::TimerClient& timerClient) { return  timerClient._getHandle(); }
+	auto getPendingEvents(tsm::TimerClient& timerClient) {
+		auto eventVectors = timerClient.getPendingEvents();
+		std::set<tsm::IEvent*> events;
+		for(auto& event : eventVectors) {
+			events.insert(event.p);
+		}
+
+		return events;
+	}
 
 	C mockContext;
 	MockEvent e0, e1;
@@ -46,9 +55,12 @@ TEST_F(StateMachineTriggerEventUnitTest, 0)
 	e0.setTimer(&mockContext, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 	Sleep(50);
-	ASSERT_EQ(1, getTimerHandle(mockContext)->timers.size());
+	auto events = getPendingEvents(mockContext);
+	EXPECT_EQ(1, events.size());
+	EXPECT_NE(events.end(), events.find(&e0));
 	Sleep(100);
-	ASSERT_EQ(0, getTimerHandle(mockContext)->timers.size());
+	events = getPendingEvents(mockContext);
+	EXPECT_EQ(0, events.size());
 	EXPECT_TRUE(e0.deleted());
 }
 
@@ -61,9 +73,12 @@ TEST_F(StateMachineTriggerEventUnitTest, 1)
 	e0.setTimer(&mockState0, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 	Sleep(50);
-	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
+	auto events = getPendingEvents(mockState0);
+	EXPECT_EQ(1, events.size());
+	EXPECT_NE(events.end(), events.find(&e0));
 	Sleep(100);
-	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
+	events = getPendingEvents(mockState0);
+	EXPECT_EQ(0, events.size());
 	EXPECT_TRUE(e0.deleted());
 }
 
@@ -75,11 +90,14 @@ TEST_F(StateMachineTriggerEventUnitTest, 2)
 	e0.setTimer(&mockState0, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 	Sleep(50);
-	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
+	auto events = getPendingEvents(mockState0);
+	EXPECT_EQ(1, events.size());
+	EXPECT_NE(events.end(), events.find(&e0));
 	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
-	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
+	events = getPendingEvents(mockState0);
+	EXPECT_EQ(0, events.size());
 	EXPECT_TRUE(e0.deleted());
-	Sleep(100);
+	Sleep(500);
 }
 
 // Cancel interval state timer
@@ -90,13 +108,18 @@ TEST_F(StateMachineTriggerEventUnitTest, 3)
 	e0.setTimer(&mockState0, 50, 30);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 
-	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
+	auto events = getPendingEvents(mockState0);
+	EXPECT_EQ(1, events.size());
+	EXPECT_NE(events.end(), events.find(&e0));
 	Sleep(100);
-	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
+	events = getPendingEvents(mockState0);
+	EXPECT_EQ(1, events.size());
+	EXPECT_NE(events.end(), events.find(&e0));
 	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
-	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
+	events = getPendingEvents(mockState0);
+	EXPECT_EQ(0, events.size());
 	EXPECT_TRUE(e0.deleted());
-	Sleep(100);
+	Sleep(500);
 }
 
 // Cancel event timer of state on State::exit()
@@ -113,13 +136,16 @@ TEST_F(StateMachineTriggerEventUnitTest, 4)
 	e1.setTimer(&mockState0, 50, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e1));
 
-	ASSERT_EQ(1, getTimerHandle(mockState0)->timers.size());
+	auto events = getPendingEvents(mockState0);
+	EXPECT_EQ(1, events.size());
+	EXPECT_NE(events.end(), events.find(&e1));
 	// mockState0 -> mockState1 -> Cancel delayed event e1 of mockState0.
 	Sleep(200);
 	EXPECT_FALSE(e1.deleted());
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 	Sleep(200);
 	ASSERT_EQ(&mockState1, mockContext.getCurrentState());
-	ASSERT_EQ(0, getTimerHandle(mockState0)->timers.size());
+	events = getPendingEvents(mockState0);
+	EXPECT_EQ(0, events.size());
 	EXPECT_TRUE(e1.deleted());
 }
