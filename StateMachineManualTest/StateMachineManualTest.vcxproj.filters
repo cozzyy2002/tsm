@@ -45,6 +45,9 @@
     <ClInclude Include="ReportView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ClipBoardUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -66,6 +69,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ReportView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ClipBoardUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

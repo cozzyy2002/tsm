@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ReportView.h"
+#include "ClipBoardUtil.h"
 #include <StateMachine/Assert.h>
 
 #include <CommCtrl.h>
@@ -134,6 +135,20 @@ HRESULT CReportView::addItems(const CVar* items, int itemCount)
 	}
 	// Make item just added visible.
 	ListView_EnsureVisible(m_hWnd, iItem, FALSE);
+
+	return S_OK;
+}
+
+
+HRESULT CReportView::copy()
+{
+	CSafeClipBoard cl(m_hWnd);
+	WIN32_ASSERT(cl.open());
+	WCHAR str[] = L"String to be copied to clip board. = クリップボードにコピーする文字列";
+	CClipBoardBuffer buff;
+	HR_ASSERT_OK(buff.copy(str, sizeof(str)));
+	WIN32_ASSERT(SetClipboardData(CF_UNICODETEXT, buff.get()));
+	buff.detach();
 
 	return S_OK;
 }

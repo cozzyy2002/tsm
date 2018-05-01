@@ -150,7 +150,10 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		}
 		ShowWindow(hWndTriggerEventDlg, SW_SHOW);
 		break;
-	case IDM_VIEW_CLEAR_LOG:
+	case ID_EDIT_COPY:
+		context.getReportView()->copy();
+		break;
+	case ID_EDIT_CLEAR_LOG:
 		context.getReportView()->clear();
 		break;
 	case IDM_ABOUT:

@@ -52,6 +52,7 @@ public:
 	HRESULT addItems(const CVar(&items)[ItemCount]);
 	HRESULT addItems(const CVar* items, int itemCount);
 
+	HRESULT copy();
 	HRESULT clear();
 
 	void resize(int width, int height);
