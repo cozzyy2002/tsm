@@ -138,19 +138,9 @@ struct HotKey {
 	UINT vk;
 };
 
-static const HotKey hotKeys[] = {
-	{ IDM_TRIGGER_EVENT, MOD_CONTROL, 'T' },		// Open trigger event dialog.
-	{ ID_EDIT_COPY, MOD_CONTROL, 'C' },				// Copy log to clip board.
-	{ ID_EDIT_CLEAR_LOG, MOD_CONTROL, 'L' },		// Clear log.
-};
-
 static BOOL OnCreate(HWND hwnd, LPCREATESTRUCT lpCreateStruct)
 {
 	context.setLogWindow(hInst, hwnd, WM_LOG);
-
-	for(auto& hotKey : hotKeys) {
-		WIN32_ASSERT(RegisterHotKey(hwnd, hotKey.id, hotKey.modifier, hotKey.vk));
-	}
 
 	return TRUE;
 }
@@ -184,11 +174,6 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	}
 }
 
-static void OnHotKey(HWND hwnd, int idHotKey, UINT fuModifiers, UINT vk)
-{
-	OnCommand(hwnd, idHotKey, NULL, 0);
-}
-
 static void OnPaint(HWND hwnd)
 {
 	PAINTSTRUCT ps;
@@ -206,10 +191,6 @@ static void OnSize(HWND hwnd, UINT state, int cx, int cy)
 
 static void OnDestroy(HWND hwnd)
 {
-	for(auto& hotKey : hotKeys) {
-		WIN32_EXPECT(UnregisterHotKey(hwnd, hotKey.id));
-	}
-
 	PostQuitMessage(0);
 }
 
@@ -233,7 +214,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
 		HANDLE_MSG(hWnd, WM_CREATE, OnCreate);
 		HANDLE_MSG(hWnd, WM_COMMAND, OnCommand);
-		HANDLE_MSG(hWnd, WM_HOTKEY, OnHotKey);
 		HANDLE_MSG(hWnd, WM_PAINT, OnPaint);
 		HANDLE_MSG(hWnd, WM_SIZE, OnSize);
 		HANDLE_MSG(hWnd, WM_DESTROY, OnDestroy);
