@@ -29,7 +29,7 @@ HRESULT WindowProcStateMachine::setup(IContext* context, IState* initialState, I
 	asyncData->msg = m_msg;
 
 	// Subclass the hWnd. 
-	WIN32_ASSERT(asyncData->appWndProc = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)WndProc));
+	WIN32_ASSERT(asyncData->appWndProc = (WNDPROC)SetWindowLongPtr(m_hWnd, GWLP_WNDPROC, (LONG_PTR)WndProc));
 	WIN32_ASSERT(SetProp(m_hWnd, windowPropertyName, (HANDLE)context));
 
 	asyncData->hEventReady.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
@@ -53,7 +53,7 @@ HRESULT WindowProcStateMachine::shutdown(IContext* context, DWORD timeout)
 
 	// Unsubclass the hWnd. 
 	if(asyncData->hWnd) {
-		WIN32_EXPECT(WndProc == (WNDPROC)SetWindowLong(asyncData->hWnd, GWL_WNDPROC, (LONG)asyncData->appWndProc));
+		WIN32_EXPECT(WndProc == (WNDPROC)SetWindowLongPtr(asyncData->hWnd, GWLP_WNDPROC, (LONG_PTR)asyncData->appWndProc));
 		WIN32_EXPECT(context == (IContext*)RemoveProp(asyncData->hWnd, windowPropertyName));
 		asyncData->hWnd = NULL;
 	}
