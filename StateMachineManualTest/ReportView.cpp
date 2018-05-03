@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "ReportView.h"
-#include "ClipBoardUtil.h"
+#include "ClipBoard.h"
 #include <StateMachine/Assert.h>
 
 #include <CommCtrl.h>
@@ -158,22 +158,24 @@ HRESULT CReportView::copy()
 	// Items
 	UINT flag = ListView_GetSelectedCount(m_hWnd) ? LVNI_SELECTED : LVNI_ALL;
 	int iItem = -1;
+	TCHAR text[0x100];
+	LVITEM item = { LVIF_TEXT };
+	item.pszText = text;
+	item.cchTextMax = ARRAYSIZE(text);
 	while(true) {
 		iItem = ListView_GetNextItem(m_hWnd, iItem, flag);
 		if(iItem < 0) break;
 
 		comma = L"";
 		for(int i = 0; i < m_columnCount; i++) {
-			TCHAR text[0x100];
 			auto iCol = i;
 			if(i < m_leftMostColumnIndex) {
 				iCol++;
 			} else if(i == m_leftMostColumnIndex) {
 				iCol = 0;
 			}
-			LVITEM item = { LVIF_TEXT, iItem, iCol };
-			item.pszText = text;
-			item.cchTextMax = ARRAYSIZE(text);
+			item.iItem = iItem;
+			item.iSubItem = iCol;
 			WIN32_ASSERT(ListView_GetItem(m_hWnd, &item));
 			CT2W wstr(text);
 			stream << comma << L"\"" << (LPCWSTR)wstr << L"\"";
@@ -183,13 +185,10 @@ HRESULT CReportView::copy()
 	}
 
 	// Copy text to clip board.
-	CSafeClipBoard cl(m_hWnd);
-	WIN32_ASSERT(cl.open());
+	CClipBoard cl;
+	WIN32_ASSERT(cl.open(m_hWnd));
 	auto str = stream.str();
-	CClipBoardBuffer buff;
-	HR_ASSERT_OK(buff.copy(str.c_str(), (str.size() + 1) * sizeof(WCHAR)));
-	WIN32_ASSERT(SetClipboardData(CF_UNICODETEXT, buff.get()));
-	buff.detach();
+	HR_ASSERT_OK(cl.copy(CF_UNICODETEXT, str.c_str(), (str.size() + 1) * sizeof(WCHAR)));
 
 	return S_OK;
 }

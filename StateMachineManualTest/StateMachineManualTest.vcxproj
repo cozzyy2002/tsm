@@ -169,7 +169,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ClipBoardUtil.h" />
+    <ClInclude Include="ClipBoard.h" />
     <ClInclude Include="MyContext.h" />
     <ClInclude Include="MyEvent.h" />
     <ClInclude Include="MyObject.h" />
@@ -181,7 +181,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ClipBoardUtil.cpp" />
+    <ClCompile Include="ClipBoard.cpp" />
     <ClCompile Include="MyContext.cpp" />
     <ClCompile Include="MyEvent.cpp" />
     <ClCompile Include="MyObject.cpp" />
