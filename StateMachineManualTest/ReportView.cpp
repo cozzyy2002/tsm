@@ -33,7 +33,7 @@ HRESULT CReportView::create(HINSTANCE hInst, HWND hWndParent, HWND* phWnd /*= nu
 
 	RECT rect;
 	WIN32_ASSERT(GetClientRect(hWndParent, &rect));
-	m_hWnd = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | WS_VSCROLL | WS_CHILD | WS_VISIBLE,
+	m_hWnd = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | LVS_SHOWSELALWAYS | WS_VSCROLL | WS_CHILD | WS_VISIBLE,
 		0, 0, rect.right - rect.left, rect.bottom - rect.top, hWndParent, (HMENU)NULL, hInst, NULL);
 	WIN32_ASSERT(m_hWnd);
 	ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT);
@@ -139,14 +139,49 @@ HRESULT CReportView::addItems(const CVar* items, int itemCount)
 	return S_OK;
 }
 
-
+// Copies currently selected ListView items to clip board as CSV Unicode text.
+// If no item is selected, copy all items.
 HRESULT CReportView::copy()
 {
+	std::wstringstream stream;
+	LPCWSTR comma = L"";
+	LPCWSTR eol = L"\r\n";
+
+	// Columns
+	for(int i = 0; i < m_columnCount; i++) {
+		CT2W wstr(m_columns[i].title);
+		stream << comma << L"\"" << (LPCWSTR)wstr << L"\"";
+		comma = L",";
+	}
+	stream << eol;
+
+	// Items
+	UINT flag = ListView_GetSelectedCount(m_hWnd) ? LVNI_SELECTED : LVNI_ALL;
+	int iItem = -1;
+	while(true) {
+		iItem = ListView_GetNextItem(m_hWnd, iItem, flag);
+		if(iItem < 0) break;
+
+		comma = L"";
+		for(int iCol = 0; iCol < m_columnCount; iCol++) {
+			TCHAR text[0x100];
+			LVITEM item = { LVIF_TEXT, iItem, iCol };
+			item.pszText = text;
+			item.cchTextMax = ARRAYSIZE(text);
+			WIN32_ASSERT(ListView_GetItem(m_hWnd, &item));
+			CT2W wstr(text);
+			stream << comma << L"\"" << (LPCWSTR)wstr << L"\"";
+			comma = L",";
+		}
+		stream << eol;
+	}
+
+	// Copy text to clip board.
 	CSafeClipBoard cl(m_hWnd);
 	WIN32_ASSERT(cl.open());
-	WCHAR str[] = L"String to be copied to clip board. = クリップボードにコピーする文字列";
+	auto str = stream.str();
 	CClipBoardBuffer buff;
-	HR_ASSERT_OK(buff.copy(str, sizeof(str)));
+	HR_ASSERT_OK(buff.copy(str.c_str(), (str.size() + 1) * sizeof(WCHAR)));
 	WIN32_ASSERT(SetClipboardData(CF_UNICODETEXT, buff.get()));
 	buff.detach();
 
