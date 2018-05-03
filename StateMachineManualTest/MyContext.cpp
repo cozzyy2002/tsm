@@ -90,7 +90,7 @@ LPCTSTR MyContext::toString(T* obj)
 
 void MyContext::onIdle(tsm::IContext* context)
 {
-	LPCTSTR msg = _T("StateMachined is idle.");
+	LPCTSTR msg = _T("StateMachine is idle.");
 	if(m_hWndLog) {
 		log(msg);
 	} else {
@@ -100,8 +100,8 @@ void MyContext::onIdle(tsm::IContext* context)
 
 void MyContext::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
 {
-	log(_T("Trigger event %s, priority=%d, delay=%d, interval=%d"),
-		toString(event), event->_getPriority(), event->_getDelayTime(), event->_getIntervalTime());
+	log(_T("Trigger event %s, delay=%d, interval=%d"),
+		toString(event), event->_getDelayTime(), event->_getIntervalTime());
 }
 
 void MyContext::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)

@@ -163,8 +163,14 @@ HRESULT CReportView::copy()
 		if(iItem < 0) break;
 
 		comma = L"";
-		for(int iCol = 0; iCol < m_columnCount; iCol++) {
+		for(int i = 0; i < m_columnCount; i++) {
 			TCHAR text[0x100];
+			auto iCol = i;
+			if(i < m_leftMostColumnIndex) {
+				iCol++;
+			} else if(i == m_leftMostColumnIndex) {
+				iCol = 0;
+			}
 			LVITEM item = { LVIF_TEXT, iItem, iCol };
 			item.pszText = text;
 			item.cchTextMax = ARRAYSIZE(text);
