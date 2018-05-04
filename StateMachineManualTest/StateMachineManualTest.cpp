@@ -264,12 +264,13 @@ static void OnDlgCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		switch(codeNotify) {
 		case EN_CHANGE:
 			{
-				// If master state of next state exist, set it's name to master state edit box.
+				// If next state exists, set master state of next state to master state edit box.
 				auto state = context.findState(getEditText(hwnd, IDC_EDIT_NEXT_STATE_NAME));
 				auto masterStateEneble = TRUE;
 				auto hWndMasterState = GetDlgItem(hwnd, IDC_EDIT_MASTER_STATE_NAME);
-				if(state && state->getMasterState()) {
-					Edit_SetText(hWndMasterState, state->getMasterState()->getName().c_str());
+				if(state) {
+					auto ms = state->getMasterState();
+					Edit_SetText(hWndMasterState, ms ? ms->getName().c_str() : _T(""));
 					masterStateEneble = FALSE;
 				}
 				Edit_Enable(hWndMasterState, masterStateEneble);
@@ -291,7 +292,7 @@ static LRESULT OnDlgNotify(HWND hWnd, int idForm, NMHDR* nmhdr)
 }
 
 #define HANDLE_DLG_MSG(hwnd, msg, fn) \
-	case msg: return SetDlgMsgResult(hwnd, msg, HANDLE_##msg(hwnd, wParam, lParam, fn));
+	case msg: return SetDlgMsgResult(hwnd, msg, HANDLE_##msg(hwnd, wParam, lParam, fn))
 
 INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
