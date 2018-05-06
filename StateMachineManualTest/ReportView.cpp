@@ -166,16 +166,15 @@ HRESULT CReportView::copy()
 		iItem = ListView_GetNextItem(m_hWnd, iItem, flag);
 		if(iItem < 0) break;
 
+		item.iItem = iItem;
 		comma = L"";
 		for(int i = 0; i < m_columnCount; i++) {
-			auto iCol = i;
+			item.iSubItem = i;
 			if(i < m_leftMostColumnIndex) {
-				iCol++;
+				item.iSubItem++;
 			} else if(i == m_leftMostColumnIndex) {
-				iCol = 0;
+				item.iSubItem = 0;
 			}
-			item.iItem = iItem;
-			item.iSubItem = iCol;
 			WIN32_ASSERT(ListView_GetItem(m_hWnd, &item));
 			CT2W wstr(text);
 			stream << comma << L"\"" << (LPCWSTR)wstr << L"\"";
