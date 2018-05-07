@@ -66,8 +66,10 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 		auto pCol = &columns[i];
 		auto& width = columnWidth[i];
 		if(1 < pCol->width) {
-			// Width specifies pixel length.
-			width = (int)pCol->width;
+			// Width specifies character length.
+			static const int stringCharWidth = ListView_GetStringWidth(m_hWnd, _T("A"));
+			static const int numberCharWidth = ListView_GetStringWidth(m_hWnd, _T("0"));
+			width = (int)pCol->width * ((pCol->type == Column::Type::String) ? stringCharWidth : numberCharWidth);
 		} else if(0 < pCol->width) {
 			// Width specifies percentage of width of List View.
 			width = (int)(width * pCol->width);

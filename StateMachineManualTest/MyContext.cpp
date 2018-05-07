@@ -5,9 +5,12 @@
 #include "MyState.h"
 #include "StateMachineManualTest.h"
 
+static TCHAR logTimeFormat[] = _T("%02d:%02d:%02d.%03d");
+static TCHAR logTimeBuff[] = _T("hh:mm:ss.xxx");
+
 /*static*/ const CReportView::Column MyContext::m_logColumns[] = {
-	{ CReportView::Column::Type::Number, _T("Time(Sec)"), 80 },
-	{ CReportView::Column::Type::Number, _T("Thread"), 80 },
+	{ CReportView::Column::Type::Number, _T("Time"), ARRAYSIZE(logTimeBuff) },
+	{ CReportView::Column::Type::Number, _T("Thread"), 10 },
 	{ CReportView::Column::Type::String, _T("Message"), CReportView::remainingColumnWidth },
 };
 
@@ -46,7 +49,7 @@ void MyContext::setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg)
 
 struct LogMessage
 {
-	float time;
+	SYSTEMTIME time;
 	DWORD thread;
 	std::tstring msg;
 };
@@ -63,7 +66,7 @@ void MyContext::log(LPCTSTR fmt, ...)
 	_vstprintf_s(msg, fmt, args);
 	logMessage->msg = msg;
 
-	logMessage->time = (float)(GetTickCount() - m_startTime) / 1000;
+	GetLocalTime(&logMessage->time);
 	logMessage->thread = GetCurrentThreadId();
 
 	auto hr = WIN32_EXPECT(PostMessage(m_hWndLog, m_logMsg, 0, (LPARAM)logMessage.get()));
@@ -73,8 +76,10 @@ void MyContext::log(LPCTSTR fmt, ...)
 LRESULT MyContext::onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	std::unique_ptr<LogMessage> logMessage((LogMessage*)lParam);
+	auto& st = logMessage->time;
+	_stprintf_s(logTimeBuff, logTimeFormat, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 	const CVar items[ARRAYSIZE(m_logColumns)] = {
-		CVar(logMessage->time), CVar((int)logMessage->thread), CVar(logMessage->msg)
+		CVar(logTimeBuff), CVar((int)logMessage->thread), CVar(logMessage->msg)
 	};
 	m_reportView.addItems(items);
 
