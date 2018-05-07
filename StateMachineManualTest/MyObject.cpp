@@ -1,14 +1,17 @@
 #include "stdafx.h"
 #include "MyObject.h"
 
-MyObject::MyObject(LPCTSTR name /*= nullptr*/)
-	: m_name(name ? name : _T(""))
+MyObject::MyObject(LPCTSTR name /*= nullptr*/, ILogger* logger /*= nullptr*/)
+	: m_name(name ? name : _T("")), m_logger(logger)
 {
 }
 
 
 MyObject::~MyObject()
 {
+	if(m_logger) {
+		m_logger->log(_T("Deleting %s"), toString());
+	}
 }
 
 LPCTSTR MyObject::toString() const

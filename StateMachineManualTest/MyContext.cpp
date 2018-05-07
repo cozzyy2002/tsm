@@ -56,7 +56,7 @@ struct LogMessage
 
 void MyContext::log(LPCTSTR fmt, ...)
 {
-	if(!m_hWndLog) return;
+	if(!m_hWndLog || !IsWindow(m_hWnd)) return;
 
 	std::unique_ptr<LogMessage> logMessage(new LogMessage());
 

@@ -235,7 +235,7 @@ static void OnDlgCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 {
 	switch(id) {
 	case IDC_BUTTON_SETUP:
-		HR_EXPECT_OK(context.setup(new MyState(_T("Initial"))));
+		HR_EXPECT_OK(context.setup(new MyState(context, _T("Initial"))));
 		break;
 	case IDC_BUTTON_SHUTDOWN:
 		HR_EXPECT_OK(context.shutdown());
@@ -314,13 +314,13 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 	if(!stateName.empty()) {
 		// Set next state.
 		auto state = context.findState(stateName);
-		event->nextState = state ? state : new MyState(stateName);
+		event->nextState = state ? state : new MyState(context, stateName);
 		stateName = getEditText(hDlg, IDC_EDIT_MASTER_STATE_NAME);
 		if(!stateName.empty()) {
 			// Set master state of next state.
 			auto masterState = context.findState(stateName);
 			event->nextState->setMasterState(
-				masterState ? masterState : new MyState(stateName));
+				masterState ? masterState : new MyState(context, stateName));
 		}
 	}
 	event->hrHandleEvent = getEditNumeric(hDlg, IDC_EDIT_HR_HANDLE_EVENT);

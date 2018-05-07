@@ -7,7 +7,7 @@
 class MyState;
 class MyEvent;
 
-class MyContext : public tsm::AsyncContext<MyEvent, MyState>, tsm::IStateMonitor, public MyObject
+class MyContext : public tsm::AsyncContext<MyEvent, MyState>, tsm::IStateMonitor, public MyObject, public ILogger
 {
 public:
 	MyContext();
@@ -17,7 +17,7 @@ public:
 	MyState* findState(const std::tstring& name) const;
 
 	void setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg);
-	void log(LPCTSTR fmt, ...);
+	virtual void log(LPCTSTR fmt, ...) override;
 	LRESULT onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	CReportView* getReportView() { return &m_reportView; }
 

@@ -20,15 +20,3 @@ HRESULT MyState::exit(MyContext* context, MyEvent* event, MyState* nextState)
 {
 	return event->hrExit;
 }
-
-
-HRESULT InitialState::handleEvent(MyContext*, MyEvent* event, MyState** nextState)
-{
-	*nextState = new StateA();
-	return S_OK;
-}
-
-HRESULT InitialState::entry(MyContext* context, MyEvent* event, MyState* previousState)
-{
-	return S_OK; //context->triggerEvent(new MyEvent());
-}

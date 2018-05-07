@@ -1,9 +1,15 @@
 #pragma once
 
+class ILogger
+{
+public:
+	virtual void log(LPCTSTR fmt, ...) = 0;
+};
+
 class MyObject
 {
 public:
-	MyObject(LPCTSTR name = nullptr);
+	MyObject(LPCTSTR name = nullptr, ILogger* logger = nullptr);
 	virtual ~MyObject();
 
 	const std::tstring& getName() const { return m_name; }
@@ -12,6 +18,7 @@ public:
 protected:
 	const std::tstring m_name;
 	mutable std::tstring m_string;
+	ILogger* m_logger;
 };
 
 #define ENUM(c, ...) \
