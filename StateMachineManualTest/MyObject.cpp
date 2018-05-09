@@ -9,9 +9,6 @@ MyObject::MyObject(LPCTSTR name /*= nullptr*/, ILogger* logger /*= nullptr*/)
 
 MyObject::~MyObject()
 {
-	if(m_logger) {
-		m_logger->log(_T("Deleting %s"), toString());
-	}
 }
 
 LPCTSTR MyObject::toString() const

@@ -15,6 +15,9 @@ public:
 	MyState(ILogger& logger, const std::tstring& name, MyState* masterState = nullptr)
 		: MyStateBase(masterState), MyObject(name.c_str(), &logger) {}
 
+	// Inplementation of IUnknown to log deleting object.
+	virtual ULONG STDMETHODCALLTYPE Release(void) override;
+
 	virtual HRESULT handleEvent(MyContext*, MyEvent* event, MyState** nextState) override;
 	virtual HRESULT entry(MyContext* context, MyEvent* event, MyState* previousState) override;
 	virtual HRESULT exit(MyContext* context, MyEvent* event, MyState* nextState) override;

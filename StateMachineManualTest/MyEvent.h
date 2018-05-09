@@ -7,9 +7,12 @@
 class MyEvent : public tsm::Event, public MyObject
 {
 public:
-	MyEvent(const std::tstring& name) : MyObject(name.c_str()) {
+	MyEvent(ILogger& logger, const std::tstring& name) : MyObject(name.c_str(), &logger) {
 		hrHandleEvent = hrEntry = hrExit = S_OK;
 	}
+
+	// Inplementation of IUnknown to log deleting object.
+	virtual ULONG STDMETHODCALLTYPE Release(void) override;
 
 	CComPtr<MyState> nextState;
 	HRESULT hrHandleEvent;

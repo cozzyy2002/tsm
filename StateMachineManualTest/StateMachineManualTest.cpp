@@ -304,12 +304,12 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 /*static*/ HRESULT triggerEvent(HWND hDlg)
 {
 	auto event = createEvent(hDlg);
-	return event ? context.triggerEvent(createEvent(hDlg)) : S_FALSE;
+	return event ? context.triggerEvent(event) : S_FALSE;
 }
 
 /*static*/ MyEvent* createEvent(HWND hDlg)
 {
-	auto event = new MyEvent(getEditText(hDlg, IDC_EDIT_EVENT_NAME));
+	auto event = new MyEvent(context, getEditText(hDlg, IDC_EDIT_EVENT_NAME));
 	auto stateName = getEditText(hDlg, IDC_EDIT_NEXT_STATE_NAME);
 	if(!stateName.empty()) {
 		// Set next state.
