@@ -55,7 +55,7 @@ public:
 	HRESULT addItems(const CVar* items, int itemCount, LPVOID itemData = nullptr);
 
 	int getSelectedIndex(int iStart = -1) const;
-	std::tstring getItemString(int iItem, int iSubItem = 0) const;
+	std::tstring getItemText(int iItem, int iSubItem = 0) const;
 	LPVOID getItemData(int iItem) const;
 
 	HRESULT copy();

@@ -154,10 +154,15 @@ int CReportView::getSelectedIndex(int iStart /*= -1*/) const
 	return ListView_GetNextItem(m_hWnd, iStart, LVNI_SELECTED);
 }
 
-std::tstring CReportView::getItemString(int iItem, int iSubItem /*= 0*/) const
+std::tstring CReportView::getItemText(int iItem, int iSubItem /*= 0*/) const
 {
 	TCHAR text[0x100] = _T("");
 	LVITEM item = { LVIF_TEXT, iItem, iSubItem };
+	if(iSubItem < m_leftMostColumnIndex) {
+		item.iSubItem++;
+	} else if(iSubItem == m_leftMostColumnIndex) {
+		item.iSubItem = 0;
+	}
 	item.pszText = text;
 	item.cchTextMax = ARRAYSIZE(text);
 	HR_EXPECT(ListView_GetItem(m_hWnd, &item), E_UNEXPECTED);
@@ -191,25 +196,13 @@ HRESULT CReportView::copy()
 	// Items
 	UINT flag = ListView_GetSelectedCount(m_hWnd) ? LVNI_SELECTED : LVNI_ALL;
 	int iItem = -1;
-	TCHAR text[0x100];
-	LVITEM item = { LVIF_TEXT };
-	item.pszText = text;
-	item.cchTextMax = ARRAYSIZE(text);
 	while(true) {
 		iItem = ListView_GetNextItem(m_hWnd, iItem, flag);
 		if(iItem < 0) break;
 
-		item.iItem = iItem;
 		comma = L"";
 		for(int i = 0; i < m_columnCount; i++) {
-			item.iSubItem = i;
-			if(i < m_leftMostColumnIndex) {
-				item.iSubItem++;
-			} else if(i == m_leftMostColumnIndex) {
-				item.iSubItem = 0;
-			}
-			WIN32_ASSERT(ListView_GetItem(m_hWnd, &item));
-			CT2W wstr(text);
+			CT2W wstr(getItemText(iItem, i).c_str());
 			stream << comma << L"\"" << (LPCWSTR)wstr << L"\"";
 			comma = L",";
 		}
