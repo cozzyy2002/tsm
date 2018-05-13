@@ -152,10 +152,10 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		ShowWindow(hWndTriggerEventDlg, SW_SHOW);
 		break;
 	case ID_EDIT_COPY:
-		context.getReportView()->copy();
+		context.getLogView()->copy();
 		break;
 	case ID_EDIT_CLEAR_LOG:
-		context.getReportView()->clear();
+		context.getLogView()->clear();
 		break;
 	case IDM_ABOUT:
 		DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hwnd, About);
@@ -181,7 +181,7 @@ static void OnSize(HWND hwnd, UINT state, int cx, int cy)
 {
 	RECT rect;
 	GetClientRect(hwnd, &rect);
-	context.getReportView()->resize(rect.right - rect.left, rect.bottom - rect.top);
+	context.getLogView()->resize(rect.right - rect.left, rect.bottom - rect.top);
 }
 
 static void OnDestroy(HWND hwnd)
@@ -223,6 +223,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 static BOOL OnInitDialog(HWND hwnd, HWND hwndFocus, LPARAM lParam)
 {
 	context.createStateMachine(hwnd, WM_STATE_MACHINE);
+	context.setStatesView(GetDlgItem(hwnd, IDC_LIST_STATES));
 
 	// Disable trigger event button until event name will be entered.
 	Button_Enable(GetDlgItem(hwnd, IDC_BUTTON_TRIGGER_EVENT), FALSE);
@@ -282,7 +283,7 @@ static void OnDlgCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 
 static LRESULT OnDlgNotify(HWND hWnd, int idForm, NMHDR* nmhdr)
 {
-	LOG4CPLUS_INFO(logger, "WM_NOTIFY: ID=" << nmhdr->idFrom << ", code=" << nmhdr->code);
+	LOG4CPLUS_DEBUG(logger, "WM_NOTIFY: ID=" << nmhdr->idFrom << ", code=" << nmhdr->code);
 	return onWmNotify(hWnd, nmhdr->idFrom, nmhdr->hwndFrom, nmhdr->code);
 }
 
@@ -352,10 +353,8 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 	}
 
 	if(handleMessage) {
-		auto hWndStates = GetDlgItem(hwnd, IDC_LIST_STATES);
-		auto index = ListBox_GetCurSel(hWndStates);
-		if(index != LB_ERR) {
-			auto state = (MyState*)ListBox_GetItemData(hWndStates, index);
+		auto state = context.getSelectedState();
+		if(state) {
 			Edit_SetText(hwndCtl, state->getName().c_str());
 		}
 		return S_OK;

@@ -15,6 +15,7 @@ public:
 		_stprintf_s(str, fmt, num);
 		this->str = str;
 	}
+	CVar(bool var) : str(var ? _T("x") : _T("")) {}
 
 	LPCTSTR toString() const { return str.c_str(); }
 
@@ -34,6 +35,7 @@ public:
 		enum class Type {
 			String,
 			Number,
+			Bool,
 		};
 		Type type;
 		LPCTSTR title;
@@ -49,8 +51,12 @@ public:
 	HRESULT setColumns(HWND hWnd, const Column* columns, int columnCount);
 
 	template<int ItemCount>
-	HRESULT addItems(const CVar(&items)[ItemCount]);
-	HRESULT addItems(const CVar* items, int itemCount);
+	HRESULT addItems(const CVar(&items)[ItemCount], LPVOID itemData = nullptr);
+	HRESULT addItems(const CVar* items, int itemCount, LPVOID itemData = nullptr);
+
+	int getSelectedIndex(int iStart = -1) const;
+	std::tstring getItemString(int iItem, int iSubItem = 0) const;
+	LPVOID getItemData(int iItem) const;
 
 	HRESULT copy();
 	HRESULT clear();
@@ -90,7 +96,7 @@ inline HRESULT CReportView::setColumns(HWND hWnd, const Column(&columns)[ColumnC
 }
 
 template<int ItemCount>
-inline HRESULT CReportView::addItems(const CVar(&items)[ItemCount])
+inline HRESULT CReportView::addItems(const CVar(&items)[ItemCount], LPVOID itemData /*= nullptr*/)
 {
-	return addItems(&items[0], ItemCount);
+	return addItems(&items[0], ItemCount, itemData);
 }

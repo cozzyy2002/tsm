@@ -36,7 +36,6 @@ HRESULT CReportView::create(HINSTANCE hInst, HWND hWndParent, HWND* phWnd /*= nu
 	m_hWnd = CreateWindow(WC_LISTVIEW, _T(""), LVS_REPORT | LVS_SHOWSELALWAYS | WS_VSCROLL | WS_CHILD | WS_VISIBLE,
 		0, 0, rect.right - rect.left, rect.bottom - rect.top, hWndParent, (HMENU)NULL, hInst, NULL);
 	WIN32_ASSERT(m_hWnd);
-	ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT);
 
 	if(phWnd) *phWnd = m_hWnd;
 	return S_OK;
@@ -47,6 +46,7 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 	// m_hWnd should be set by create() or this method.
 	if(hWnd) m_hWnd = hWnd;
 	HR_ASSERT(m_hWnd, E_ILLEGAL_METHOD_CALL);
+	ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT);
 
 	m_columns = columns;
 	m_columnCount = columnCount;
@@ -56,8 +56,8 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 	m_leftMostColumnIndex = -1;
 	RECT rect;
 	WIN32_ASSERT(GetClientRect(m_hWnd, &rect));
-	auto width = rect.right - rect.left;
-	auto remainingWidth = width;
+	auto listViewWidth = rect.right - rect.left;
+	auto remainingWidth = listViewWidth;
 	std::unique_ptr<int[]> columnWidth(new int[columnCount]);
 	for(int i = 0; i < columnCount; i++) {
 		if((m_leftMostColumnIndex < 0) && (columns[i].type == Column::Type::String)) {
@@ -72,7 +72,7 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 			width = (int)pCol->width * ((pCol->type == Column::Type::String) ? stringCharWidth : numberCharWidth);
 		} else if(0 < pCol->width) {
 			// Width specifies percentage of width of List View.
-			width = (int)(width * pCol->width);
+			width = (int)(listViewWidth * pCol->width);
 		} else if(0 == pCol->width) {
 			// autoColumnWidth = automatic width.
 			return E_NOTIMPL;
@@ -102,6 +102,9 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 		case Column::Type::Number:
 			col.fmt = LVCFMT_RIGHT | LVCFMT_FIXED_WIDTH;
 			break;
+		case Column::Type::Bool:
+			col.fmt = LVCFMT_CENTER | LVCFMT_FIXED_WIDTH;
+			break;
 		}
 		col.pszText = (LPTSTR)pCol->title;
 		WIN32_ASSERT(i == ListView_InsertColumn(m_hWnd, i, &col));
@@ -110,7 +113,7 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 	return S_OK;
 }
 
-HRESULT CReportView::addItems(const CVar* items, int itemCount)
+HRESULT CReportView::addItems(const CVar* items, int itemCount, LPVOID itemData /*= nullptr*/)
 {
 	HR_ASSERT(m_hWnd, E_ILLEGAL_METHOD_CALL);
 	HR_ASSERT(itemCount <= m_columnCount, E_INVALIDARG);
@@ -118,27 +121,55 @@ HRESULT CReportView::addItems(const CVar* items, int itemCount)
 	auto iItem = ListView_GetItemCount(m_hWnd);
 	for(int i = 0; i < itemCount; i++) {
 		auto pItem = &items[i];
-		LVITEM item = { LVIF_TEXT, iItem, i };
 		if(0 == i) {
 			// Insert leftmost item.
 			if(m_leftMostColumnIndex < itemCount) {
 				pItem = &items[m_leftMostColumnIndex];
 			}
+			LVITEM item = { LVIF_TEXT | LVIF_PARAM, iItem, i };
 			item.pszText = (LPTSTR)pItem->toString();
+			item.lParam = (LPARAM)itemData;
 			HR_ASSERT(iItem == ListView_InsertItem(m_hWnd, &item), E_UNEXPECTED);
 		} else {
 			// Set remaining items as sub item.
 			if(i <= m_leftMostColumnIndex) {
 				pItem = &items[i - 1];
 			}
-			item.pszText = (LPTSTR)pItem->toString();
-			HR_ASSERT(ListView_SetItem(m_hWnd, &item), E_UNEXPECTED);
+			ListView_SetItemText(m_hWnd, iItem, i, (LPTSTR)pItem->toString());
 		}
 	}
 	// Make item just added visible.
 	ListView_EnsureVisible(m_hWnd, iItem, FALSE);
 
 	return S_OK;
+}
+
+/**
+ * Returns setlected index in the list view.
+ *
+ * If no item is selected, returns -1.
+ */
+int CReportView::getSelectedIndex(int iStart /*= -1*/) const
+{
+	return ListView_GetNextItem(m_hWnd, iStart, LVNI_SELECTED);
+}
+
+std::tstring CReportView::getItemString(int iItem, int iSubItem /*= 0*/) const
+{
+	TCHAR text[0x100] = _T("");
+	LVITEM item = { LVIF_TEXT, iItem, iSubItem };
+	item.pszText = text;
+	item.cchTextMax = ARRAYSIZE(text);
+	HR_EXPECT(ListView_GetItem(m_hWnd, &item), E_UNEXPECTED);
+	return text;
+}
+
+LPVOID CReportView::getItemData(int iItem) const
+{
+	LVITEM item = { LVIF_PARAM, iItem, 0 };
+	item.lParam = (LPARAM)nullptr;
+	HR_EXPECT(ListView_GetItem(m_hWnd, &item), E_UNEXPECTED);
+	return LPVOID(item.lParam);
 }
 
 // Copies currently selected ListView items to clip board as CSV Unicode text.

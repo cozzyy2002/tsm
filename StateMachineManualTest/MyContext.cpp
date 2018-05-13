@@ -14,6 +14,12 @@ static TCHAR logTimeBuff[] = _T("hh:mm:ss.xxx");
 	{ CReportView::Column::Type::String, _T("Message"), CReportView::remainingColumnWidth },
 };
 
+/*static*/ const CReportView::Column MyContext::m_statesColumns[] = {
+	{ CReportView::Column::Type::String, _T("Name"), 0.5f },
+	{ CReportView::Column::Type::Bool, _T("isSubState"), 0.2f },
+	{ CReportView::Column::Type::Bool, _T("callExitOnShutdown"), CReportView::remainingColumnWidth },
+};
+
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext"));
 
 MyContext::MyContext()
@@ -43,8 +49,8 @@ void MyContext::setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg)
 	m_hWndLog = hWndLog;
 	m_logMsg = logMsg;
 
-	HR_EXPECT_OK(m_reportView.create(hInst, hWndLog));
-	HR_EXPECT_OK(m_reportView.setColumns(m_logColumns));
+	HR_EXPECT_OK(m_logView.create(hInst, hWndLog));
+	HR_EXPECT_OK(m_logView.setColumns(m_logColumns));
 }
 
 struct LogMessage
@@ -81,9 +87,29 @@ LRESULT MyContext::onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	const CVar items[ARRAYSIZE(m_logColumns)] = {
 		CVar(logTimeBuff), CVar((int)logMessage->thread), CVar(logMessage->msg)
 	};
-	m_reportView.addItems(items);
+	m_logView.addItems(items);
 
 	return 0;
+}
+
+void MyContext::setStatesView(HWND hWndStates)
+{
+	HR_EXPECT_OK(m_statesView.setColumns(hWndStates, m_statesColumns));
+}
+
+/**
+ * Returns MyState object setlected in states list view.
+ *
+ * If no item is selected, returns nullptr.
+ */
+MyState* MyContext::getSelectedState() const
+{
+	MyState* state = nullptr;
+	auto selected = m_statesView.getSelectedIndex();
+	if(0 <= selected) {
+		state = (MyState*)m_statesView.getItemData(selected);
+	}
+	return state;
 }
 
 template<class T>
@@ -126,12 +152,14 @@ void MyContext::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::
 		LOG4CPLUS_INFO(logger, "State changed from " << toString(previous) << " to " << toString(next));
 	}
 
-	//PostMessage(m_hWnd, WM_STATE_CHANGED, 0, 0);
-	auto states = GetDlgItem(m_hWnd, IDC_LIST_STATES);
-	ListBox_ResetContent(states);
+	m_statesView.clear();
 	for(auto state = ((MyContext*)context)->getCurrentState(); state; state = state->getMasterState()) {
-		auto index = ListBox_AddString(states, state->MyObject::toString());
-		ListBox_SetItemData(states, index, state);
+		const CVar items[ARRAYSIZE(m_statesColumns)] = {
+			CVar(state->MyObject::toString()),
+			CVar(state->isSubState()),
+			CVar(state->_callExitOnShutdown()),
+		};
+		m_statesView.addItems(items, state);
 	}
 }
 

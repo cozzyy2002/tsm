@@ -19,7 +19,9 @@ public:
 	void setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg);
 	virtual void log(LPCTSTR fmt, ...) override;
 	LRESULT onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam);
-	CReportView* getReportView() { return &m_reportView; }
+	CReportView* getLogView() { return &m_logView; }
+	void setStatesView(HWND hWndStates);
+	MyState* getSelectedState() const;
 
 #pragma region Implementation of IStateMonitor
 	virtual void onIdle(tsm::IContext* context) override;
@@ -45,6 +47,8 @@ protected:
 	UINT m_logMsg;
 
 	DWORD m_startTime;
-	CReportView m_reportView;
+	CReportView m_logView;
+	CReportView m_statesView;
 	static const CReportView::Column m_logColumns[];
+	static const CReportView::Column m_statesColumns[];
 };
