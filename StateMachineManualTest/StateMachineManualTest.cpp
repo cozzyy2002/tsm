@@ -33,7 +33,8 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 static INT_PTR CALLBACK    triggerEventDialogProc(HWND, UINT, WPARAM, LPARAM);
 static HRESULT triggerEvent(HWND hDlg);
 static MyEvent* createEvent(HWND hDlg);
-static HRESULT onWmNotify(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify);
+static HRESULT onNextStateNameChanged(HWND hDlg, HWND hwndCtl);
+static HRESULT onStateNameGotFocus(HWND hwndCtl);
 static DWORD getEditNumeric(HWND hDlg, int id);
 static std::tstring getEditText(HWND hDlg, int id);
 
@@ -259,32 +260,21 @@ static void OnDlgCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 	case IDC_EDIT_NEXT_STATE_NAME:
 		switch(codeNotify) {
 		case EN_CHANGE:
-			{
-				// If next state exists, set master state of next state to master state edit box.
-				auto state = context.findState(getEditText(hwnd, IDC_EDIT_NEXT_STATE_NAME));
-				auto masterStateEneble = TRUE;
-				auto hWndMasterState = GetDlgItem(hwnd, IDC_EDIT_MASTER_STATE_NAME);
-				if(state) {
-					auto ms = state->getMasterState();
-					Edit_SetText(hWndMasterState, ms ? ms->getName().c_str() : _T(""));
-					masterStateEneble = FALSE;
-				}
-				Edit_Enable(hWndMasterState, masterStateEneble);
-			}
-			return;
+			onNextStateNameChanged(hwnd, hwndCtl);
+			break;
+		case EN_SETFOCUS:
+			onStateNameGotFocus(hwndCtl);
+			break;
 		}
-		// Go below
+		break;
 	case IDC_EDIT_MASTER_STATE_NAME:
-		//LOG4CPLUS_INFO(logger, "id=" << id << ", codeNotify=" << codeNotify);
-		onWmNotify(hwnd, id, hwndCtl, codeNotify);
+		switch(codeNotify) {
+		case EN_SETFOCUS:
+			onStateNameGotFocus(hwndCtl);
+			break;
+		}
 		break;
 	}
-}
-
-static LRESULT OnDlgNotify(HWND hWnd, int idForm, NMHDR* nmhdr)
-{
-	LOG4CPLUS_DEBUG(logger, "WM_NOTIFY: ID=" << nmhdr->idFrom << ", code=" << nmhdr->code);
-	return onWmNotify(hWnd, nmhdr->idFrom, nmhdr->hwndFrom, nmhdr->code);
 }
 
 #define HANDLE_DLG_MSG(hwnd, msg, fn) \
@@ -297,7 +287,6 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 	{
 		HANDLE_DLG_MSG(hDlg, WM_INITDIALOG, OnInitDialog);
 		HANDLE_DLG_MSG(hDlg, WM_COMMAND, OnDlgCommand);
-		HANDLE_DLG_MSG(hDlg, WM_NOTIFY, OnDlgNotify);
 	}
 	return (INT_PTR)FALSE;
 }
@@ -337,30 +326,31 @@ INT_PTR CALLBACK    triggerEventDialogProc(HWND hDlg, UINT message, WPARAM wPara
 	return event;
 }
 
-/*static*/ HRESULT onWmNotify(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
+/*static*/ HRESULT onNextStateNameChanged(HWND hDlg, HWND /*hwndCtl*/)
 {
-	auto handleMessage = false;
-	switch(codeNotify) {
-	case EN_SETFOCUS:
-		switch(id) {
-		case IDC_EDIT_NEXT_STATE_NAME:
-		case IDC_EDIT_MASTER_STATE_NAME:
-			// If edit control is empty, handle this message.
-			handleMessage = (0 == Edit_GetTextLength(hwndCtl));
-			break;
-		}
-		break;
+	// If next state exists in states list view, set master state of next state to master state edit box.
+	auto state = context.findState(getEditText(hDlg, IDC_EDIT_NEXT_STATE_NAME));
+	auto masterStateEneble = TRUE;
+	auto hWndMasterState = GetDlgItem(hDlg, IDC_EDIT_MASTER_STATE_NAME);
+	if(state) {
+		auto ms = state->getMasterState();
+		Edit_SetText(hWndMasterState, ms ? ms->getName().c_str() : _T(""));
+		masterStateEneble = FALSE;
 	}
+	Edit_Enable(hWndMasterState, masterStateEneble);
+	return S_OK;
+}
 
-	if(handleMessage) {
+/*static*/ HRESULT onStateNameGotFocus(HWND hwndCtl)
+{
+	// If the text box is empty, set selected state name in states list view.
+	if(0 == Edit_GetTextLength(hwndCtl)) {
 		auto state = context.getSelectedState();
 		if(state) {
 			Edit_SetText(hwndCtl, state->getName().c_str());
 		}
-		return S_OK;
-	} else {
-		return FORWARD_WM_NOTIFY(hwnd, id, hwndCtl, DefWindowProc);
 	}
+	return S_OK;
 }
 
 DWORD getEditNumeric(HWND hDlg, int id)
