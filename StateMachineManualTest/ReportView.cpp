@@ -59,6 +59,8 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 	auto listViewWidth = rect.right - rect.left;
 	auto remainingWidth = listViewWidth;
 	std::unique_ptr<int[]> columnWidth(new int[columnCount]);
+	static const int stringCharWidth = ListView_GetStringWidth(m_hWnd, _T("A"));
+	static const int numberCharWidth = ListView_GetStringWidth(m_hWnd, _T("0"));
 	for(int i = 0; i < columnCount; i++) {
 		if((m_leftMostColumnIndex < 0) && (columns[i].type == Column::Type::String)) {
 			m_leftMostColumnIndex = i;
@@ -67,15 +69,14 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 		auto& width = columnWidth[i];
 		if(1 < pCol->width) {
 			// Width specifies character length.
-			static const int stringCharWidth = ListView_GetStringWidth(m_hWnd, _T("A"));
-			static const int numberCharWidth = ListView_GetStringWidth(m_hWnd, _T("0"));
 			width = (int)pCol->width * ((pCol->type == Column::Type::String) ? stringCharWidth : numberCharWidth);
 		} else if(0 < pCol->width) {
 			// Width specifies percentage of width of List View.
 			width = (int)(listViewWidth * pCol->width);
 		} else if(0 == pCol->width) {
 			// autoColumnWidth = automatic width.
-			return E_NOTIMPL;
+			// Sufficient width to show title in column header.
+			width = _tcslen(pCol->title) * stringCharWidth;
 		} else {
 			// remainingColumnWidth = Width is remaning length.
 			width = (0 < remainingWidth) ? remainingWidth : 0;

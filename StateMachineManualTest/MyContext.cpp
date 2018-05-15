@@ -15,8 +15,9 @@ static TCHAR logTimeBuff[] = _T("hh:mm:ss.xxx");
 };
 
 /*static*/ const CReportView::Column MyContext::m_statesColumns[] = {
-	{ CReportView::Column::Type::String, _T("Name"), 0.5f },
-	{ CReportView::Column::Type::Bool, _T("isSubState"), 0.2f },
+	{ CReportView::Column::Type::String, _T("Name"), 0.4f },
+	{ CReportView::Column::Type::Number, _T("Address"), (sizeof(void*) * 2) + 5 },
+	{ CReportView::Column::Type::Bool, _T("isSubState"), CReportView::autoColumnWidth },
 	{ CReportView::Column::Type::Bool, _T("callExitOnShutdown"), CReportView::remainingColumnWidth },
 };
 
@@ -155,7 +156,8 @@ void MyContext::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::
 	m_statesView.clear();
 	for(auto state = ((MyContext*)context)->getCurrentState(); state; state = state->getMasterState()) {
 		const CVar items[ARRAYSIZE(m_statesColumns)] = {
-			CVar(state->MyObject::toString()),
+			CVar(state->MyObject::getName()),
+			CVar((MyObject*)state),		// In log window, address of state object is shown as pointer of MyObject class.
 			CVar(state->isSubState()),
 			CVar(state->_callExitOnShutdown()),
 		};

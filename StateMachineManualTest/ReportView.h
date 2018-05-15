@@ -16,6 +16,11 @@ public:
 		this->str = str;
 	}
 	CVar(bool var) : str(var ? _T("x") : _T("")) {}
+	CVar(void* p) {
+		TCHAR str[(sizeof(p) * 2) + 5];
+		_stprintf_s(str, _T("0x%p"), p);
+		this->str = str;
+	}
 
 	LPCTSTR toString() const { return str.c_str(); }
 
