@@ -58,6 +58,7 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 	WIN32_ASSERT(GetClientRect(m_hWnd, &rect));
 	auto listViewWidth = rect.right - rect.left;
 	auto remainingWidth = listViewWidth;
+	auto remainingWidthCount = 0;
 	std::unique_ptr<int[]> columnWidth(new int[columnCount]);
 	static const int stringCharWidth = ListView_GetStringWidth(m_hWnd, _T("A"));
 	static const int numberCharWidth = ListView_GetStringWidth(m_hWnd, _T("0"));
@@ -79,11 +80,19 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 			width = _tcslen(pCol->title) * stringCharWidth;
 		} else {
 			// remainingColumnWidth = Width is remaning length.
-			width = (0 < remainingWidth) ? remainingWidth : 0;
+			width = -1;
+			remainingWidthCount++;
 		}
-		remainingWidth -= width;
+		remainingWidth -= (0 <= width) ? width : 0;
 	}
 	if(m_leftMostColumnIndex < 0) m_leftMostColumnIndex = 0;
+	if(remainingWidthCount) {
+		remainingWidth /= remainingWidthCount;
+		for(int i = 0; i < columnCount; i++) {
+			auto& width = columnWidth[i];
+			if(width < 0) width = remainingWidth;
+		}
+	}
 
 	LVCOLUMN col = { 0 };
 	col.mask = LVCF_FMT | LVCF_SUBITEM | LVCF_TEXT | LVCF_WIDTH | LVCF_ORDER;

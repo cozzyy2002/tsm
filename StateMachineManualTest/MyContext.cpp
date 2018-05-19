@@ -15,10 +15,10 @@ static TCHAR logTimeBuff[] = _T("hh:mm:ss.xxx");
 };
 
 /*static*/ const CReportView::Column MyContext::m_statesColumns[] = {
-	{ CReportView::Column::Type::String, _T("Name"), 0.4f },
+	{ CReportView::Column::Type::String, _T("Name"), CReportView::remainingColumnWidth },
 	{ CReportView::Column::Type::Number, _T("Address"), (sizeof(void*) * 2) + 5 },
 	{ CReportView::Column::Type::Bool, _T("isSubState"), CReportView::autoColumnWidth },
-	{ CReportView::Column::Type::Bool, _T("callExitOnShutdown"), CReportView::remainingColumnWidth },
+	{ CReportView::Column::Type::Bool, _T("callExitOnShutdown"), CReportView::autoColumnWidth },
 };
 
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext"));
