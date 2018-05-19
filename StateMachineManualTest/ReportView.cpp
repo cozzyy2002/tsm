@@ -80,13 +80,14 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 			width = _tcslen(pCol->title) * stringCharWidth;
 		} else {
 			// remainingColumnWidth = Width is remaning length.
-			width = -1;
+			width = -1;		// Mark to set value later.
 			remainingWidthCount++;
 		}
-		remainingWidth -= (0 <= width) ? width : 0;
+		remainingWidth -= (0 < width) ? width : 0;
 	}
 	if(m_leftMostColumnIndex < 0) m_leftMostColumnIndex = 0;
 	if(remainingWidthCount) {
+		// Set width of the column(s) marked as remaining width.
 		remainingWidth /= remainingWidthCount;
 		for(int i = 0; i < columnCount; i++) {
 			auto& width = columnWidth[i];
