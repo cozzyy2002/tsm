@@ -150,7 +150,9 @@ static void OnCommand(HWND hwnd, int id, HWND hwndCtl, UINT codeNotify)
 		if(!hWndTriggerEventDlg) {
 			hWndTriggerEventDlg = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG_EVENT), hwnd, triggerEventDialogProc);
 		}
-		ShowWindow(hWndTriggerEventDlg, SW_SHOW);
+		if(!IsWindowVisible(hWndTriggerEventDlg)) {
+			ShowWindow(hWndTriggerEventDlg, SW_SHOW);
+		}
 		break;
 	case ID_EDIT_COPY:
 		context.getLogView()->copy();
