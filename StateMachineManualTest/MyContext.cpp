@@ -9,6 +9,7 @@ static TCHAR logTimeFormat[] = _T("%02d:%02d:%02d.%03d");
 static TCHAR logTimeBuff[] = _T("hh:mm:ss.xxx");
 
 /*static*/ const CReportView::Column MyContext::m_logColumns[] = {
+	{ CReportView::Column::Type::Number, _T("No."), 10 },
 	{ CReportView::Column::Type::Number, _T("Time"), ARRAYSIZE(logTimeBuff) },
 	{ CReportView::Column::Type::Number, _T("Thread"), 10 },
 	{ CReportView::Column::Type::String, _T("Message"), CReportView::remainingColumnWidth },
@@ -24,7 +25,7 @@ static TCHAR logTimeBuff[] = _T("hh:mm:ss.xxx");
 static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext"));
 
 MyContext::MyContext()
-	: m_hWndLog(NULL), m_startTime(GetTickCount())
+	: m_logNo(0), m_hWndLog(NULL), m_startTime(GetTickCount())
 {
 	tsm::IContext::onAssertFailedProc = MyContext::onAssertFailed;
 }
@@ -86,7 +87,7 @@ LRESULT MyContext::onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	auto& st = logMessage->time;
 	_stprintf_s(logTimeBuff, logTimeFormat, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
 	const CVar items[ARRAYSIZE(m_logColumns)] = {
-		CVar(logTimeBuff), CVar((int)logMessage->thread), CVar(logMessage->msg)
+		CVar(++m_logNo), CVar(logTimeBuff), CVar((int)logMessage->thread), CVar(logMessage->msg)
 	};
 	m_logView.addItems(items);
 

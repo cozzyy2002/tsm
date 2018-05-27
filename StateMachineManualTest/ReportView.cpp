@@ -70,7 +70,21 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 		auto& width = columnWidth[i];
 		if(1 < pCol->width) {
 			// Width specifies character length.
-			width = (int)pCol->width * ((pCol->type == Column::Type::String) ? stringCharWidth : numberCharWidth);
+			int charWidth;
+			switch(pCol->type) {
+			default:
+			case Column::Type::String:
+				charWidth = stringCharWidth;
+				break;
+			case Column::Type::Number:
+				charWidth = numberCharWidth;
+				break;
+			case Column::Type::Bool:
+				// Assuming value to be shown is "true" or "false".
+				charWidth = 5;
+				break;
+			}
+			width = (int)pCol->width * charWidth;
 		} else if(0 < pCol->width) {
 			// Width specifies percentage of width of List View.
 			width = (int)(listViewWidth * pCol->width);

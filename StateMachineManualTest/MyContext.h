@@ -46,6 +46,7 @@ protected:
 
 	UINT m_logMsg;
 
+	int m_logNo;
 	DWORD m_startTime;
 	CReportView m_logView;
 	CReportView m_statesView;
