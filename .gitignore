@@ -12,3 +12,4 @@
 *.log
 /Log.log.*
 *.aps
+*.ods*

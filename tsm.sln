@@ -27,6 +27,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StateMachineManualTest", "S
 		{BD429D1D-B2CF-479C-A3BB-AD081C5C210F} = {BD429D1D-B2CF-479C-A3BB-AD081C5C210F}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_docs", "_docs", "{0FA725A0-EFAA-4569-A92E-E03FAC2127A6}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D4DE4B50-3DA0-40BA-8447-D688F65D8A48}"
+	ProjectSection(SolutionItems) = preProject
+		docs\index.html = docs\index.html
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -82,5 +92,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{13E1F4B6-CFE0-46CD-9AA1-6B187A4E6203} = {C28D57E5-B031-4FB9-ADF4-F8E86B446120}
 		{5D559714-38BA-49C2-89BA-FFF1B69626B4} = {C28D57E5-B031-4FB9-ADF4-F8E86B446120}
+		{D4DE4B50-3DA0-40BA-8447-D688F65D8A48} = {0FA725A0-EFAA-4569-A92E-E03FAC2127A6}
 	EndGlobalSection
 EndGlobal
