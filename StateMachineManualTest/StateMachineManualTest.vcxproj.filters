@@ -18,6 +18,12 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="StateMachineManualTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StateMachineManualTestDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -27,51 +33,15 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="StateMachineManualTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MyObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MyState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MyContext.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MyEvent.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ReportView.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ClipBoard.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="StateMachineManualTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyObject.cpp">
+    <ClCompile Include="StateMachineManualTestDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MyContext.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MyEvent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ReportView.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ClipBoard.cpp">
+    <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -81,10 +51,12 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
+    <None Include="res\StateMachineManualTest.rc2">
       <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="StateMachineManualTest.ico">
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\StateMachineManualTest.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
