@@ -64,6 +64,8 @@ BEGIN_MESSAGE_MAP(CStateMachineManualTestDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_COMMAND(ID_FILE_STATECONTROL, &CStateMachineManualTestDlg::OnFileStatecontrol)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -152,3 +154,25 @@ HCURSOR CStateMachineManualTestDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CStateMachineManualTestDlg::OnFileStatecontrol()
+{
+	if(!m_stateControl) {
+		m_stateControl.reset(new CStateControl(this));
+	}
+
+	if(!m_stateControl->IsWindowVisible()) {
+		m_stateControl->ShowWindow(SW_SHOWNORMAL);
+	}
+}
+
+
+void CStateMachineManualTestDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	if(m_stateControl) {
+		m_stateControl->DestroyWindow();
+	}
+}

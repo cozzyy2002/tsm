@@ -51,8 +51,8 @@ void MyContext::setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg)
 	m_hWndLog = hWndLog;
 	m_logMsg = logMsg;
 
-	HR_EXPECT_OK(m_logView.create(hInst, hWndLog));
-	HR_EXPECT_OK(m_logView.setColumns(m_logColumns));
+	//HR_EXPECT_OK(m_logView.create(hInst, hWndLog));
+	HR_EXPECT_OK(m_logView.setColumns(hWndLog, m_logColumns));
 }
 
 struct LogMessage

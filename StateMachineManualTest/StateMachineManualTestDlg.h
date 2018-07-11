@@ -4,10 +4,17 @@
 
 #pragma once
 
+#include "StateControl.h"
+#include <memory>
+
+class CStateControl;
 
 // CStateMachineManualTestDlg dialog
 class CStateMachineManualTestDlg : public CDialogEx
 {
+protected:
+	std::unique_ptr<CStateControl> m_stateControl;
+
 // Construction
 public:
 	CStateMachineManualTestDlg(CWnd* pParent = NULL);	// standard constructor
@@ -31,4 +38,7 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnFileStatecontrol();
+	afx_msg void OnDestroy();
 };

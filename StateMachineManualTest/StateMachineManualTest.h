@@ -10,6 +10,8 @@
 
 #include "resource.h"		// main symbols
 
+#include "MyContext.h"
+
 
 // CStateMachineManualTestApp:
 // See StateMachineManualTest.cpp for the implementation of this class
@@ -17,6 +19,9 @@
 
 class CStateMachineManualTestApp : public CWinApp
 {
+protected:
+	MyContext context;
+
 public:
 	CStateMachineManualTestApp();
 
@@ -27,6 +32,7 @@ public:
 // Implementation
 
 	DECLARE_MESSAGE_MAP()
+//	virtual int ExitInstance();
 };
 
 extern CStateMachineManualTestApp theApp;

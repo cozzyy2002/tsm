@@ -6,6 +6,14 @@
 #include "StateMachineManualTest.h"
 #include "StateMachineManualTestDlg.h"
 
+#include <StateMachine/Event.h>
+#include <StateMachine/State.h>
+#include <StateMachine/Assert.h>
+
+#include <log4cplus/configurator.h>
+
+static log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("CStateMachineManualTestApp"));
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -39,6 +47,8 @@ CStateMachineManualTestApp theApp;
 
 BOOL CStateMachineManualTestApp::InitInstance()
 {
+	log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT("log4cplus.properties"));
+
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
 	// visual styles.  Otherwise, any window creation will fail.
@@ -66,10 +76,12 @@ BOOL CStateMachineManualTestApp::InitInstance()
 	// Change the registry key under which our settings are stored
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+	SetRegistryKey(_T("StateMachineManualTest"));
 
 	CStateMachineManualTestDlg dlg;
 	m_pMainWnd = &dlg;
+	context.setLogWindow(this->m_hInstance, m_pMainWnd->GetSafeHwnd(), 200);
+
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
@@ -83,6 +95,8 @@ BOOL CStateMachineManualTestApp::InitInstance()
 	}
 	else if (nResponse == -1)
 	{
+		LOG4CPLUS_WARN(logger, "Dialog create failed. CDialog::DoModal() returned " << nResponse);
+
 		TRACE(traceAppMsg, 0, "Warning: dialog creation failed, so application is terminating unexpectedly.\n");
 		TRACE(traceAppMsg, 0, "Warning: if you are using MFC controls on the dialog, you cannot #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS.\n");
 	}
@@ -101,4 +115,3 @@ BOOL CStateMachineManualTestApp::InitInstance()
 	//  application, rather than start the application's message pump.
 	return FALSE;
 }
-
