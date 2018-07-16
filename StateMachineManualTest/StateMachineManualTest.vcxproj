@@ -196,7 +196,6 @@
     <ClInclude Include="MyObject.h" />
     <ClInclude Include="MyState.h" />
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="StateControl.h" />
     <ClInclude Include="StateMachineManualTest.h" />
     <ClInclude Include="StateMachineManualTestDlg.h" />
     <ClInclude Include="stdafx.h" />
@@ -209,7 +208,6 @@
     <ClCompile Include="MyObject.cpp" />
     <ClCompile Include="MyState.cpp" />
     <ClCompile Include="ReportView.cpp" />
-    <ClCompile Include="StateControl.cpp" />
     <ClCompile Include="StateMachineManualTest.cpp" />
     <ClCompile Include="StateMachineManualTestDlg.cpp" />
     <ClCompile Include="stdafx.cpp">

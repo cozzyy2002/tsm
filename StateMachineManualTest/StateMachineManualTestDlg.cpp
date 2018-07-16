@@ -158,13 +158,6 @@ HCURSOR CStateMachineManualTestDlg::OnQueryDragIcon()
 
 void CStateMachineManualTestDlg::OnFileStatecontrol()
 {
-	if(!m_stateControl) {
-		m_stateControl.reset(new CStateControl(this));
-	}
-
-	if(!m_stateControl->IsWindowVisible()) {
-		m_stateControl->ShowWindow(SW_SHOWNORMAL);
-	}
 }
 
 
@@ -172,7 +165,4 @@ void CStateMachineManualTestDlg::OnDestroy()
 {
 	CDialogEx::OnDestroy();
 
-	if(m_stateControl) {
-		m_stateControl->DestroyWindow();
-	}
 }

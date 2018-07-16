@@ -4,16 +4,12 @@
 
 #pragma once
 
-#include "StateControl.h"
-#include <memory>
-
 class CStateControl;
 
 // CStateMachineManualTestDlg dialog
 class CStateMachineManualTestDlg : public CDialogEx
 {
 protected:
-	std::unique_ptr<CStateControl> m_stateControl;
 
 // Construction
 public:

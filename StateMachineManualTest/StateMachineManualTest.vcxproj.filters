@@ -45,9 +45,6 @@
     <ClInclude Include="MyState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="StateControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="StateMachineManualTest.cpp">
@@ -75,9 +72,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ReportView.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StateControl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
