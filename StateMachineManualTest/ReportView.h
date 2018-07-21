@@ -31,10 +31,8 @@ protected:
 class CReportView
 {
 public:
-	CReportView(HWND hWnd = NULL);
+	CReportView();
 	~CReportView();
-
-	HRESULT create(HINSTANCE hInst, HWND hWndParent, HWND* phWnd = nullptr);
 
 	struct Column {
 		enum class Type {
@@ -49,8 +47,6 @@ public:
 	static const int autoColumnWidth = 0;
 	static const int remainingColumnWidth = -1;
 
-	template<int ColumnCount>
-	HRESULT setColumns(const Column (&columns)[ColumnCount]);
 	template<int ColumnCount>
 	HRESULT setColumns(HWND hWnd, const Column(&columns)[ColumnCount]);
 	HRESULT setColumns(HWND hWnd, const Column* columns, int columnCount);
@@ -75,17 +71,6 @@ protected:
 	int m_leftMostColumnIndex;
 	static bool m_commonControlInitialized;
 };
-
-/**
- * Set column header and column attributes specified by columns argument.
- *
- * Before calling this method, call this->create() method to create List View control.
- */
-template<int ColumnCount>
-inline HRESULT CReportView::setColumns(const Column (&columns)[ColumnCount])
-{
-	return setColumns(NULL, &(columns[0]), ColumnCount);
-}
 
 /**
  * Set column header and column attributes specified by columns argument.

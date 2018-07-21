@@ -58,6 +58,8 @@ CStateMachineManualTestDlg::CStateMachineManualTestDlg(CWnd* pParent /*=NULL*/)
 void CStateMachineManualTestDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	//  DDX_Control(pDX, IDC_LIST_LOG, m_listLog);
+	DDX_Control(pDX, IDC_LIST_LOG, m_listLog);
 }
 
 BEGIN_MESSAGE_MAP(CStateMachineManualTestDlg, CDialogEx)
@@ -66,6 +68,8 @@ BEGIN_MESSAGE_MAP(CStateMachineManualTestDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_COMMAND(ID_FILE_STATECONTROL, &CStateMachineManualTestDlg::OnFileStatecontrol)
 	ON_WM_DESTROY()
+	ON_MESSAGE(WM_LOG_MESSAGE, &CStateMachineManualTestDlg::OnLogMessage)
+//	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 
@@ -101,6 +105,8 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	context.createStateMachine(this->m_hWnd, WM_TRIGGER_EVENT);
+	context.setLogWindow(m_listLog.m_hWnd, WM_LOG_MESSAGE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -158,6 +164,7 @@ HCURSOR CStateMachineManualTestDlg::OnQueryDragIcon()
 
 void CStateMachineManualTestDlg::OnFileStatecontrol()
 {
+	context.log(_T(__FUNCTION__) _T(": HWND=0x%p"), this->m_hWnd);
 }
 
 
@@ -165,4 +172,11 @@ void CStateMachineManualTestDlg::OnDestroy()
 {
 	CDialogEx::OnDestroy();
 
+}
+
+
+afx_msg LRESULT CStateMachineManualTestDlg::OnLogMessage(WPARAM wParam, LPARAM lParam)
+{
+	context.onLogMsg(this->m_hWnd, wParam, lParam);
+	return 0;
 }

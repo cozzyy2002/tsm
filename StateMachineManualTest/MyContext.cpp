@@ -46,12 +46,11 @@ MyState* MyContext::findState(const std::tstring& name) const
 	return state;
 }
 
-void MyContext::setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg)
+void MyContext::setLogWindow(HWND hWndLog, UINT logMsg)
 {
 	m_hWndLog = hWndLog;
 	m_logMsg = logMsg;
 
-	//HR_EXPECT_OK(m_logView.create(hInst, hWndLog));
 	HR_EXPECT_OK(m_logView.setColumns(hWndLog, m_logColumns));
 }
 
@@ -77,7 +76,7 @@ void MyContext::log(LPCTSTR fmt, ...)
 	GetLocalTime(&logMessage->time);
 	logMessage->thread = GetCurrentThreadId();
 
-	auto hr = WIN32_EXPECT(PostMessage(m_hWndLog, m_logMsg, 0, (LPARAM)logMessage.get()));
+	auto hr = WIN32_EXPECT(PostMessage(m_hWnd, m_logMsg, 0, (LPARAM)logMessage.get()));
 	if(SUCCEEDED(hr)) logMessage.release();
 }
 

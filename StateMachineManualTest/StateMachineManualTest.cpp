@@ -80,7 +80,6 @@ BOOL CStateMachineManualTestApp::InitInstance()
 
 	CStateMachineManualTestDlg dlg;
 	m_pMainWnd = &dlg;
-	context.setLogWindow(this->m_hInstance, m_pMainWnd->GetSafeHwnd(), 200);
 
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)

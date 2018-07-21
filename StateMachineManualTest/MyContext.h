@@ -16,7 +16,7 @@ public:
 	void createStateMachine(HWND hWnd, UINT msg);
 	MyState* findState(const std::tstring& name) const;
 
-	void setLogWindow(HINSTANCE hInst, HWND hWndLog, UINT logMsg);
+	void setLogWindow(HWND hWndLog, UINT logMsg);
 	virtual void log(LPCTSTR fmt, ...) override;
 	LRESULT onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	CReportView* getLogView() { return &m_logView; }

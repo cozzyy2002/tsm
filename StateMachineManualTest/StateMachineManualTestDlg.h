@@ -3,6 +3,14 @@
 //
 
 #pragma once
+#include "MyContext.h"
+
+#include "afxcmn.h"
+
+enum {
+	WM_TRIGGER_EVENT = WM_USER + 1,
+	WM_LOG_MESSAGE
+};
 
 class CStateControl;
 
@@ -10,6 +18,7 @@ class CStateControl;
 class CStateMachineManualTestDlg : public CDialogEx
 {
 protected:
+	MyContext context;
 
 // Construction
 public:
@@ -37,4 +46,10 @@ protected:
 public:
 	afx_msg void OnFileStatecontrol();
 	afx_msg void OnDestroy();
+protected:
+	afx_msg LRESULT OnLogMessage(WPARAM wParam, LPARAM lParam);
+public:
+//	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+protected:
+	CListCtrl m_listLog;
 };
