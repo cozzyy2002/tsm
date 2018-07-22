@@ -6,6 +6,7 @@
 #include "MyContext.h"
 
 #include "afxcmn.h"
+#include "afxpropertygridctrl.h"
 
 enum {
 	WM_TRIGGER_EVENT = WM_USER + 1,
@@ -52,4 +53,10 @@ public:
 //	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 protected:
 	CListCtrl m_listLog;
+	CListCtrl m_listStates;
+	CMFCPropertyGridCtrl m_eventProperties;
+public:
+	afx_msg void OnClickedButtonSetup();
+	afx_msg void OnClickedButtonShutdown();
+	afx_msg void OnClickedButtonTriggerEvent();
 };

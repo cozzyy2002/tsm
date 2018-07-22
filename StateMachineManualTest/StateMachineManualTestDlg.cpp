@@ -6,6 +6,9 @@
 #include "StateMachineManualTest.h"
 #include "StateMachineManualTestDlg.h"
 #include "afxdialogex.h"
+#include "MyEvent.h"
+#include "MyState.h"
+#include <StateMachine/Assert.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -60,6 +63,8 @@ void CStateMachineManualTestDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	//  DDX_Control(pDX, IDC_LIST_LOG, m_listLog);
 	DDX_Control(pDX, IDC_LIST_LOG, m_listLog);
+	DDX_Control(pDX, IDC_LIST_STATES, m_listStates);
+	DDX_Control(pDX, IDC_EVENT_PROPERTIES, m_eventProperties);
 }
 
 BEGIN_MESSAGE_MAP(CStateMachineManualTestDlg, CDialogEx)
@@ -70,6 +75,9 @@ BEGIN_MESSAGE_MAP(CStateMachineManualTestDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_MESSAGE(WM_LOG_MESSAGE, &CStateMachineManualTestDlg::OnLogMessage)
 //	ON_WM_CREATE()
+ON_BN_CLICKED(IDC_BUTTON_SETUP, &CStateMachineManualTestDlg::OnClickedButtonSetup)
+ON_BN_CLICKED(IDC_BUTTON_SHUTDOWN, &CStateMachineManualTestDlg::OnClickedButtonShutdown)
+ON_BN_CLICKED(IDC_BUTTON_TRIGGER_EVENT, &CStateMachineManualTestDlg::OnClickedButtonTriggerEvent)
 END_MESSAGE_MAP()
 
 
@@ -105,8 +113,10 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	context.createStateMachine(this->m_hWnd, WM_TRIGGER_EVENT);
 	context.setLogWindow(m_listLog.m_hWnd, WM_LOG_MESSAGE);
+	context.setStatesView(m_listStates.m_hWnd);
+
+	context.createStateMachine(this->m_hWnd, WM_TRIGGER_EVENT);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -179,4 +189,21 @@ afx_msg LRESULT CStateMachineManualTestDlg::OnLogMessage(WPARAM wParam, LPARAM l
 {
 	context.onLogMsg(this->m_hWnd, wParam, lParam);
 	return 0;
+}
+
+
+void CStateMachineManualTestDlg::OnClickedButtonSetup()
+{
+	HR_EXPECT_OK(context.setup(new MyState(context, _T("Initial state"))));
+}
+
+
+void CStateMachineManualTestDlg::OnClickedButtonShutdown()
+{
+	HR_EXPECT_OK(context.shutdown());
+}
+
+
+void CStateMachineManualTestDlg::OnClickedButtonTriggerEvent()
+{
 }

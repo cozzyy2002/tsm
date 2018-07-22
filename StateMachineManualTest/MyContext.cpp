@@ -34,6 +34,8 @@ void MyContext::createStateMachine(HWND hWnd, UINT msg)
 {
 	m_stateMachine.reset(tsm::IStateMachine::create(hWnd, msg));
 	m_hWnd = hWnd;
+
+	log(_T(__FUNCTION__) _T("(hWnd=0x%p, Window message=%d): State machine=0x%p"), hWnd, msg, m_stateMachine.get());
 }
 
 MyState* MyContext::findState(const std::tstring& name) const
