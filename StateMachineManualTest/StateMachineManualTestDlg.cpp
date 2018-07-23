@@ -80,6 +80,7 @@ ON_BN_CLICKED(IDC_BUTTON_SHUTDOWN, &CStateMachineManualTestDlg::OnClickedButtonS
 ON_BN_CLICKED(IDC_BUTTON_TRIGGER_EVENT, &CStateMachineManualTestDlg::OnClickedButtonTriggerEvent)
 END_MESSAGE_MAP()
 
+static CMFCPropertyGridProperty* eventName(nullptr);
 
 // CStateMachineManualTestDlg message handlers
 
@@ -115,6 +116,10 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	context.setLogWindow(m_listLog.m_hWnd, WM_LOG_MESSAGE);
 	context.setStatesView(m_listStates.m_hWnd);
+
+	eventName = new CMFCPropertyGridProperty(_T("Name"), COleVariant(_T("")), _T("Event name"));
+	m_eventProperties.AddProperty(eventName);
+	m_eventProperties.RedrawWindow();
 
 	context.createStateMachine(this->m_hWnd, WM_TRIGGER_EVENT);
 
@@ -206,4 +211,7 @@ void CStateMachineManualTestDlg::OnClickedButtonShutdown()
 
 void CStateMachineManualTestDlg::OnClickedButtonTriggerEvent()
 {
+	UpdateData();
+	auto e = new MyEvent(context, eventName->GetValue().bstrVal);
+	HR_EXPECT_OK(context.triggerEvent(e));
 }

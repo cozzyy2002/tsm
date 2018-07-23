@@ -21,6 +21,7 @@ CReportView::~CReportView()
 HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCount)
 {
 	m_hWnd = hWnd;
+	ListView_SetExtendedListViewStyle(m_hWnd, LVS_EX_FULLROWSELECT);
 
 	m_columns = columns;
 	m_columnCount = columnCount;
