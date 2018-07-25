@@ -191,6 +191,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EventProperties.h" />
     <ClInclude Include="MyContext.h" />
     <ClInclude Include="MyEvent.h" />
     <ClInclude Include="MyObject.h" />
@@ -203,6 +204,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ClipBoard.cpp" />
+    <ClCompile Include="EventProperties.cpp" />
     <ClCompile Include="MyContext.cpp" />
     <ClCompile Include="MyEvent.cpp" />
     <ClCompile Include="MyObject.cpp" />

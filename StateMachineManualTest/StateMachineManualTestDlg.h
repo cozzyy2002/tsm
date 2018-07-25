@@ -4,6 +4,7 @@
 
 #pragma once
 #include "MyContext.h"
+#include "EventProperties.h"
 
 #include "afxcmn.h"
 #include "afxpropertygridctrl.h"
@@ -13,13 +14,12 @@ enum {
 	WM_LOG_MESSAGE
 };
 
-class CStateControl;
-
 // CStateMachineManualTestDlg dialog
 class CStateMachineManualTestDlg : public CDialogEx
 {
 protected:
 	MyContext context;
+	CEventProperties eventProperties;
 
 // Construction
 public:

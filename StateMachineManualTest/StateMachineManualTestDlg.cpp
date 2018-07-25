@@ -117,9 +117,7 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	context.setLogWindow(m_listLog.m_hWnd, WM_LOG_MESSAGE);
 	context.setStatesView(m_listStates.m_hWnd);
 
-	eventName = new CMFCPropertyGridProperty(_T("Name"), COleVariant(_T("")), _T("Event name"));
-	m_eventProperties.AddProperty(eventName);
-	m_eventProperties.RedrawWindow();
+	eventProperties.initialize(&context, &m_eventProperties);
 
 	context.createStateMachine(this->m_hWnd, WM_TRIGGER_EVENT);
 
@@ -212,6 +210,6 @@ void CStateMachineManualTestDlg::OnClickedButtonShutdown()
 void CStateMachineManualTestDlg::OnClickedButtonTriggerEvent()
 {
 	UpdateData();
-	auto e = new MyEvent(context, eventName->GetValue().bstrVal);
+	auto e = eventProperties.createEvent();
 	HR_EXPECT_OK(context.triggerEvent(e));
 }
