@@ -30,12 +30,12 @@ MyContext::MyContext()
 	tsm::IContext::onAssertFailedProc = MyContext::onAssertFailed;
 }
 
-void MyContext::createStateMachine(HWND hWnd, UINT msg)
+void MyContext::createStateMachine(HWND hWnd)
 {
-	m_stateMachine.reset(tsm::IStateMachine::create(hWnd, msg));
+	m_stateMachine.reset(tsm::IStateMachine::create(hWnd, WM_TRIGGER_EVENT));
 	m_hWnd = hWnd;
 
-	log(_T(__FUNCTION__) _T("(hWnd=0x%p, Window message=%d): State machine=0x%p"), hWnd, msg, m_stateMachine.get());
+	log(_T(__FUNCTION__) _T("(hWnd=0x%p): State machine=0x%p"), hWnd, m_stateMachine.get());
 }
 
 MyState* MyContext::findState(const std::tstring& name) const
@@ -48,10 +48,9 @@ MyState* MyContext::findState(const std::tstring& name) const
 	return state;
 }
 
-void MyContext::setLogWindow(HWND hWndLog, UINT logMsg)
+void MyContext::setLogWindow(HWND hWndLog)
 {
 	m_hWndLog = hWndLog;
-	m_logMsg = logMsg;
 
 	HR_EXPECT_OK(m_logView.setColumns(hWndLog, m_logColumns));
 }
@@ -78,7 +77,7 @@ void MyContext::log(LPCTSTR fmt, ...)
 	GetLocalTime(&logMessage->time);
 	logMessage->thread = GetCurrentThreadId();
 
-	auto hr = WIN32_EXPECT(PostMessage(m_hWnd, m_logMsg, 0, (LPARAM)logMessage.get()));
+	auto hr = WIN32_EXPECT(PostMessage(m_hWnd, WM_LOG_MESSAGE, 0, (LPARAM)logMessage.get()));
 	if(SUCCEEDED(hr)) logMessage.release();
 }
 

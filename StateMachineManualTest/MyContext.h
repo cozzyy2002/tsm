@@ -7,16 +7,21 @@
 class MyState;
 class MyEvent;
 
+enum {
+	WM_TRIGGER_EVENT = WM_USER + 1,
+	WM_LOG_MESSAGE
+};
+
 class MyContext : public tsm::AsyncContext<MyEvent, MyState>, tsm::IStateMonitor, public MyObject, public ILogger
 {
 public:
 	MyContext();
 
 	virtual tsm::IStateMonitor* _getStateMonitor() override { return this; }
-	void createStateMachine(HWND hWnd, UINT msg);
+	void createStateMachine(HWND hWnd);
 	MyState* findState(const std::tstring& name) const;
 
-	void setLogWindow(HWND hWndLog, UINT logMsg);
+	void setLogWindow(HWND hWndLog);
 	virtual void log(LPCTSTR fmt, ...) override;
 	LRESULT onLogMsg(HWND hWnd, WPARAM wParam, LPARAM lParam);
 	CReportView* getLogView() { return &m_logView; }
@@ -43,8 +48,6 @@ protected:
 
 	// Window handle to which log message is written.
 	HWND m_hWndLog;
-
-	UINT m_logMsg;
 
 	int m_logNo;
 	DWORD m_startTime;

@@ -24,9 +24,13 @@ void setOptionProperty(const OptionItem<T>* optionItems, size_t optionItemCount,
 template<typename T, int optionItemCount>
 void setOptionProperty(const OptionItem<T>(&optionItems)[optionItemCount], CMFCPropertyGridProperty* property);
 template<typename T>
+void setOptionProperty(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property);
+template<typename T>
 T getOptionPropertyValue(const OptionItem<T>* optionItems, size_t optionItemCount, CMFCPropertyGridProperty* property);
 template<typename T, int optionItemCount>
 T getOptionPropertyValue(const OptionItem<T>(&optionItems)[optionItemCount], CMFCPropertyGridProperty* property);
+template<typename T>
+T getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property);
 
 
 static const OptionItem<CEventProperties::TimerType> timerTypeOptions[] = {
@@ -103,9 +107,15 @@ void setOptionProperty(const OptionItem<T>* optionItems, size_t optionItemCount,
 }
 
 template<typename T, int optionItemCount>
-void setOptionProperty(const OptionItem<T>(&optionItems)[optionItemCount], CMFCPropertyGridProperty* property)
+void setOptionProperty(const OptionItem<T> (&optionItems)[optionItemCount], CMFCPropertyGridProperty* property)
 {
 	setOptionProperty(optionItems, optionItemCount, property);
+}
+
+template<typename T>
+void setOptionProperty(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property)
+{
+	setOptionProperty(optionItems.data(), optionItems.size(), property);
 }
 
 template<typename T>
@@ -126,7 +136,13 @@ T getOptionPropertyValue(const OptionItem<T>* optionItems, size_t optionItemCoun
 }
 
 template<typename T, int optionItemCount>
-T getOptionPropertyValue(const OptionItem<T>(&optionItems)[optionItemCount], CMFCPropertyGridProperty* property)
+T getOptionPropertyValue(const OptionItem<T> (&optionItems)[optionItemCount], CMFCPropertyGridProperty* property)
 {
 	return getOptionPropertyValue(optionItems, optionItemCount, property);
+}
+
+template<typename T>
+T getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property)
+{
+	return getOptionPropertyValue(optionItems.data(), optionItems.size(), property);
 }

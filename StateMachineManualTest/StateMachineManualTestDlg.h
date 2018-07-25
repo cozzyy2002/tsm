@@ -9,11 +9,6 @@
 #include "afxcmn.h"
 #include "afxpropertygridctrl.h"
 
-enum {
-	WM_TRIGGER_EVENT = WM_USER + 1,
-	WM_LOG_MESSAGE
-};
-
 // CStateMachineManualTestDlg dialog
 class CStateMachineManualTestDlg : public CDialogEx
 {

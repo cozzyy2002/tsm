@@ -114,12 +114,12 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	context.setLogWindow(m_listLog.m_hWnd, WM_LOG_MESSAGE);
+	context.setLogWindow(m_listLog.m_hWnd);
 	context.setStatesView(m_listStates.m_hWnd);
 
 	eventProperties.initialize(&context, &m_eventProperties);
 
-	context.createStateMachine(this->m_hWnd, WM_TRIGGER_EVENT);
+	context.createStateMachine(this->m_hWnd);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
