@@ -4,7 +4,7 @@
 #include "MyEvent.h"
 
 CEventProperties::CEventProperties()
-	: context(nullptr), ctrl(nullptr)
+	: context(nullptr)
 {
 }
 
@@ -39,14 +39,13 @@ static const OptionItem<CEventProperties::TimerType> timerTypeOptions[] = {
 	{ _T("State"), CEventProperties::TimerType::State },
 };
 
-void CEventProperties::initialize(MyContext * context, CMFCPropertyGridCtrl * ctrl)
+void CEventProperties::initialize(MyContext * context)
 {
 	this->context = context;
-	this->ctrl = ctrl;
 
 	// Event name: string
 	eventNameProperty = new CMFCPropertyGridProperty(_T("Name"), COleVariant(_T("")), _T("Event name"));
-	ctrl->AddProperty(eventNameProperty);
+	AddProperty(eventNameProperty);
 
 	// Timer property: Timer type, delay, interval
 	auto timerPropertiesProperty = new CMFCPropertyGridProperty(_T("Timer"));
@@ -58,17 +57,21 @@ void CEventProperties::initialize(MyContext * context, CMFCPropertyGridCtrl * ct
 	timerPropertiesProperty->AddSubItem(delayProperty);
 	intervalProperty = new CMFCPropertyGridProperty(_T("Interval"), COleVariant((long)0), _T("Interval(mSec)"));
 	timerPropertiesProperty->AddSubItem(intervalProperty);
-	ctrl->AddProperty(timerPropertiesProperty);
+	AddProperty(timerPropertiesProperty);
 
 	// Next state
 	auto nextStateProperty = new CMFCPropertyGridProperty(_T("Next state"));
 	VARIANT _callExitOnShutdown = { VT_BOOL };
 	callExitOnShutdownProperty = new CMFCPropertyGridProperty(_T("callExitOnShutdown"), COleVariant(_callExitOnShutdown));
 	nextStateProperty->AddSubItem(callExitOnShutdownProperty);
-	ctrl->AddProperty(nextStateProperty);
+	AddProperty(nextStateProperty);
 
-	ctrl->SetGroupNameFullWidth();
-	ctrl->RedrawWindow();
+	SetGroupNameFullWidth();
+	RedrawWindow();
+}
+
+void CEventProperties::updateStates()
+{
 }
 
 MyEvent * CEventProperties::createEvent()

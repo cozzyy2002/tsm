@@ -78,6 +78,7 @@ BEGIN_MESSAGE_MAP(CStateMachineManualTestDlg, CDialogEx)
 ON_BN_CLICKED(IDC_BUTTON_SETUP, &CStateMachineManualTestDlg::OnClickedButtonSetup)
 ON_BN_CLICKED(IDC_BUTTON_SHUTDOWN, &CStateMachineManualTestDlg::OnClickedButtonShutdown)
 ON_BN_CLICKED(IDC_BUTTON_TRIGGER_EVENT, &CStateMachineManualTestDlg::OnClickedButtonTriggerEvent)
+ON_MESSAGE(WM_STATE_CHANGED, &CStateMachineManualTestDlg::OnStateChanged)
 END_MESSAGE_MAP()
 
 static CMFCPropertyGridProperty* eventName(nullptr);
@@ -117,7 +118,7 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	context.setLogWindow(m_listLog.m_hWnd);
 	context.setStatesView(m_listStates.m_hWnd);
 
-	eventProperties.initialize(&context, &m_eventProperties);
+	m_eventProperties.initialize(&context);
 
 	context.createStateMachine(this->m_hWnd);
 
@@ -210,6 +211,13 @@ void CStateMachineManualTestDlg::OnClickedButtonShutdown()
 void CStateMachineManualTestDlg::OnClickedButtonTriggerEvent()
 {
 	UpdateData();
-	auto e = eventProperties.createEvent();
+	auto e = m_eventProperties.createEvent();
 	HR_EXPECT_OK(context.triggerEvent(e));
+}
+
+
+afx_msg LRESULT CStateMachineManualTestDlg::OnStateChanged(WPARAM wParam, LPARAM lParam)
+{
+	m_eventProperties.updateStates();
+	return 0;
 }

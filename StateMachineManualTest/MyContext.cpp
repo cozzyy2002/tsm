@@ -148,6 +148,10 @@ void MyContext::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm:
 
 void MyContext::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
+	if(m_hWnd) {
+		WIN32_EXPECT(PostMessage(m_hWnd, WM_STATE_CHANGED, 0, 0L));
+	}
+
 	if(m_hWndLog) {
 		log(_T("State changed from %s to %s"), toString(previous), toString(next));
 	} else {

@@ -14,7 +14,6 @@ class CStateMachineManualTestDlg : public CDialogEx
 {
 protected:
 	MyContext context;
-	CEventProperties eventProperties;
 
 // Construction
 public:
@@ -49,9 +48,11 @@ public:
 protected:
 	CListCtrl m_listLog;
 	CListCtrl m_listStates;
-	CMFCPropertyGridCtrl m_eventProperties;
+	CEventProperties m_eventProperties;
 public:
 	afx_msg void OnClickedButtonSetup();
 	afx_msg void OnClickedButtonShutdown();
 	afx_msg void OnClickedButtonTriggerEvent();
+protected:
+	afx_msg LRESULT OnStateChanged(WPARAM wParam, LPARAM lParam);
 };

@@ -9,7 +9,8 @@ class MyEvent;
 
 enum {
 	WM_TRIGGER_EVENT = WM_USER + 1,
-	WM_LOG_MESSAGE
+	WM_LOG_MESSAGE,
+	WM_STATE_CHANGED,
 };
 
 class MyContext : public tsm::AsyncContext<MyEvent, MyState>, tsm::IStateMonitor, public MyObject, public ILogger

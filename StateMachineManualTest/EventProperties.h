@@ -3,13 +3,14 @@
 class MyContext;
 class MyEvent;
 
-class CEventProperties
+class CEventProperties : public CMFCPropertyGridCtrl
 {
 public:
 	CEventProperties();
 	~CEventProperties();
 
-	void initialize(MyContext* context, CMFCPropertyGridCtrl* ctrl);
+	void initialize(MyContext* context);
+	void updateStates();
 	MyEvent* createEvent();
 
 	enum class TimerType {
@@ -20,7 +21,6 @@ public:
 
 protected:
 	MyContext* context;
-	CMFCPropertyGridCtrl* ctrl;
 
 	CMFCPropertyGridProperty* eventNameProperty;
 
