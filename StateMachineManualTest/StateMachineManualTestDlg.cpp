@@ -53,7 +53,7 @@ END_MESSAGE_MAP()
 
 
 CStateMachineManualTestDlg::CStateMachineManualTestDlg(CWnd* pParent /*=NULL*/)
-	: CDialogEx(IDD_STATEMACHINEMANUALTEST_DIALOG, pParent)
+	: CDialogEx(IDD_STATEMACHINEMANUALTEST_DIALOG, pParent), m_eventProperties(&context)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -117,8 +117,6 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	// TODO: Add extra initialization here
 	context.setLogWindow(m_listLog.m_hWnd);
 	context.setStatesView(m_listStates.m_hWnd);
-
-	m_eventProperties.initialize(&context);
 
 	context.createStateMachine(this->m_hWnd);
 

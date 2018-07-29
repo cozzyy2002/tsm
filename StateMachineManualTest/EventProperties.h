@@ -6,10 +6,10 @@ class MyEvent;
 class CEventProperties : public CMFCPropertyGridCtrl
 {
 public:
-	CEventProperties();
+	CEventProperties(MyContext* context);
 	~CEventProperties();
 
-	void initialize(MyContext* context);
+	virtual void Init() override;
 	void updateStates();
 	MyEvent* createEvent();
 

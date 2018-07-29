@@ -3,8 +3,8 @@
 #include "MyContext.h"
 #include "MyEvent.h"
 
-CEventProperties::CEventProperties()
-	: context(nullptr)
+CEventProperties::CEventProperties(MyContext* context)
+	: context(context)
 {
 }
 
@@ -20,9 +20,9 @@ CEventProperties::~CEventProperties()
 	{ _T("State"), CEventProperties::TimerType::State },
 };
 
-void CEventProperties::initialize(MyContext * context)
+void CEventProperties::Init()
 {
-	this->context = context;
+	CMFCPropertyGridCtrl::Init();
 
 	// Event name: string
 	eventNameProperty = new CMFCPropertyGridProperty(_T("Name"), COleVariant(_T("")), _T("Event name"));
@@ -57,8 +57,6 @@ void CEventProperties::updateStates()
 
 MyEvent * CEventProperties::createEvent()
 {
-	if(!context) return nullptr;
-
 	auto e = new MyEvent(*context, getStringPropertyValue(eventNameProperty));
 
 	auto timerType = getOptionPropertyValue(timerTypeOptions, timerTypeProperty);
