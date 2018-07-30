@@ -4,6 +4,7 @@
 
 #pragma once
 #include "MyContext.h"
+#include "ReportView.h"
 #include "EventProperties.h"
 
 #include "afxcmn.h"
@@ -14,6 +15,10 @@ class CStateMachineManualTestDlg : public CDialogEx
 {
 protected:
 	MyContext context;
+
+	CReportView m_statesView;
+	CReportView m_logView;
+	int m_logNo;
 
 // Construction
 public:

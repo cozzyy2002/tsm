@@ -54,6 +54,7 @@ END_MESSAGE_MAP()
 
 CStateMachineManualTestDlg::CStateMachineManualTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_STATEMACHINEMANUALTEST_DIALOG, pParent), m_eventProperties(&context)
+	, m_logNo(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -81,7 +82,23 @@ ON_BN_CLICKED(IDC_BUTTON_TRIGGER_EVENT, &CStateMachineManualTestDlg::OnClickedBu
 ON_MESSAGE(WM_STATE_CHANGED, &CStateMachineManualTestDlg::OnStateChanged)
 END_MESSAGE_MAP()
 
-static CMFCPropertyGridProperty* eventName(nullptr);
+
+static TCHAR logTimeFormat[] = _T("%02d:%02d:%02d.%03d");
+static TCHAR logTimeBuff[] = _T("hh:mm:ss.xxx");
+
+static const CReportView::Column logColumns[] = {
+	{ CReportView::Column::Type::Number, _T("No."), 10 },
+	{ CReportView::Column::Type::Number, _T("Time"), ARRAYSIZE(logTimeBuff) },
+	{ CReportView::Column::Type::Number, _T("Thread"), 10 },
+	{ CReportView::Column::Type::String, _T("Message"), CReportView::remainingColumnWidth },
+};
+
+static const CReportView::Column statesColumns[] = {
+	{ CReportView::Column::Type::String, _T("Name"), CReportView::remainingColumnWidth },
+	{ CReportView::Column::Type::Number, _T("Address"), (sizeof(void*) * 2) + 5 },
+	{ CReportView::Column::Type::Bool, _T("isSubState"), CReportView::autoColumnWidth },
+	{ CReportView::Column::Type::Bool, _T("callExitOnShutdown"), CReportView::autoColumnWidth },
+};
 
 // CStateMachineManualTestDlg message handlers
 
@@ -115,8 +132,8 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-	context.setLogWindow(m_listLog.m_hWnd);
-	context.setStatesView(m_listStates.m_hWnd);
+	HR_EXPECT_OK(m_logView.setColumns(m_listLog.m_hWnd, logColumns));
+	HR_EXPECT_OK(m_statesView.setColumns(m_listStates.m_hWnd, statesColumns));
 
 	context.createStateMachine(this->m_hWnd);
 
@@ -189,7 +206,13 @@ void CStateMachineManualTestDlg::OnDestroy()
 
 afx_msg LRESULT CStateMachineManualTestDlg::OnLogMessage(WPARAM wParam, LPARAM lParam)
 {
-	context.onLogMsg(this->m_hWnd, wParam, lParam);
+	std::unique_ptr<LogMessage> logMessage((LogMessage*)lParam);
+	auto& st = logMessage->time;
+	_stprintf_s(logTimeBuff, logTimeFormat, st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+	const CVar items[ARRAYSIZE(logColumns)] = {
+		CVar(++m_logNo), CVar(logTimeBuff), CVar((int)logMessage->thread), CVar(logMessage->msg)
+	};
+	m_logView.addItems(items);
 	return 0;
 }
 
@@ -217,5 +240,17 @@ void CStateMachineManualTestDlg::OnClickedButtonTriggerEvent()
 afx_msg LRESULT CStateMachineManualTestDlg::OnStateChanged(WPARAM wParam, LPARAM lParam)
 {
 	m_eventProperties.updateStates();
+
+	m_statesView.clear();
+	for(auto state = context.getCurrentState(); state; state = state->getMasterState()) {
+		const CVar items[ARRAYSIZE(statesColumns)] = {
+			CVar(state->MyObject::getName()),
+			CVar((MyObject*)state),		// In log window, address of state object is shown as pointer of MyObject class.
+			CVar(state->isSubState()),
+			CVar(state->_callExitOnShutdown()),
+		};
+		m_statesView.addItems(items, state);
+	}
+
 	return 0;
 }
