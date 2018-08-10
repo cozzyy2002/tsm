@@ -49,24 +49,30 @@ HRESULT CReportView::setColumns(HWND hWnd, const Column* columns, int columnCoun
 			switch(pCol->type) {
 			default:
 			case Column::Type::String:
+			case Column::Type::Bool:
 				charWidth = stringCharWidth;
 				break;
 			case Column::Type::Number:
 				charWidth = numberCharWidth;
-				break;
-			case Column::Type::Bool:
-				// Assuming value to be shown is "true" or "false".
-				charWidth = 5;
 				break;
 			}
 			width = (int)pCol->width * charWidth;
 		} else if(0 < pCol->width) {
 			// Width specifies percentage of width of List View.
 			width = (int)(listViewWidth * pCol->width);
-		} else if(0 == pCol->width) {
-			// autoColumnWidth = automatic width.
-			// Sufficient width to show title in column header.
-			width = _tcslen(pCol->title) * stringCharWidth;
+		} else if(autoColumnWidth == pCol->width) {
+			switch(pCol->type) {
+			default:
+			case Column::Type::String:
+				// autoColumnWidth = automatic width.
+				// Sufficient width to show title in column header.
+				width = _tcslen(pCol->title) * stringCharWidth;
+				break;
+			case Column::Type::Bool:
+				// Assuming value to be shown is "true" or "false".
+				width = 5 * stringCharWidth;
+				break;
+			}
 		} else {
 			// remainingColumnWidth = Width is remaning length.
 			width = -1;		// Mark to set value later.

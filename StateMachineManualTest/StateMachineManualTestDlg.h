@@ -60,4 +60,10 @@ public:
 	afx_msg void OnClickedButtonTriggerEvent();
 protected:
 	afx_msg LRESULT OnStateChanged(WPARAM wParam, LPARAM lParam);
+public:
+//	afx_msg void OnIdok();
+//	afx_msg void OnIdcancel();
+	afx_msg void OnFileExit();
+	virtual void OnOK();
+	virtual void OnCancel();
 };

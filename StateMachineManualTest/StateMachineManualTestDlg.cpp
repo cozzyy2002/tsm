@@ -80,6 +80,9 @@ ON_BN_CLICKED(IDC_BUTTON_SETUP, &CStateMachineManualTestDlg::OnClickedButtonSetu
 ON_BN_CLICKED(IDC_BUTTON_SHUTDOWN, &CStateMachineManualTestDlg::OnClickedButtonShutdown)
 ON_BN_CLICKED(IDC_BUTTON_TRIGGER_EVENT, &CStateMachineManualTestDlg::OnClickedButtonTriggerEvent)
 ON_MESSAGE(WM_STATE_CHANGED, &CStateMachineManualTestDlg::OnStateChanged)
+//ON_COMMAND(IDOK, &CStateMachineManualTestDlg::OnIdok)
+//ON_COMMAND(IDCANCEL, &CStateMachineManualTestDlg::OnIdcancel)
+ON_COMMAND(ID_FILE_EXIT, &CStateMachineManualTestDlg::OnFileExit)
 END_MESSAGE_MAP()
 
 
@@ -253,4 +256,26 @@ afx_msg LRESULT CStateMachineManualTestDlg::OnStateChanged(WPARAM wParam, LPARAM
 	}
 
 	return 0;
+}
+
+
+void CStateMachineManualTestDlg::OnFileExit()
+{
+	CDialogEx::EndDialog(IDOK);
+}
+
+
+void CStateMachineManualTestDlg::OnOK()
+{
+	// Ignore [Enter]
+	// Use [File]->[Exit] to terminate.
+	//CDialogEx::OnOK();
+}
+
+
+void CStateMachineManualTestDlg::OnCancel()
+{
+	// Ignore [Esc]
+	// Use [File]->[Exit] to terminate.
+	//CDialogEx::OnCancel();
 }
