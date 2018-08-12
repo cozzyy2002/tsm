@@ -152,12 +152,6 @@ bool CEventProperties::getBoolPropertyValue(CMFCPropertyGridProperty * property)
 template<typename T>
 void CEventProperties::setOptionProperty(const OptionItem<T>* optionItems, size_t optionItemCount, CMFCPropertyGridProperty* property)
 {
-	//if(0 < optionItemCount) {
-	//	// Select first item.
-	//	COleVariant var(optionItems[0].name);
-	//	property->SetValue(var);
-	//}
-
 	for(size_t i = 0; i < optionItemCount; i++) {
 		property->AddOption(optionItems[i].name);
 	}

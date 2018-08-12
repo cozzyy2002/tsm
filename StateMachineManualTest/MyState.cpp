@@ -32,5 +32,5 @@ HRESULT MyState::exit(MyContext* context, MyEvent* event, MyState* nextState)
 {
 	m_logger->log(_T("%s::exit()"), MyObject::toString());
 
-	return event->hrExit;
+	return event ? event->hrExit : S_OK;
 }
