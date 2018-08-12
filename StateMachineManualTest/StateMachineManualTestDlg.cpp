@@ -83,6 +83,9 @@ ON_MESSAGE(WM_STATE_CHANGED, &CStateMachineManualTestDlg::OnStateChanged)
 //ON_COMMAND(IDOK, &CStateMachineManualTestDlg::OnIdok)
 //ON_COMMAND(IDCANCEL, &CStateMachineManualTestDlg::OnIdcancel)
 ON_COMMAND(ID_FILE_EXIT, &CStateMachineManualTestDlg::OnFileExit)
+ON_COMMAND(ID_EDIT_SELECT_ALL, &CStateMachineManualTestDlg::OnEditSelectAll)
+ON_COMMAND(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnEditCopy)
+ON_COMMAND(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnEditClear)
 END_MESSAGE_MAP()
 
 
@@ -128,6 +131,8 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
+
+	m_hAccel = LoadAccelerators(theApp.m_hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
 
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
@@ -202,8 +207,9 @@ void CStateMachineManualTestDlg::OnFileStatecontrol()
 
 void CStateMachineManualTestDlg::OnDestroy()
 {
-	CDialogEx::OnDestroy();
+	::DestroyAcceleratorTable(m_hAccel);
 
+	CDialogEx::OnDestroy();
 }
 
 
@@ -278,4 +284,41 @@ void CStateMachineManualTestDlg::OnCancel()
 	// Ignore [Esc]
 	// Use [File]->[Exit] to terminate.
 	//CDialogEx::OnCancel();
+}
+
+
+void CStateMachineManualTestDlg::OnEditSelectAll()
+{
+	// TODO: Add your command handler code here
+}
+
+
+void CStateMachineManualTestDlg::OnEditCopy()
+{
+	int ctrlID = 0;
+	auto ctrl = GetFocus();
+	if(ctrl) {
+		ctrlID = ctrl->GetDlgCtrlID();
+	}
+	if(ctrlID == IDC_LIST_STATES) {
+		// Copy current state to clipboard.
+		m_statesView.copy();
+	} else {
+		// Copy log to clipboard.
+		m_logView.copy();
+	}
+}
+
+
+void CStateMachineManualTestDlg::OnEditClear()
+{
+	m_logView.clear();
+}
+
+
+BOOL CStateMachineManualTestDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if(m_hAccel) return ::TranslateAccelerator(m_hWnd, m_hAccel, pMsg);
+
+	return CDialogEx::PreTranslateMessage(pMsg);
 }

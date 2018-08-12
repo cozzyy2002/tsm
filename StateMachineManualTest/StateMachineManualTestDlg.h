@@ -20,6 +20,11 @@ protected:
 	CReportView m_logView;
 	int m_logNo;
 
+	// Accelerator handle.
+	// See Handling accelerator in dialog.
+	// https://stackoverflow.com/questions/48259255/handling-accelerator-in-a-dialog
+	HACCEL m_hAccel;
+
 // Construction
 public:
 	CStateMachineManualTestDlg(CWnd* pParent = NULL);	// standard constructor
@@ -66,4 +71,8 @@ public:
 	afx_msg void OnFileExit();
 	virtual void OnOK();
 	virtual void OnCancel();
+	afx_msg void OnEditSelectAll();
+	afx_msg void OnEditCopy();
+	afx_msg void OnEditClear();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
