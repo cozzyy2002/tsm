@@ -52,6 +52,23 @@ END_MESSAGE_MAP()
 
 
 
+CReportView& CStateMachineManualTestDlg::getActivaReportView()
+{
+	int ctrlID = 0;
+	auto ctrl = GetFocus();
+	if(ctrl) {
+		ctrlID = ctrl->GetDlgCtrlID();
+	}
+	switch(ctrlID) {
+	default:
+	case IDC_LIST_LOG:
+		return m_logView;
+	case IDC_LIST_STATES:
+		// Copy current state to clipboard.
+		return m_statesView;
+	}
+}
+
 CStateMachineManualTestDlg::CStateMachineManualTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_STATEMACHINEMANUALTEST_DIALOG, pParent), m_eventProperties(&context)
 	, m_logNo(0)
@@ -86,6 +103,8 @@ ON_COMMAND(ID_FILE_EXIT, &CStateMachineManualTestDlg::OnFileExit)
 ON_COMMAND(ID_EDIT_SELECT_ALL, &CStateMachineManualTestDlg::OnEditSelectAll)
 ON_COMMAND(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnEditCopy)
 ON_COMMAND(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnEditClear)
+ON_UPDATE_COMMAND_UI(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnUpdateEditClear)
+ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnUpdateEditCopy)
 END_MESSAGE_MAP()
 
 
@@ -295,18 +314,7 @@ void CStateMachineManualTestDlg::OnEditSelectAll()
 
 void CStateMachineManualTestDlg::OnEditCopy()
 {
-	int ctrlID = 0;
-	auto ctrl = GetFocus();
-	if(ctrl) {
-		ctrlID = ctrl->GetDlgCtrlID();
-	}
-	if(ctrlID == IDC_LIST_STATES) {
-		// Copy current state to clipboard.
-		m_statesView.copy();
-	} else {
-		// Copy log to clipboard.
-		m_logView.copy();
-	}
+	getActivaReportView().copy();
 }
 
 
@@ -321,4 +329,16 @@ BOOL CStateMachineManualTestDlg::PreTranslateMessage(MSG* pMsg)
 	if(m_hAccel) return ::TranslateAccelerator(m_hWnd, m_hAccel, pMsg);
 
 	return CDialogEx::PreTranslateMessage(pMsg);
+}
+
+
+void CStateMachineManualTestDlg::OnUpdateEditClear(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(0 < m_logView.getItemCount());
+}
+
+
+void CStateMachineManualTestDlg::OnUpdateEditCopy(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(0 < getActivaReportView().getItemCount());
 }

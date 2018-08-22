@@ -60,6 +60,7 @@ public:
 	int getSelectedIndex(int iStart = -1) const;
 	std::tstring getItemText(int iItem, int iSubItem = 0) const;
 	LPVOID getItemData(int iItem) const;
+	int getItemCount() const;
 
 	HRESULT copy();
 	HRESULT clear();

@@ -25,6 +25,8 @@ protected:
 	// https://stackoverflow.com/questions/48259255/handling-accelerator-in-a-dialog
 	HACCEL m_hAccel;
 
+	CReportView& getActivaReportView();
+
 // Construction
 public:
 	CStateMachineManualTestDlg(CWnd* pParent = NULL);	// standard constructor
@@ -75,4 +77,6 @@ public:
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditClear();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnUpdateEditClear(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
 };

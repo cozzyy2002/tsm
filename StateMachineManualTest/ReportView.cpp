@@ -183,6 +183,11 @@ LPVOID CReportView::getItemData(int iItem) const
 	return LPVOID(item.lParam);
 }
 
+int CReportView::getItemCount() const
+{
+	return ListView_GetItemCount(m_hWnd);
+}
+
 // Copies currently selected ListView items to clip board as CSV Unicode text.
 // If no item is selected, copy all items.
 HRESULT CReportView::copy()
