@@ -15,6 +15,8 @@
 #endif
 
 
+static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("StateMachineManualTestDlg"));
+
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -103,8 +105,9 @@ ON_COMMAND(ID_FILE_EXIT, &CStateMachineManualTestDlg::OnFileExit)
 ON_COMMAND(ID_EDIT_SELECT_ALL, &CStateMachineManualTestDlg::OnEditSelectAll)
 ON_COMMAND(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnEditCopy)
 ON_COMMAND(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnEditClear)
-ON_UPDATE_COMMAND_UI(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnUpdateEditClear)
-ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnUpdateEditCopy)
+//ON_UPDATE_COMMAND_UI(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnUpdateEditClear)
+//ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnUpdateEditCopy)
+ON_WM_INITMENU()
 END_MESSAGE_MAP()
 
 
@@ -314,12 +317,16 @@ void CStateMachineManualTestDlg::OnEditSelectAll()
 
 void CStateMachineManualTestDlg::OnEditCopy()
 {
+	LOG4CPLUS_DEBUG(logger, _T(__FUNCTION__));
+
 	getActivaReportView().copy();
 }
 
 
 void CStateMachineManualTestDlg::OnEditClear()
 {
+	LOG4CPLUS_DEBUG(logger, _T(__FUNCTION__));
+
 	m_logView.clear();
 }
 
@@ -332,13 +339,17 @@ BOOL CStateMachineManualTestDlg::PreTranslateMessage(MSG* pMsg)
 }
 
 
-void CStateMachineManualTestDlg::OnUpdateEditClear(CCmdUI *pCmdUI)
+void CStateMachineManualTestDlg::OnInitMenu(CMenu* pMenu)
 {
-	pCmdUI->Enable(0 < m_logView.getItemCount());
-}
+	CDialogEx::OnInitMenu(pMenu);
 
+	MENUITEMINFO info = { sizeof(MENUITEMINFO), MIIM_STATE };
 
-void CStateMachineManualTestDlg::OnUpdateEditCopy(CCmdUI *pCmdUI)
-{
-	pCmdUI->Enable(0 < getActivaReportView().getItemCount());
+	// Update enabled of [Edit]-[Clear log]
+	info.fState = (0 < m_logView.getItemCount()) ? MFS_ENABLED : MFS_DISABLED;
+	pMenu->SetMenuItemInfo(ID_EDIT_CLEAR, &info);
+
+	// Update enabled of [Edit]-[Copy]
+	info.fState = (0 < getActivaReportView().getItemCount()) ? MFS_ENABLED : MFS_DISABLED;
+	pMenu->SetMenuItemInfo(ID_EDIT_COPY, &info);
 }

@@ -77,6 +77,7 @@ public:
 	afx_msg void OnEditCopy();
 	afx_msg void OnEditClear();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
-	afx_msg void OnUpdateEditClear(CCmdUI *pCmdUI);
-	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
+//	afx_msg void OnUpdateEditClear(CCmdUI *pCmdUI);
+//	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
+	afx_msg void OnInitMenu(CMenu* pMenu);
 };
