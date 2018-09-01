@@ -48,6 +48,7 @@ void CEventProperties::Init()
 	callExitOnShutdownProperty = new CMFCPropertyGridProperty(_T("callExitOnShutdown"), COleVariant(_callExitOnShutdown));
 	nextStateProperty->AddSubItem(callExitOnShutdownProperty);
 	AddProperty(nextStateProperty);
+	updateStates();
 
 	RedrawWindow();
 }
@@ -57,15 +58,17 @@ static MyState* NewNextState = (MyState*)-1;
 void CEventProperties::updateStates()
 {
 	if(nextStates) {
-		nextStateProperty->RemoveSubItem(nextStates, FALSE);
+		CMFCPropertyGridProperty* p = nextStates;
+		nextStateProperty->RemoveSubItem(p, FALSE);
 		nextStates->RemoveAllOptions();
 		nextStateProperty->RemoveSubItem(masterStates, FALSE);
 		masterStates->RemoveAllOptions();
 	} else {
 		// Next state property contains empty item and state list excluding current state.
 		// Empty item is editable to specify name of new state.
-		nextStates = new CMFCPropertyGridProperty(_T("Name"), _T(""), _T("Type new state name or select existing state"));
+		nextStates = new CList(_T("Name"), _T(""), _T("Type new state name or select existing state"));
 		nextStates->AllowEdit(TRUE);
+		nextStates->onValueUpdated = [this]() { updateNextStates(); };
 		// Master state property containg empty item and state list including current state.
 		// Empty item is non-editable and selecting it means that next state does nat have master state.
 		masterStates = new CMFCPropertyGridProperty(_T("Master state"), _T(""), _T("Select existing state"));
@@ -89,8 +92,7 @@ void CEventProperties::updateStates()
 	nextStateProperty->AddSubItem(nextStates);
 	nextStateProperty->AddSubItem(masterStates);
 	nextStateProperty->AddSubItem(callExitOnShutdownProperty);
-
-	RedrawWindow();
+	updateNextStates();
 }
 
 MyEvent * CEventProperties::createEvent()
@@ -140,6 +142,25 @@ MyEvent * CEventProperties::createEvent()
 	}
 
 	return e;
+}
+
+// Called when next state is changed.
+// Determines either master state and callExitOnShutDown are visible or not
+// depending on value of next state.
+void CEventProperties::updateNextStates()
+{
+	auto enable = FALSE;
+	auto nextStateName = getStringPropertyValue(nextStates);
+	if(!nextStateName.empty()) {
+		auto nextState = getOptionPropertyValue(&(stateList.data()[1]), stateList.size() - 1, nextStates, (MyState*)nullptr);
+		// If next state is selected from state list, specifying master state and callExitOnShutDown is not necessary.
+		// See createEvent() method.
+		enable = nextState ? FALSE : TRUE;
+	}
+
+	masterStates->Show(enable);
+	callExitOnShutdownProperty->Show(enable);
+	RedrawWindow();
 }
 
 std::tstring CEventProperties::getStringPropertyValue(CMFCPropertyGridProperty * property)
@@ -200,4 +221,14 @@ template<typename T>
 T CEventProperties::getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property, T defaultValue)
 {
 	return getOptionPropertyValue(optionItems.data(), optionItems.size(), property, defaultValue);
+}
+
+BOOL CEventProperties::CList::OnUpdateValue()
+{
+	auto ret = CMFCPropertyGridProperty::OnUpdateValue();
+
+	if(onValueUpdated) {
+		onValueUpdated();
+	}
+	return ret;
 }

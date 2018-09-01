@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 class MyContext;
 class MyEvent;
 class MyState;
@@ -17,6 +19,22 @@ public:
 protected:
 	MyContext* context;
 
+	class CList : public CMFCPropertyGridProperty
+	{
+	public:
+		CList(const CString& strName, const COleVariant& varValue, LPCTSTR lpszDescr = NULL, DWORD_PTR dwData = 0,
+			LPCTSTR lpszEditMask = NULL, LPCTSTR lpszEditTemplate = NULL, LPCTSTR lpszValidChars = NULL)
+			: CMFCPropertyGridProperty(strName, varValue, lpszDescr, dwData, lpszEditMask, lpszEditTemplate, lpszValidChars) {}
+
+		// Function called when combobox value is changed such as:
+		//   Text is edited
+		//   Item selected is changed
+		std::function<void()> onValueUpdated;
+
+	protected:
+		virtual BOOL OnUpdateValue() override;
+	};
+
 	CMFCPropertyGridProperty* eventNameProperty;
 
 	CMFCPropertyGridProperty* timerTypeProperty;
@@ -24,9 +42,11 @@ protected:
 	CMFCPropertyGridProperty* intervalProperty;
 
 	CMFCPropertyGridProperty* nextStateProperty;
-	CMFCPropertyGridProperty* nextStates;
+	CList* nextStates;
 	CMFCPropertyGridProperty* masterStates;
 	CMFCPropertyGridProperty* callExitOnShutdownProperty;
+
+	void updateNextStates();
 
 	std::tstring getStringPropertyValue(CMFCPropertyGridProperty* property);
 	bool getBoolPropertyValue(CMFCPropertyGridProperty* property);
