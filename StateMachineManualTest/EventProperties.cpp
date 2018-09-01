@@ -118,15 +118,25 @@ MyEvent * CEventProperties::createEvent()
 	}
 
 	// Get next state and master state of the state.
+	// Next state may be:
+	//  One of states in stateList list box excluding top state(current state)
+	//  New state whose name is specified by text in nextState combo box.
+	//  Or nullptr that is state change does not occur.
 	auto nextState = getOptionPropertyValue(&(stateList.data()[1]), stateList.size() - 1, nextStates, (MyState*)nullptr);
 	if(!nextState) {
+		// If Next state name specified in nextState combo box does not match existing states,
+		// check if new state name is specified.
 		auto nextStateName = getStringPropertyValue(nextStates);
 		if(!nextStateName.empty()) {
 			// Create new state and set it as next state.
+			// Master state should be nullptr or selected from stateList list box including top state(current state)
 			auto masterState = getOptionPropertyValue(stateList, masterStates, (MyState*)nullptr);
 			e->nextState = new MyState(*context, nextStateName, masterState);
 			e->nextState.p->callExitOnShutDown = getBoolPropertyValue(callExitOnShutdownProperty);
 		}
+	} else {
+		// Next state if selected from stateList list box.
+		e->nextState = nextState;
 	}
 
 	return e;
