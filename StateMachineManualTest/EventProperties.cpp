@@ -151,7 +151,7 @@ void CEventProperties::updateNextStates()
 {
 	auto enable = FALSE;
 	auto nextStateName = getStringPropertyValue(nextStates);
-	if(!nextStateName.empty()) {
+	if(!nextStateName.empty() && !stateList.empty()) {
 		auto nextState = getOptionPropertyValue(&(stateList.data()[1]), stateList.size() - 1, nextStates, (MyState*)nullptr);
 		// If next state is selected from state list, specifying master state and callExitOnShutDown is not necessary.
 		// See createEvent() method.
