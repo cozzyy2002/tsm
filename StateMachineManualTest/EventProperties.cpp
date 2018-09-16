@@ -17,9 +17,9 @@ CEventProperties::~CEventProperties()
 
 
 /*static*/ const CEventProperties::OptionItem<CEventProperties::TimerType> CEventProperties::timerTypeOptions[] = {
-	{ _T("None"), CEventProperties::TimerType::None },
-	{ _T("Context"), CEventProperties::TimerType::Context },
-	{ _T("State"), CEventProperties::TimerType::State },
+	{ _T("None"), TimerType::None },
+	{ _T("Context"), TimerType::Context },
+	{ _T("State"), TimerType::State },
 };
 
 void CEventProperties::Init()
@@ -165,13 +165,8 @@ void CEventProperties::updateNextStates()
 
 std::tstring CEventProperties::getStringPropertyValue(CMFCPropertyGridProperty * property)
 {
-	auto var = property->GetValue();
-	return
-#ifdef _UNICODE
-		var.bstrVal;
-#else
-		var.pcVal;
-#endif
+	auto& var = property->GetValue();
+	return (LPCTSTR)((bstr_t)var);
 }
 
 bool CEventProperties::getBoolPropertyValue(CMFCPropertyGridProperty * property)
