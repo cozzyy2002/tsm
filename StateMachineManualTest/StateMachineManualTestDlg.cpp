@@ -177,6 +177,10 @@ void CStateMachineManualTestDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		CAboutDlg dlgAbout;
 		dlgAbout.DoModal();
 	}
+	else if(nID == SC_CLOSE)
+	{
+		CDialogEx::EndDialog(IDOK);
+	}
 	else
 	{
 		CDialogEx::OnSysCommand(nID, lParam);
