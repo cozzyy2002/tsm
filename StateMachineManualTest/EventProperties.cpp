@@ -124,7 +124,10 @@ MyEvent * CEventProperties::createEvent()
 	//  One of states in stateList list box excluding top state(current state)
 	//  New state whose name is specified by text in nextState combo box.
 	//  Or nullptr that is state change does not occur.
-	auto nextState = getOptionPropertyValue(&(stateList.data()[1]), stateList.size() - 1, nextStates, (MyState*)nullptr);
+	MyState* nextState = nullptr;
+	if(1 < stateList.size()) {
+		nextState = getOptionPropertyValue(&(stateList.data()[1]), stateList.size() - 1, nextStates, (MyState*)nullptr);
+	}
 	if(!nextState) {
 		// If Next state name specified in nextState combo box does not match existing states,
 		// check if new state name is specified.
@@ -152,14 +155,14 @@ void CEventProperties::updateNextStates()
 	auto enable = FALSE;
 	auto nextStateName = getStringPropertyValue(nextStates);
 	if(!nextStateName.empty() && !stateList.empty()) {
-		auto nextState = getOptionPropertyValue(&(stateList.data()[1]), stateList.size() - 1, nextStates, (MyState*)nullptr);
+		auto nextState = getOptionPropertyValue(stateList, nextStates, (MyState*)nullptr);
 		// If next state is selected from state list, specifying master state and callExitOnShutDown is not necessary.
 		// See createEvent() method.
 		enable = nextState ? FALSE : TRUE;
 	}
-
 	masterStates->Show(enable);
 	callExitOnShutdownProperty->Show(enable);
+
 	RedrawWindow();
 }
 
