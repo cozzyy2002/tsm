@@ -53,6 +53,22 @@ void CEventProperties::Init()
 	RedrawWindow();
 }
 
+void CEventProperties::AdjustLayout()
+{
+	CMFCPropertyGridCtrl::AdjustLayout();
+
+	// Adjust header width.
+	auto& header = GetHeaderCtrl();
+	HDITEM headerItem = { HDI_WIDTH };
+	header.GetItem(0, &headerItem);
+	auto width = headerItem.cxy;
+	header.GetItem(1, &headerItem);
+	width = headerItem.cxy;
+	headerItem.cxy = width / 2;
+	header.SetItem(0, &headerItem);
+	header.SetItem(1, &headerItem);
+}
+
 static MyState* NewNextState = (MyState*)-1;
 
 void CEventProperties::updateStates()
@@ -138,6 +154,9 @@ MyEvent * CEventProperties::createEvent()
 			auto masterState = getOptionPropertyValue(stateList, masterStates, (MyState*)nullptr);
 			e->nextState = new MyState(*context, nextStateName, masterState);
 			e->nextState.p->callExitOnShutDown = getBoolPropertyValue(callExitOnShutdownProperty);
+
+			// Clear next state name.
+			nextStates->SetValue(_T(""));
 		}
 	} else {
 		// Next state if selected from stateList list box.
@@ -160,8 +179,8 @@ void CEventProperties::updateNextStates()
 		// See createEvent() method.
 		enable = nextState ? FALSE : TRUE;
 	}
-	masterStates->Show(enable);
-	callExitOnShutdownProperty->Show(enable);
+	masterStates->Enable(enable);
+	callExitOnShutdownProperty->Enable(enable);
 
 	RedrawWindow();
 }

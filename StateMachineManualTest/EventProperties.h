@@ -13,6 +13,7 @@ public:
 	~CEventProperties();
 
 	virtual void Init() override;
+	virtual void AdjustLayout() override;
 	void updateStates();
 	MyEvent* createEvent();
 
