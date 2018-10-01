@@ -30,6 +30,11 @@ void CEventProperties::Init()
 	eventNameProperty = new CMFCPropertyGridProperty(_T("Name"), COleVariant(_T("")), _T("Event name"));
 	AddProperty(eventNameProperty);
 
+	// Event priority
+	eventPriorityProperty = new CMFCPropertyGridProperty(_T("Priority"), COleVariant((long)0, VT_I4), _T("Event priority"));
+	eventPriorityProperty->EnableSpinControl(TRUE, -100, 100);
+	AddProperty(eventPriorityProperty);
+
 	// Timer property: Timer type, delay, interval
 	auto timerPropertiesProperty = new CMFCPropertyGridProperty(_T("Timer"));
 	timerTypeProperty = new CMFCPropertyGridProperty(_T("Type"), _T("None"), _T("Select timer type"));
@@ -114,7 +119,7 @@ void CEventProperties::updateStates()
 MyEvent * CEventProperties::createEvent()
 {
 	// Create event.
-	auto e = new MyEvent(*context, getStringPropertyValue(eventNameProperty));
+	auto e = new MyEvent(*context, getStringPropertyValue(eventNameProperty), eventPriorityProperty->GetValue().lVal);
 
 	// Set timer to the event.
 	auto timerType = getOptionPropertyValue(timerTypeOptions, timerTypeProperty, TimerType::None);

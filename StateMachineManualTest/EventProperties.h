@@ -37,6 +37,7 @@ protected:
 	};
 
 	CMFCPropertyGridProperty* eventNameProperty;
+	CMFCPropertyGridProperty* eventPriorityProperty;
 
 	CMFCPropertyGridProperty* timerTypeProperty;
 	CMFCPropertyGridProperty* delayProperty;

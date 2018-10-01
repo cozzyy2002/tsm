@@ -7,7 +7,8 @@
 class MyEvent : public tsm::Event, public MyObject
 {
 public:
-	MyEvent(ILogger& logger, const std::tstring& name) : MyObject(name.c_str(), &logger) {
+	MyEvent(ILogger& logger, const std::tstring& name, int priority)
+		: MyObject(name.c_str(), &logger), Event(priority) {
 		hrHandleEvent = hrEntry = hrExit = S_OK;
 	}
 
