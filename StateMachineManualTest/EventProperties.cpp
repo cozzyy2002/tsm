@@ -55,6 +55,16 @@ void CEventProperties::Init()
 	AddProperty(nextStateProperty);
 	updateStates();
 
+	// HRESULT of event handlers
+	auto hResultProperty = new CMFCPropertyGridProperty(_T("Return value"));
+	handleEventHResultProperty = new CHResultProperty(this, _T("handleEvent()"), _T("Return value of State::handleEvent() method."));
+	hResultProperty->AddSubItem(handleEventHResultProperty);
+	entryHResultProperty = new CHResultProperty(this, _T("entry()"), _T("Return value of State::entry() method."));
+	hResultProperty->AddSubItem(entryHResultProperty);
+	exitHResultProperty = new CHResultProperty(this, _T("exit()"), _T("Return value of State::exit() method."));
+	hResultProperty->AddSubItem(exitHResultProperty);
+	AddProperty(hResultProperty);
+
 	RedrawWindow();
 }
 
@@ -120,6 +130,9 @@ MyEvent * CEventProperties::createEvent()
 {
 	// Create event.
 	auto e = new MyEvent(*context, getStringPropertyValue(eventNameProperty), eventPriorityProperty->GetValue().lVal);
+	e->hrHandleEvent = handleEventHResultProperty->getSelectedValue();
+	e->hrEntry = entryHResultProperty->getSelectedValue();
+	e->hrExit = exitHResultProperty->getSelectedValue();
 
 	// Set timer to the event.
 	auto timerType = getOptionPropertyValue(timerTypeOptions, timerTypeProperty, TimerType::None);
@@ -190,13 +203,13 @@ void CEventProperties::updateNextStates()
 	RedrawWindow();
 }
 
-std::tstring CEventProperties::getStringPropertyValue(CMFCPropertyGridProperty * property)
+std::tstring CEventProperties::getStringPropertyValue(const CMFCPropertyGridProperty * property) const
 {
 	auto& var = property->GetValue();
 	return (LPCTSTR)((bstr_t)var);
 }
 
-bool CEventProperties::getBoolPropertyValue(CMFCPropertyGridProperty * property)
+bool CEventProperties::getBoolPropertyValue(const CMFCPropertyGridProperty * property) const
 {
 	auto var = property->GetValue();
 	return var.boolVal ? true : false;
@@ -223,7 +236,7 @@ void CEventProperties::setOptionProperty(const std::vector<OptionItem<T>>& optio
 }
 
 template<typename T>
-T CEventProperties::getOptionPropertyValue(const OptionItem<T>* optionItems, size_t optionItemCount, CMFCPropertyGridProperty* property, T defaultValue)
+T CEventProperties::getOptionPropertyValue(const OptionItem<T>* optionItems, size_t optionItemCount, const CMFCPropertyGridProperty* property, T defaultValue) const
 {
 	auto str = getStringPropertyValue(property);
 	for(size_t i = 0; i < optionItemCount; i++) {
@@ -234,13 +247,13 @@ T CEventProperties::getOptionPropertyValue(const OptionItem<T>* optionItems, siz
 }
 
 template<typename T, int optionItemCount>
-T CEventProperties::getOptionPropertyValue(const OptionItem<T> (&optionItems)[optionItemCount], CMFCPropertyGridProperty* property, T defaultValue)
+T CEventProperties::getOptionPropertyValue(const OptionItem<T> (&optionItems)[optionItemCount], const CMFCPropertyGridProperty* property, T defaultValue) const
 {
 	return getOptionPropertyValue(optionItems, optionItemCount, property, defaultValue);
 }
 
 template<typename T>
-T CEventProperties::getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property, T defaultValue)
+T CEventProperties::getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, const CMFCPropertyGridProperty* property, T defaultValue) const
 {
 	return getOptionPropertyValue(optionItems.data(), optionItems.size(), property, defaultValue);
 }
@@ -253,4 +266,25 @@ BOOL CEventProperties::CList::OnUpdateValue()
 		onValueUpdated();
 	}
 	return ret;
+}
+
+/*static*/ const CEventProperties::OptionItem<HRESULT> CEventProperties::CHResultProperty::VALUE_LIST[] = {
+#define DEF_ITEM(x) { _T(#x), x }
+	DEF_ITEM(S_OK),
+	DEF_ITEM(S_FALSE),
+	DEF_ITEM(E_ABORT),
+	DEF_ITEM(E_UNEXPECTED),
+#undef DEF_ITEM
+};
+
+CEventProperties::CHResultProperty::CHResultProperty(CEventProperties* owner, const CString & strName, LPCTSTR lpszDescr)
+	: CMFCPropertyGridProperty(strName, _T(""), lpszDescr), owner(owner)
+{
+	owner->setOptionProperty<HRESULT>(VALUE_LIST, this);
+	SetValue(VALUE_LIST[0].name);
+}
+
+HRESULT CEventProperties::CHResultProperty::getSelectedValue() const
+{
+	return owner->getOptionPropertyValue<HRESULT>(VALUE_LIST, this, VALUE_LIST[0].value);
 }

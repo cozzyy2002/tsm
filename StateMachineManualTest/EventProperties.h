@@ -48,10 +48,15 @@ protected:
 	CMFCPropertyGridProperty* masterStates;
 	CMFCPropertyGridProperty* callExitOnShutdownProperty;
 
+	class CHResultProperty;
+	CHResultProperty* handleEventHResultProperty;
+	CHResultProperty* entryHResultProperty;
+	CHResultProperty* exitHResultProperty;
+
 	void updateNextStates();
 
-	std::tstring getStringPropertyValue(CMFCPropertyGridProperty* property);
-	bool getBoolPropertyValue(CMFCPropertyGridProperty* property);
+	std::tstring getStringPropertyValue(const CMFCPropertyGridProperty* property) const;
+	bool getBoolPropertyValue(const CMFCPropertyGridProperty* property) const;
 
 	enum class TimerType {
 		None,
@@ -75,9 +80,21 @@ protected:
 	template<typename T>
 	void setOptionProperty(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property);
 	template<typename T>
-	T getOptionPropertyValue(const OptionItem<T>* optionItems, size_t optionItemCount, CMFCPropertyGridProperty* property, T defaultValue);
+	T getOptionPropertyValue(const OptionItem<T>* optionItems, size_t optionItemCount, const CMFCPropertyGridProperty* property, T defaultValue) const;
 	template<typename T, int optionItemCount>
-	T getOptionPropertyValue(const OptionItem<T>(&optionItems)[optionItemCount], CMFCPropertyGridProperty* property, T defaultValue);
+	T getOptionPropertyValue(const OptionItem<T>(&optionItems)[optionItemCount], const CMFCPropertyGridProperty* property, T defaultValue) const;
 	template<typename T>
-	T getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property, T defaultValue);
+	T getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, const CMFCPropertyGridProperty* property, T defaultValue) const;
+
+	// MFCPropertyGridProperty class specialized to select HRESULT value.
+	class CHResultProperty : public CMFCPropertyGridProperty
+	{
+	public:
+		CHResultProperty(CEventProperties* owner, const CString& strName, LPCTSTR lpszDescr = NULL);
+		HRESULT getSelectedValue() const;
+
+	protected:
+		static const OptionItem<HRESULT> VALUE_LIST[];
+		CEventProperties* owner;
+	};
 };
