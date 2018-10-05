@@ -4,6 +4,22 @@
 #include "MyEvent.h"
 #include "MyState.h"
 
+static std::tstring getStringPropertyValue(const CMFCPropertyGridProperty* property);
+static bool getBoolPropertyValue(const CMFCPropertyGridProperty* property);
+
+template<typename T>
+static void setOptionProperty(const CEventProperties::OptionItem<T>* optionItems, size_t optionItemCount, CMFCPropertyGridProperty* property);
+template<typename T, int optionItemCount>
+static void setOptionProperty(const CEventProperties::OptionItem<T>(&optionItems)[optionItemCount], CMFCPropertyGridProperty* property);
+template<typename T>
+static void setOptionProperty(const std::vector<CEventProperties::OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property);
+template<typename T>
+static T getOptionPropertyValue(const CEventProperties::OptionItem<T>* optionItems, size_t optionItemCount, const CMFCPropertyGridProperty* property, T defaultValue);
+template<typename T, int optionItemCount>
+static T getOptionPropertyValue(const CEventProperties::OptionItem<T>(&optionItems)[optionItemCount], const CMFCPropertyGridProperty* property, T defaultValue);
+template<typename T>
+static T getOptionPropertyValue(const std::vector<CEventProperties::OptionItem<T>>& optionItems, const CMFCPropertyGridProperty* property, T defaultValue);
+
 CEventProperties::CEventProperties(MyContext* context)
 	: context(context)
 	, nextStates(nullptr), masterStates(nullptr)
@@ -57,11 +73,11 @@ void CEventProperties::Init()
 
 	// HRESULT of event handlers
 	auto hResultProperty = new CMFCPropertyGridProperty(_T("Return value"));
-	handleEventHResultProperty = new CHResultProperty(this, _T("handleEvent()"), _T("Return value of State::handleEvent() method."));
+	handleEventHResultProperty = new CHResultProperty(_T("handleEvent()"), _T("Return value of State::handleEvent() method."));
 	hResultProperty->AddSubItem(handleEventHResultProperty);
-	entryHResultProperty = new CHResultProperty(this, _T("entry()"), _T("Return value of State::entry() method."));
+	entryHResultProperty = new CHResultProperty(_T("entry()"), _T("Return value of State::entry() method."));
 	hResultProperty->AddSubItem(entryHResultProperty);
-	exitHResultProperty = new CHResultProperty(this, _T("exit()"), _T("Return value of State::exit() method."));
+	exitHResultProperty = new CHResultProperty(_T("exit()"), _T("Return value of State::exit() method."));
 	hResultProperty->AddSubItem(exitHResultProperty);
 	AddProperty(hResultProperty);
 
@@ -203,61 +219,6 @@ void CEventProperties::updateNextStates()
 	RedrawWindow();
 }
 
-std::tstring CEventProperties::getStringPropertyValue(const CMFCPropertyGridProperty * property) const
-{
-	auto& var = property->GetValue();
-	return (LPCTSTR)((bstr_t)var);
-}
-
-bool CEventProperties::getBoolPropertyValue(const CMFCPropertyGridProperty * property) const
-{
-	auto var = property->GetValue();
-	return var.boolVal ? true : false;
-}
-
-template<typename T>
-void CEventProperties::setOptionProperty(const OptionItem<T>* optionItems, size_t optionItemCount, CMFCPropertyGridProperty* property)
-{
-	for(size_t i = 0; i < optionItemCount; i++) {
-		property->AddOption(optionItems[i].name);
-	}
-}
-
-template<typename T, int optionItemCount>
-void CEventProperties::setOptionProperty(const OptionItem<T> (&optionItems)[optionItemCount], CMFCPropertyGridProperty* property)
-{
-	setOptionProperty(optionItems, optionItemCount, property);
-}
-
-template<typename T>
-void CEventProperties::setOptionProperty(const std::vector<OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property)
-{
-	setOptionProperty(optionItems.data(), optionItems.size(), property);
-}
-
-template<typename T>
-T CEventProperties::getOptionPropertyValue(const OptionItem<T>* optionItems, size_t optionItemCount, const CMFCPropertyGridProperty* property, T defaultValue) const
-{
-	auto str = getStringPropertyValue(property);
-	for(size_t i = 0; i < optionItemCount; i++) {
-		auto& optionItem = optionItems[i];
-		if(str == optionItem.name) return optionItem.value;
-	}
-	return defaultValue;
-}
-
-template<typename T, int optionItemCount>
-T CEventProperties::getOptionPropertyValue(const OptionItem<T> (&optionItems)[optionItemCount], const CMFCPropertyGridProperty* property, T defaultValue) const
-{
-	return getOptionPropertyValue(optionItems, optionItemCount, property, defaultValue);
-}
-
-template<typename T>
-T CEventProperties::getOptionPropertyValue(const std::vector<OptionItem<T>>& optionItems, const CMFCPropertyGridProperty* property, T defaultValue) const
-{
-	return getOptionPropertyValue(optionItems.data(), optionItems.size(), property, defaultValue);
-}
-
 BOOL CEventProperties::CList::OnUpdateValue()
 {
 	auto ret = CMFCPropertyGridProperty::OnUpdateValue();
@@ -277,14 +238,69 @@ BOOL CEventProperties::CList::OnUpdateValue()
 #undef DEF_ITEM
 };
 
-CEventProperties::CHResultProperty::CHResultProperty(CEventProperties* owner, const CString & strName, LPCTSTR lpszDescr)
-	: CMFCPropertyGridProperty(strName, _T(""), lpszDescr), owner(owner)
+CEventProperties::CHResultProperty::CHResultProperty(const CString & strName, LPCTSTR lpszDescr)
+	: CMFCPropertyGridProperty(strName, _T(""), lpszDescr)
 {
-	owner->setOptionProperty<HRESULT>(VALUE_LIST, this);
+	setOptionProperty<HRESULT>(VALUE_LIST, this);
 	SetValue(VALUE_LIST[0].name);
 }
 
 HRESULT CEventProperties::CHResultProperty::getSelectedValue() const
 {
-	return owner->getOptionPropertyValue<HRESULT>(VALUE_LIST, this, VALUE_LIST[0].value);
+	return getOptionPropertyValue<HRESULT>(VALUE_LIST, this, VALUE_LIST[0].value);
+}
+
+std::tstring getStringPropertyValue(const CMFCPropertyGridProperty * property)
+{
+	auto& var = property->GetValue();
+	return (LPCTSTR)((bstr_t)var);
+}
+
+bool getBoolPropertyValue(const CMFCPropertyGridProperty * property)
+{
+	auto var = property->GetValue();
+	return var.boolVal ? true : false;
+}
+
+template<typename T>
+void setOptionProperty(const CEventProperties::OptionItem<T>* optionItems, size_t optionItemCount, CMFCPropertyGridProperty* property)
+{
+	for(size_t i = 0; i < optionItemCount; i++) {
+		property->AddOption(optionItems[i].name);
+	}
+}
+
+template<typename T, int optionItemCount>
+void setOptionProperty(const CEventProperties::OptionItem<T>(&optionItems)[optionItemCount], CMFCPropertyGridProperty* property)
+{
+	setOptionProperty(optionItems, optionItemCount, property);
+}
+
+template<typename T>
+void setOptionProperty(const std::vector<CEventProperties::OptionItem<T>>& optionItems, CMFCPropertyGridProperty* property)
+{
+	setOptionProperty(optionItems.data(), optionItems.size(), property);
+}
+
+template<typename T>
+T getOptionPropertyValue(const CEventProperties::OptionItem<T>* optionItems, size_t optionItemCount, const CMFCPropertyGridProperty* property, T defaultValue)
+{
+	auto str = getStringPropertyValue(property);
+	for(size_t i = 0; i < optionItemCount; i++) {
+		auto& optionItem = optionItems[i];
+		if(str == optionItem.name) return optionItem.value;
+	}
+	return defaultValue;
+}
+
+template<typename T, int optionItemCount>
+T getOptionPropertyValue(const CEventProperties::OptionItem<T>(&optionItems)[optionItemCount], const CMFCPropertyGridProperty* property, T defaultValue)
+{
+	return getOptionPropertyValue(optionItems, optionItemCount, property, defaultValue);
+}
+
+template<typename T>
+T getOptionPropertyValue(const std::vector<CEventProperties::OptionItem<T>>& optionItems, const CMFCPropertyGridProperty* property, T defaultValue)
+{
+	return getOptionPropertyValue(optionItems.data(), optionItems.size(), property, defaultValue);
 }
