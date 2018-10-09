@@ -35,6 +35,8 @@ public:
 // Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	virtual BOOL OnInitDialog();
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -108,6 +110,7 @@ ON_COMMAND(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnEditClear)
 //ON_UPDATE_COMMAND_UI(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnUpdateEditClear)
 //ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnUpdateEditCopy)
 ON_WM_INITMENU()
+ON_COMMAND(ID_HELP_ABOUT, &CStateMachineManualTestDlg::OnHelpAbout)
 END_MESSAGE_MAP()
 
 
@@ -134,26 +137,6 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 {
 	CDialogEx::OnInitDialog();
 
-	// Add "About..." menu item to system menu.
-
-	// IDM_ABOUTBOX must be in the system command range.
-	ASSERT((IDM_ABOUTBOX & 0xFFF0) == IDM_ABOUTBOX);
-	ASSERT(IDM_ABOUTBOX < 0xF000);
-
-	CMenu* pSysMenu = GetSystemMenu(FALSE);
-	if (pSysMenu != NULL)
-	{
-		BOOL bNameValid;
-		CString strAboutMenu;
-		bNameValid = strAboutMenu.LoadString(IDS_ABOUTBOX);
-		ASSERT(bNameValid);
-		if (!strAboutMenu.IsEmpty())
-		{
-			pSysMenu->AppendMenu(MF_SEPARATOR);
-			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
-		}
-	}
-
 	m_hAccel = LoadAccelerators(theApp.m_hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
 
 	// Set the icon for this dialog.  The framework does this automatically
@@ -172,12 +155,7 @@ BOOL CStateMachineManualTestDlg::OnInitDialog()
 
 void CStateMachineManualTestDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
-	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
-	{
-		CAboutDlg dlgAbout;
-		dlgAbout.DoModal();
-	}
-	else if(nID == SC_CLOSE)
+	if(nID == SC_CLOSE)
 	{
 		CDialogEx::EndDialog(IDOK);
 	}
@@ -356,4 +334,50 @@ void CStateMachineManualTestDlg::OnInitMenu(CMenu* pMenu)
 	// Update enabled of [Edit]-[Copy]
 	info.fState = (0 < getActivaReportView().getItemCount()) ? MFS_ENABLED : MFS_DISABLED;
 	pMenu->SetMenuItemInfo(ID_EDIT_COPY, &info);
+
+	// Set [Help]-[About] menu string from resouce.
+	static CString strHelpAbout;
+	if(strHelpAbout.IsEmpty()) {
+		auto ok = strHelpAbout.LoadString(IDS_ABOUTBOX);
+		ASSERT(ok);
+		MENUITEMINFO info = { sizeof(MENUITEMINFO), MIIM_STRING };
+		info.fType = MFT_STRING;
+		info.dwTypeData = (LPTSTR)strHelpAbout.GetString();
+		pMenu->SetMenuItemInfo(ID_HELP_ABOUT, &info);
+	}
+}
+
+
+BOOL CAboutDlg::OnInitDialog()
+{
+	CDialogEx::OnInitDialog();
+
+	LPCTSTR buildCondition =
+#ifdef _WIN64
+		_T("x64/")
+#else
+		_T("win32/")
+#endif
+#ifdef _UNICODE
+		_T("Unicode/")
+#else
+		_T("Ansi/")
+#endif
+#ifdef _DEBUG
+		_T("Debug")
+#else
+		_T("Release")
+#endif
+		;
+	SetDlgItemText(IDC_STATIC_BUILD_CONDITION, buildCondition);
+
+	return TRUE;  // return TRUE unless you set the focus to a control
+				  // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+
+void CStateMachineManualTestDlg::OnHelpAbout()
+{
+	CAboutDlg dlgAbout;
+	dlgAbout.DoModal();
 }
