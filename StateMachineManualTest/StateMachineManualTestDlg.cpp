@@ -157,7 +157,8 @@ void CStateMachineManualTestDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if(nID == SC_CLOSE)
 	{
-		CDialogEx::EndDialog(IDOK);
+		// Terminate application by [Alt+F4] or clicking [x] button.
+		OnFileExit();
 	}
 	else
 	{
@@ -341,7 +342,6 @@ void CStateMachineManualTestDlg::OnInitMenu(CMenu* pMenu)
 		auto ok = strHelpAbout.LoadString(IDS_ABOUTBOX);
 		ASSERT(ok);
 		MENUITEMINFO info = { sizeof(MENUITEMINFO), MIIM_STRING };
-		info.fType = MFT_STRING;
 		info.dwTypeData = (LPTSTR)strHelpAbout.GetString();
 		pMenu->SetMenuItemInfo(ID_HELP_ABOUT, &info);
 	}
