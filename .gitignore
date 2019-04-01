@@ -17,3 +17,5 @@
 /test_tab4.json
 /test_tab.json
 /test.json
+/.vs
+*.vcxproj.filters
