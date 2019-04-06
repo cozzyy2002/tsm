@@ -121,7 +121,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Platform)\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc14\$(Platform)\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Platform)\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc141\$(Platform)\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
       <AdditionalDependencies>StateMachine.lib;log4cplusUD.lib</AdditionalDependencies>
     </Link>
     <Midl>
@@ -134,6 +134,9 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PostBuildEvent>
+      <Command>xcopy /D "$(LOG4CPLUS_ROOT)\msvc141\$(Platform)\bin.$(Configuration)_Unicode\*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -179,7 +182,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Platform)\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc14\$(Platform)\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Platform)\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc141\$(Platform)\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
       <AdditionalDependencies>StateMachine.lib;log4cplusU.lib</AdditionalDependencies>
     </Link>
     <Midl>
@@ -192,6 +195,9 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PostBuildEvent>
+      <Command>xcopy /D "$(LOG4CPLUS_ROOT)\msvc141\$(Platform)\bin.$(Configuration)_Unicode\*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
