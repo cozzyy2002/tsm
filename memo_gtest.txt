@@ -1,0 +1,10 @@
+GoogleTest/GoogleMock のリンク
+
+	ライブラリのディレクトリ
+	GoogleTest: $(GTEST_ROOT)\googletest\msvc\{VS version}\gtest\$(Platform)-$(Configuration)
+	GoogleMock: $(GTEST_ROOT)\googlemock\msvc\{VS version}\$(Platform)-$(Configuration)
+
+	Code genaration
+	GoogleTest: gtest-md.sln -> gtest-md 以下にライブラリ作成
+	GoogleMock: MDd ソリューション無し
+
