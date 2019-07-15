@@ -75,6 +75,8 @@ public:
 
 	virtual int _getPriority() const = 0;
 
+	virtual HRESULT _preHandle(IContext* context) = 0;
+
 #pragma region Definition for event timer
 	virtual DWORD _getDelayTime() const = 0;
 	virtual DWORD _getIntervalTime() const = 0;

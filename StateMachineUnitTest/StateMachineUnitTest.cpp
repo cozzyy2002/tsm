@@ -16,13 +16,15 @@ template<class C>
 class StateMachineUnitTest : public Test
 {
 public:
+	using MockEvent_t = MockEvent<C>;
+
 	void SetUp() {}
 	void TearDown() {
 		EXPECT_EQ(nullptr, mockContext._getCurrentState());
 	}
 
 	C mockContext;
-	MockEvent mockEvent;
+	MockEvent_t mockEvent;
 	MockState<C> mockState0, mockState1, mockState2, mockState3;
 };
 
@@ -151,6 +153,8 @@ TYPED_TEST_CASE(StateMachineEventUnitTest, ContextTypes);
 // No state transition occurs.
 TYPED_TEST(StateMachineEventUnitTest, 0)
 {
+	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		.WillOnce(Return(S_FALSE));
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
@@ -296,6 +300,7 @@ public:
 
 TEST_F(StateMachineNotImplTest, 0)
 {
+	MockEvent<MockContext> mockEvent;
 	ASSERT_EQ(E_NOTIMPL, mockContext.triggerEvent(&mockEvent));
 
 	EXPECT_TRUE(mockEvent.deleted());

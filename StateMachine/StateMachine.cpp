@@ -112,7 +112,15 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 		stateMonitor->onEventHandling(context, event, currentState);
 	});
 
-	HRESULT hr = forEachState(currentState, [this, context, event, &nextState](IState* state)
+	HRESULT hr = event->_preHandle(context);
+	switch(hr) {
+	case S_OK:
+	case S_FALSE:
+	default:
+		break;
+	}
+
+	hr = forEachState(currentState, [this, context, event, &nextState](IState* state)
 	{
 		HRESULT hr = HR_EXPECT_OK(callHandleEvent(state, context, event, &nextState));
 		switch(hr) {

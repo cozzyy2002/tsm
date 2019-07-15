@@ -4,6 +4,7 @@
 #include <StateMachine/Event.h>
 #include <StateMachine/State.h>
 
+template<class C>
 class MockEvent;
 template <class C>
 class MockState;
@@ -32,13 +33,13 @@ public:
 
 extern void mockOnAssertFailed(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
 
-class MockContext : public tsm::Context<MockEvent, MockState<MockContext>>, public TestStateMonitor
+class MockContext : public tsm::Context<MockEvent<MockContext>, MockState<MockContext>>, public TestStateMonitor
 {
 public:
 	virtual IStateMonitor* _getStateMonitor() override { return this; }
 };
 
-class MockAsyncContext : public tsm::AsyncContext<MockEvent, MockState<MockAsyncContext>>, public TestStateMonitor
+class MockAsyncContext : public tsm::AsyncContext<MockEvent<MockAsyncContext>, MockState<MockAsyncContext>>, public TestStateMonitor
 {
 public:
 	virtual IStateMonitor* _getStateMonitor() override { return this; }
@@ -65,10 +66,13 @@ protected:
 	std::string className;
 };
 
-class MockEvent : public tsm::Event, public TestUnknown
+template<class C>
+class MockEvent : public tsm::Event<C>, public TestUnknown
 {
 public:
 	MockEvent(int id = 0) : TestUnknown(m_cRef), id(id) { setObject(this); }
+
+	MOCK_METHOD1_T(preHandle, HRESULT(C*));
 
 	void setPriority(int priority) { m_priority = priority; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
@@ -77,7 +81,7 @@ public:
 };
 
 template<class C>
-class MockState : public tsm::State<C, MockEvent>, public TestUnknown
+class MockState : public tsm::State<C, MockEvent<C>>, public TestUnknown
 {
 public:
 	MockState() : TestUnknown(m_cRef) { setObject(this); }
@@ -91,7 +95,7 @@ public:
 		return cRef;
 	}
 
-	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent*, IState**));
-	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent*, IState*));
-	MOCK_METHOD3_T(exit, HRESULT(C*, MockEvent*, IState*));
+	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent<C>*, IState**));
+	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent<C>*, IState*));
+	MOCK_METHOD3_T(exit, HRESULT(C*, MockEvent<C>*, IState*));
 };

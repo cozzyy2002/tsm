@@ -12,6 +12,7 @@ class StateMachineTimerUnitTest : public Test
 {
 public:
 	using UnitTestBase = StateMachineTimerUnitTest<C>;
+	using MockEvent_t = MockEvent<MockAsyncContext>;
 
 	void SetUp() {
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
@@ -35,7 +36,7 @@ public:
 	}
 
 	C mockContext;
-	MockEvent e0, e1;
+	MockEvent_t e0, e1;
 	MockState<C> mockState0, mockState1;
 };
 

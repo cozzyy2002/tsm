@@ -4,6 +4,7 @@
 
 namespace tsm {
 
+template<class C = IContext>
 class Event : public IEvent
 {
 public:
@@ -15,6 +16,12 @@ public:
 	Event(int priority = DefaultPriority)
 		: m_priority(priority), m_timerClient(nullptr) {}
 	virtual ~Event() {}
+
+	HRESULT _preHandle(IContext* context) override {
+		return preHandle((C*)context);
+	}
+
+	virtual HRESULT preHandle(C* context) { return S_FALSE; }
 
 	virtual int _getPriority() const override { return m_priority; }
 	virtual DWORD _getDelayTime() const override { return m_delayTime; }

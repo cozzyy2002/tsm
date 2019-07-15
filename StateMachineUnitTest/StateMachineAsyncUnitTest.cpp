@@ -8,6 +8,8 @@ using namespace testing;
 class StateMachineAsyncUnitTest : public Test
 {
 public:
+	using MockEvent_t = MockEvent<MockAsyncContext>;
+
 	void SetUp() {
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
@@ -20,32 +22,32 @@ public:
 
 	void createEvents(int count = 1) {
 		for(int id = 0; id < count; id++) {
-			mockEvents.push_back(new MockEvent(id));
+			mockEvents.push_back(new MockEvent_t(id));
 		}
 	}
 
 	MockAsyncContext mockContext;
-	std::vector<CComPtr<MockEvent>> mockEvents;
+	std::vector<CComPtr<MockEvent_t>> mockEvents;
 	MockState<MockAsyncContext> mockState0, mockState1;
 };
 
 // Identify event object and manage it's life time
 TEST_F(StateMachineAsyncUnitTest, 0)
 {
-	MockEvent e0, e1, e2;
+	MockEvent_t e0, e1, e2;
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, _, Not(nullptr)))
-		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent_t* event, tsm::IState**)
 		{
 			EXPECT_EQ(&e0, event);
 			Sleep(10);
 			return S_OK;
 		}))
-		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent_t* event, tsm::IState**)
 		{
 			EXPECT_EQ(&e1, event);
 			return S_OK;
 		}))
-		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent_t* event, tsm::IState**)
 		{
 			EXPECT_EQ(&e2, event);
 			return S_OK;
@@ -68,7 +70,7 @@ TEST_F(StateMachineAsyncUnitTest, 1)
 	static const int EventsCount = 4;
 	int actualEventCount = 0;
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, Not(nullptr), _))
-		.WillRepeatedly(Invoke([&actualEventCount](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		.WillRepeatedly(Invoke([&actualEventCount](MockAsyncContext* context, MockEvent_t* event, tsm::IState**)
 		{
 			// Wait for all triggerEvent() to be called.
 			if(actualEventCount == 0) Sleep(10);
@@ -122,7 +124,7 @@ TEST_P(StateMachineAsyncPriorityUnitTest, sequence)
 
 	int actualEventCount = 0;
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, Not(nullptr), _))
-		.WillRepeatedly(Invoke([&actualEventCount, param](MockAsyncContext* context, MockEvent* event, tsm::IState**)
+		.WillRepeatedly(Invoke([&actualEventCount, param](MockAsyncContext* context, MockEvent_t* event, tsm::IState**)
 		{
 			auto index = actualEventCount++;
 			// Wait for all triggerEvent() to be called.
