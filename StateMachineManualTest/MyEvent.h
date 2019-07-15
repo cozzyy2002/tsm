@@ -4,7 +4,7 @@
 #include "MyObject.h"
 #include "MyState.h"
 
-class MyEvent : public tsm::Event, public MyObject
+class MyEvent : public tsm::Event<MyContext>, public MyObject
 {
 public:
 	MyEvent(ILogger& logger, const std::tstring& name, int priority)

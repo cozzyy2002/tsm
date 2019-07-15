@@ -67,7 +67,7 @@ public:
 	virtual HRESULT handleEvent(CParserContext* context, CParserEvent* e, CParserStateBase** nextState) override;
 };
 
-class CParserEvent : public tsm::Event
+class CParserEvent : public tsm::Event<CParserContext>
 {
 public:
 	CParserEvent(TCHAR character) : character(character) {}
