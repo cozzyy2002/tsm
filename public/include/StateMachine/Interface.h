@@ -75,7 +75,9 @@ public:
 
 	virtual int _getPriority() const = 0;
 
+#pragma region Methods to be called by StateMachine.
 	virtual HRESULT _preHandle(IContext* context) = 0;
+#pragma endregion
 
 #pragma region Definition for event timer
 	virtual DWORD _getDelayTime() const = 0;

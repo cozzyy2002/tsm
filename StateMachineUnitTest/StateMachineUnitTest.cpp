@@ -151,15 +151,47 @@ public:
 TYPED_TEST_CASE(StateMachineEventUnitTest, ContextTypes);
 
 // No state transition occurs.
-TYPED_TEST(StateMachineEventUnitTest, 0)
+// Event::preHandle() returns S_OK.
+TYPED_TEST(StateMachineEventUnitTest, NoStateTransition)
 {
 	EXPECT_CALL(mockEvent, preHandle(&mockContext))
-		.WillOnce(Return(S_FALSE));
+		.WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
 
-	ASSERT_HRESULT_SUCCEEDED(mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));
+
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_FALSE(mockState0.deleted());
+}
+
+// Event::preHandle() returns S_FALSE(State::handleEvent() is not called).
+TYPED_TEST(StateMachineEventUnitTest, PreHandleFalse)
+{
+	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		.WillOnce(Return(S_FALSE));
+	EXPECT_CALL(mockState0, handleEvent(_, _, _)).Times(0);
+	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+
+	ASSERT_EQ(S_FALSE, mockContext.handleEvent(&mockEvent));
+
+	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
+	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_FALSE(mockState0.deleted());
+}
+
+// Event::preHandle() returns error(State::handleEvent() is not called).
+TYPED_TEST(StateMachineEventUnitTest, PreHandleError)
+{
+	auto hr = E_ABORT;
+	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		.WillOnce(Return(hr));
+	EXPECT_CALL(mockState0, handleEvent(_, _, _)).Times(0);
+	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+
+	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
 
 	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
 	EXPECT_TRUE(mockEvent.deleted());
@@ -167,8 +199,10 @@ TYPED_TEST(StateMachineEventUnitTest, 0)
 }
 
 // State transition occurs.
-TYPED_TEST(StateMachineEventUnitTest, 1)
+TYPED_TEST(StateMachineEventUnitTest, StateTransition)
 {
+	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		.WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
 	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(S_OK));
@@ -183,9 +217,11 @@ TYPED_TEST(StateMachineEventUnitTest, 1)
 }
 
 // State::handleEvent() returns error.
-TYPED_TEST(StateMachineEventUnitTest, 2)
+TYPED_TEST(StateMachineEventUnitTest, HandleEventError)
 {
 	auto hr = E_ABORT;
+	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		.WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(Return(hr));
 	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
@@ -198,9 +234,11 @@ TYPED_TEST(StateMachineEventUnitTest, 2)
 }
 
 // State::exit() returns error.
-TYPED_TEST(StateMachineEventUnitTest, 3)
+TYPED_TEST(StateMachineEventUnitTest, ExitError)
 {
 	auto hr = E_ABORT;
+	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		.WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
 	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(hr));
@@ -216,9 +254,11 @@ TYPED_TEST(StateMachineEventUnitTest, 3)
 }
 
 // State::entry() returns error.
-TYPED_TEST(StateMachineEventUnitTest, 4)
+TYPED_TEST(StateMachineEventUnitTest, EntryError)
 {
 	auto hr = E_ABORT;
+	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		.WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
 	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(S_OK));
@@ -257,9 +297,13 @@ TYPED_TEST(StateMachineSubStateUnitTest, 0)
 	{
 		InSequence _sequence;
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
+		EXPECT_CALL(mockEvent, preHandle(&mockContext))
+			.WillOnce(Return(S_OK));
 		EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, _))
 			.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
 		EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));
+		EXPECT_CALL(mockEvent, preHandle(&mockContext))
+			.WillOnce(Return(S_OK));
 		EXPECT_CALL(mockState1, handleEvent(&mockContext, &mockEvent, _))
 			.WillOnce(DoAll(SetArgPointee<2>(&mockState0), Return(S_OK)));
 		EXPECT_CALL(mockState1, exit(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));

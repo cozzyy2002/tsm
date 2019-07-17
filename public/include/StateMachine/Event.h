@@ -17,11 +17,15 @@ public:
 		: m_priority(priority), m_timerClient(nullptr) {}
 	virtual ~Event() {}
 
+#pragma region Implementation of IState that call methods of sub class.
 	HRESULT _preHandle(IContext* context) override {
 		return preHandle((C*)context);
 	}
+#pragma endregion
 
-	virtual HRESULT preHandle(C* context) { return S_FALSE; }
+#pragma region Methods to be implemented by sub class.
+	virtual HRESULT preHandle(C* context) { return S_OK; }
+#pragma endregion
 
 	virtual int _getPriority() const override { return m_priority; }
 	virtual DWORD _getDelayTime() const override { return m_delayTime; }

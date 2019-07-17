@@ -115,9 +115,10 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	HRESULT hr = event->_preHandle(context);
 	switch(hr) {
 	case S_OK:
-	case S_FALSE:
-	default:
 		break;
+	case S_FALSE:		// No more handling is required.
+	default:			// Error occurred.
+		return hr;
 	}
 
 	hr = forEachState(currentState, [this, context, event, &nextState](IState* state)

@@ -22,19 +22,20 @@ public:
 
 	void createEvents(int count = 1) {
 		for(int id = 0; id < count; id++) {
-			mockEvents.push_back(new MockEvent_t(id));
+			mockEvents.push_back(new NiceMock<MockEvent_t>(id));
 		}
 	}
 
 	MockAsyncContext mockContext;
-	std::vector<CComPtr<MockEvent_t>> mockEvents;
+	// Note: Use NiceMock to ommit `EXPECT_CALL(Event, preHandle())`.
+	std::vector<CComPtr<NiceMock<MockEvent_t>>> mockEvents;
 	MockState<MockAsyncContext> mockState0, mockState1;
 };
 
 // Identify event object and manage it's life time
 TEST_F(StateMachineAsyncUnitTest, 0)
 {
-	MockEvent_t e0, e1, e2;
+	NiceMock<MockEvent_t> e0, e1, e2;
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, _, Not(nullptr)))
 		.WillOnce(Invoke([&](MockAsyncContext* context, MockEvent_t* event, tsm::IState**)
 		{
