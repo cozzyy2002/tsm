@@ -73,11 +73,13 @@ void CEventProperties::Init()
 
 	// HRESULT of event handlers
 	auto hResultProperty = new CMFCPropertyGridProperty(_T("Return value"));
-	handleEventHResultProperty = new CHResultProperty(_T("handleEvent()"), _T("Return value of State::handleEvent() method."));
+	preHandleHResultProperty = new CHResultProperty(_T("Event::preHandle()"), _T("Return value of Event::preHandle() mehtod."));
+	hResultProperty->AddSubItem(preHandleHResultProperty);
+	handleEventHResultProperty = new CHResultProperty(_T("State::handleEvent()"), _T("Return value of State::handleEvent() method."));
 	hResultProperty->AddSubItem(handleEventHResultProperty);
-	entryHResultProperty = new CHResultProperty(_T("entry()"), _T("Return value of State::entry() method."));
+	entryHResultProperty = new CHResultProperty(_T("State::entry()"), _T("Return value of State::entry() method."));
 	hResultProperty->AddSubItem(entryHResultProperty);
-	exitHResultProperty = new CHResultProperty(_T("exit()"), _T("Return value of State::exit() method."));
+	exitHResultProperty = new CHResultProperty(_T("State::exit()"), _T("Return value of State::exit() method."));
 	hResultProperty->AddSubItem(exitHResultProperty);
 	AddProperty(hResultProperty);
 
@@ -146,6 +148,7 @@ MyEvent * CEventProperties::createEvent()
 {
 	// Create event.
 	auto e = new MyEvent(*context, getStringPropertyValue(eventNameProperty), eventPriorityProperty->GetValue().lVal);
+	e->hrPreHandle = preHandleHResultProperty->getSelectedValue();
 	e->hrHandleEvent = handleEventHResultProperty->getSelectedValue();
 	e->hrEntry = entryHResultProperty->getSelectedValue();
 	e->hrExit = exitHResultProperty->getSelectedValue();

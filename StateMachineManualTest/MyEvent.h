@@ -12,10 +12,14 @@ public:
 		hrHandleEvent = hrEntry = hrExit = S_OK;
 	}
 
+	// Implementation of tsm::Event
+	virtual HRESULT preHandle(MyContext* context) override;
+
 	// Inplementation of IUnknown to log deleting object.
 	virtual ULONG STDMETHODCALLTYPE Release(void) override;
 
 	CComPtr<MyState> nextState;
+	HRESULT hrPreHandle;
 	HRESULT hrHandleEvent;
 	HRESULT hrEntry;
 	HRESULT hrExit;

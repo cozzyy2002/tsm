@@ -61,6 +61,7 @@ protected:
 	CMFCPropertyGridProperty* callExitOnShutdownProperty;
 
 	class CHResultProperty;
+	CHResultProperty* preHandleHResultProperty;
 	CHResultProperty* handleEventHResultProperty;
 	CHResultProperty* entryHResultProperty;
 	CHResultProperty* exitHResultProperty;
