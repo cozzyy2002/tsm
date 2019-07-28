@@ -26,7 +26,7 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 
 	HR_ASSERT_OK(setupInner(context, initialState, event));
 
-	auto asyncData = context->_getHandle()->asyncData;
+	auto asyncData = context->_getHandle(true)->asyncData;
 
 	// Setup event queue.
 	asyncData->eventQueue.clear();

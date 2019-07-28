@@ -23,8 +23,8 @@ template<class T, class H>
 class HandleOwner
 {
 public:
-	virtual H* _getHandle() {
-		if(!m_handle) m_handle.reset(HandleFactory::create(_getInstance()));
+	virtual H* _getHandle(bool reset = false) {
+		if(!m_handle || reset) m_handle.reset(HandleFactory::create(_getInstance()));
 		return m_handle.get();
 	}
 

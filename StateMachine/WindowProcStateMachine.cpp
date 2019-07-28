@@ -24,7 +24,7 @@ HRESULT WindowProcStateMachine::setup(IContext* context, IState* initialState, I
 
 	HR_ASSERT_OK(setupInner(context, initialState, event));
 
-	auto asyncData = context->_getHandle()->asyncData;
+	auto asyncData = context->_getHandle(true)->asyncData;
 	asyncData->hWnd = m_hWnd;
 	asyncData->msg = m_msg;
 
