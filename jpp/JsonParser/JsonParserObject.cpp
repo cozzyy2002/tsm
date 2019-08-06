@@ -19,7 +19,6 @@ HRESULT CParserContext::start(std::tostream& out, const CJsonParser::Option& opt
 
 HRESULT CParserContext::stop()
 {
-	*outStream << std::ends;
 	return Context::shutdown();
 }
 
