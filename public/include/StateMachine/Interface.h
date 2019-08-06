@@ -77,6 +77,7 @@ public:
 
 #pragma region Methods to be called by StateMachine.
 	virtual HRESULT _preHandle(IContext* context) = 0;
+	virtual HRESULT _postHandle(IContext* context, HRESULT hr) = 0;
 #pragma endregion
 
 #pragma region Definition for event timer

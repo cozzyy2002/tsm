@@ -48,8 +48,6 @@ HRESULT json_parser::CJsonParser::preprocess(std::tistream& source, std::tostrea
 	for(source >> ch; !source.eof(); source >> ch) {
 		CComPtr<CParserEvent> e(new CParserEvent(ch));
 		context.handleEvent(e);
-		// Note: e.character might be modified by state.
-		context.previousCharacter = e->character;
 	}
 	context.stop();
 	return S_OK;

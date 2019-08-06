@@ -187,3 +187,10 @@ HRESULT CLiteralState::handleEvent(CParserContext* context, CParserEvent* e, CPa
 	context->out(character);
 	return S_OK;
 }
+
+HRESULT json_parser::CParserEvent::postHandle(CParserContext * context, HRESULT hr)
+{
+	// Note: e.character might be modified by state.
+	context->previousCharacter = character;
+	return S_OK;
+}

@@ -153,6 +153,9 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 			});
 		}
 	}
+
+	hr = event->_postHandle(context, hr);
+
 	return hr;
 }
 

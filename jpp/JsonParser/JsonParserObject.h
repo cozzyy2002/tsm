@@ -72,6 +72,8 @@ class CParserEvent : public tsm::Event<CParserContext>
 public:
 	CParserEvent(TCHAR character) : character(character) {}
 
+	virtual HRESULT postHandle(CParserContext* context, HRESULT hr) override;
+
 	// Character to parse.
 	TCHAR character;
 };
