@@ -9,6 +9,13 @@ HRESULT MyEvent::preHandle(MyContext* context)
 	return hrPreHandle;
 }
 
+HRESULT MyEvent::postHandle(MyContext * context, HRESULT hr)
+{
+	m_logger->log(_T("%s::postHandle(hr=0x%p): HRESULT=0x%p"), MyObject::toString(), hr, hrPreHandle);
+
+	return hrPostHandle;
+}
+
 ULONG MyEvent::Release(void)
 {
 	if(1 == m_cRef) {

@@ -62,6 +62,7 @@ protected:
 
 	class CHResultProperty;
 	CHResultProperty* preHandleHResultProperty;
+	CHResultProperty* postHandleHResultProperty;
 	CHResultProperty* handleEventHResultProperty;
 	CHResultProperty* entryHResultProperty;
 	CHResultProperty* exitHResultProperty;
