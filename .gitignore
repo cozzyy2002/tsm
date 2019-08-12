@@ -20,3 +20,4 @@
 /.vs
 *.vcxproj.filters
 *.BAK
+/test.json.txt

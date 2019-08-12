@@ -73,6 +73,7 @@ public:
 	MockEvent(int id = 0) : TestUnknown(m_cRef), id(id) { setObject(this); }
 
 	MOCK_METHOD1_T(preHandle, HRESULT(C*));
+	MOCK_METHOD2_T(postHandle, HRESULT(C*, HRESULT));
 
 	void setPriority(int priority) { m_priority = priority; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }

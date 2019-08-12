@@ -51,6 +51,7 @@ public:
 TEST_F(StateMachineTriggerEventUnitTest, 0)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(1);
+	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(1);
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, Not(nullptr)))
 		.WillOnce(Return(S_OK));
 
@@ -70,6 +71,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 0)
 TEST_F(StateMachineTriggerEventUnitTest, 1)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(1);
+	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(1);
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, Not(nullptr)))
 		.WillOnce(Return(S_OK));
 
@@ -89,6 +91,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 1)
 TEST_F(StateMachineTriggerEventUnitTest, 2)
 {
 	EXPECT_CALL(e0, preHandle(_)).Times(0);
+	EXPECT_CALL(e0, postHandle(_, _)).Times(0);
 	EXPECT_CALL(mockState0, handleEvent(_, _, _)).Times(0);
 
 	e0.setTimer(&mockState0, 100);
@@ -108,6 +111,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 2)
 TEST_F(StateMachineTriggerEventUnitTest, 3)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(2);
+	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(2);
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, _)).Times(2);
 
 	e0.setTimer(&mockState0, 50, 30);
@@ -131,10 +135,12 @@ TEST_F(StateMachineTriggerEventUnitTest, 3)
 TEST_F(StateMachineTriggerEventUnitTest, 4)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(1);
+	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(1);
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, Not(nullptr)))
 		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
 	// Interval timer of e1 should be canceled.
 	EXPECT_CALL(e1, preHandle(&mockContext)).Times(2);
+	EXPECT_CALL(e1, postHandle(&mockContext, S_OK)).Times(2);
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e1, _)).Times(2);
 	EXPECT_CALL(mockState0, exit(&mockContext, &e0, &mockState1)).WillOnce(Return(S_OK));
 	EXPECT_CALL(mockState1, entry(&mockContext, &e0, &mockState0)).WillOnce(Return(S_OK));
