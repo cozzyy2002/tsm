@@ -7,13 +7,11 @@ class MyContext;
 class MyEvent;
 class MyState;
 
-using MyStateBase = tsm::State<MyContext, MyEvent, MyState>;
-
-class MyState : public MyStateBase, public MyObject
+class MyState : public tsm::State<MyContext, MyEvent, MyState>, public MyObject
 {
 public:
 	MyState(ILogger& logger, const std::tstring& name, MyState* masterState = nullptr)
-		: MyStateBase(masterState), MyObject(name.c_str(), &logger), callExitOnShutDown(false) {}
+		: State(masterState), MyObject(name.c_str(), &logger), callExitOnShutDown(false) {}
 
 	// Inplementation of IUnknown to log deleting object.
 	virtual ULONG STDMETHODCALLTYPE Release(void) override;
