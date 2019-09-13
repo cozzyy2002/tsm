@@ -2,8 +2,6 @@
 
 #include "Unknown.h"
 
-#include <mutex>
-
 namespace tsm {
 
 class IEvent;
@@ -16,8 +14,7 @@ struct EventHandle;
 struct StateHandle;
 struct ContextHandle;
 
-using lock_object_t = std::recursive_mutex;
-using lock_t = std::lock_guard<lock_object_t>;
+class lock_t;
 
 template<class T, class H>
 class HandleOwner

@@ -153,6 +153,7 @@
     <ClInclude Include="..\public\include\StateMachine\Context.h" />
     <ClInclude Include="..\public\include\StateMachine\Event.h" />
     <ClInclude Include="..\public\include\StateMachine\Interface.h" />
+    <ClInclude Include="..\public\include\StateMachine\Lock.h" />
     <ClInclude Include="..\public\include\StateMachine\State.h" />
     <ClInclude Include="..\public\include\StateMachine\stdafx.h" />
     <ClInclude Include="..\public\include\StateMachine\TimerClient.h" />

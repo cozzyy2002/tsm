@@ -2,9 +2,11 @@
 
 #include <StateMachine/Interface.h>
 #include <StateMachine/TimerClient.h>
+#include <StateMachine/Lock.h>
 #include <memory>
 #include <map>
 #include <deque>
+#include <mutex>
 
 namespace tsm {
 

@@ -63,6 +63,9 @@
     <ClInclude Include="WindowProcStateMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\public\include\StateMachine\Lock.h">
+      <Filter>public\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

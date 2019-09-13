@@ -2,6 +2,7 @@
 
 #include "Interface.h"
 #include "TimerClient.h"
+#include "Lock.h"
 
 #include <memory>
 
