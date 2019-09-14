@@ -38,6 +38,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{D4DE4B50-3
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StateMachine.NET", "StateMachine.NET\StateMachine.NET.vcxproj", "{DE14C539-5986-4AD3-8DAD-E3F966304787}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BD429D1D-B2CF-479C-A3BB-AD081C5C210F} = {BD429D1D-B2CF-479C-A3BB-AD081C5C210F}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
