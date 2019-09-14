@@ -30,6 +30,11 @@ Context::!Context()
 	}
 }
 
+bool Context::isAsync()
+{
+	return m_nativeContext->isAsync();
+}
+
 HResult Context::setup(State^ initialState, Event^ event)
 {
 	return (HResult)m_nativeContext->setup(getNative(initialState), getNative(event));

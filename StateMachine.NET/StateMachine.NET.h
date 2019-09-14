@@ -31,12 +31,20 @@ public:
 	virtual ~Context();
 	!Context();
 
+	bool isAsync();
 	HResult setup(State^ initialState, Event^ event);
+	HResult setup(State^ initialState) { return setup(initialState, nullptr); }
 	HResult shutdown(TimeSpan timeout);
+	HResult shutdown() { return shutdown(TimeSpan::FromMilliseconds(100)); }
 	HResult triggerEvent(Event^ event);
 	HResult handleEvent(Event^ event);
 	HResult waitReady(TimeSpan timeout);
 	State^ getCurrentState();
+
+#pragma region .NET properties
+	property bool IsAsync { bool get() { return isAsync(); }}
+	property State^ CurrentState { State^ get() { return getCurrentState(); }}
+#pragma endregion
 
 internal:
 	NativeType* get() { return m_nativeContext; }
@@ -65,6 +73,11 @@ public:
 	//State^ getSubState();
 	bool isSubState();
 
+#pragma region .NET properties
+	property State^ MasterState { State^ get() { return getMasterState(); }}
+	property bool IsSubState { bool get() { return isSubState(); }}
+#pragma endregion
+
 internal:
 	NativeType* get() { return m_nativeState; }
 
@@ -85,6 +98,10 @@ public:
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
 	virtual HResult postHandle(Context^ context, HResult hr) { return hr; }
 #pragma endregion
+
+	//
+	// TODO: Implement setTimer() method.
+	//
 
 internal:
 	NativeType* get() { return m_nativeEvent; }
