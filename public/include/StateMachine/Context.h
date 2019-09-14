@@ -2,8 +2,6 @@
 
 #include "Interface.h"
 #include "TimerClient.h"
-#include "Lock.h"
-
 #include <memory>
 
 namespace tsm {
@@ -30,8 +28,6 @@ public:
 	virtual IState* _getCurrentState() override { return m_currentState; }
 	virtual void _setCurrentState(IState* state) override { m_currentState = state; }
 
-	virtual lock_t* _getHandleEventLock() override { return new lock_t(m_handleEventLock); }
-
 	virtual IStateMonitor* _getStateMonitor() override { return nullptr; }
 
 	// Implementation of IContext::_getTimerClient().
@@ -42,7 +38,6 @@ public:
 protected:
 	std::unique_ptr<IStateMachine> m_stateMachine;
 	CComPtr<IState> m_currentState;
-	lock_object_t m_handleEventLock;
 };
 
 template<class E = IEvent, class S = IState>

@@ -2,7 +2,6 @@
 
 #include "Interface.h"
 #include "TimerClient.h"
-#include "Lock.h"
 
 namespace tsm {
 

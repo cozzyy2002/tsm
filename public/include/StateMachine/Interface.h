@@ -14,8 +14,6 @@ struct EventHandle;
 struct StateHandle;
 struct ContextHandle;
 
-class lock_t;
-
 template<class T, class H>
 class HandleOwner
 {
@@ -51,8 +49,6 @@ public:
 
 	using OnAssertFailed = void(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
 	static OnAssertFailed* onAssertFailedProc;
-
-	virtual lock_t* _getHandleEventLock() = 0;
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
 
