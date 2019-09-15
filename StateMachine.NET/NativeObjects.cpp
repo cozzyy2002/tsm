@@ -19,7 +19,7 @@ typename C::ManagedType^ getManaged(C* native)
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState)
-	: tsm::State<Context, Event, State>(masterState ? masterState->get()->getMasterState() : nullptr)
+	: tsm::State<Context, Event, State>(masterState ? masterState->get() : nullptr)
 {
 }
 

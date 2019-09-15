@@ -62,7 +62,8 @@ HResult Context::waitReady(TimeSpan timeout)
 
 State^ Context::getCurrentState()
 {
-	return m_nativeContext->getCurrentState()->get();
+	auto currentState = m_nativeContext->getCurrentState();
+	return currentState ? currentState->get() : nullptr;
 }
 
 //-------------- Managed State class. --------------------//
