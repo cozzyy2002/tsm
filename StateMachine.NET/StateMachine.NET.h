@@ -64,7 +64,7 @@ public:
 	!State();
 
 #pragma region Methods to be implemented by sub class.
-	virtual HResult handleEvent(Context^ context, Event^ event, State% nextState) { return HResult::Ok; }
+	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
 	virtual HResult entry(Context^ context, Event^ event, State^ previousState) { return HResult::Ok; }
 	virtual HResult exit(Context^ context, Event^ event, State^ nextState) { return HResult::Ok; }
 #pragma endregion

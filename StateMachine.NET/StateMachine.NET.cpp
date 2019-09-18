@@ -57,8 +57,7 @@ HResult Context::waitReady(TimeSpan timeout)
 
 State^ Context::getCurrentState()
 {
-	auto currentState = m_nativeContext->getCurrentState();
-	return currentState ? currentState->get() : nullptr;
+	return getManaged(m_nativeContext->getCurrentState());
 }
 
 //-------------- Managed State class. --------------------//
@@ -85,7 +84,7 @@ State::!State()
 HRESULT State::handleEventCallback(native::Context* context, native::Event* event, native::State** nextState)
 {
 	State^ _nextState = nullptr;
-	auto hr = handleEvent(getManaged(context), getManaged(event), *_nextState);
+	auto hr = handleEvent(getManaged(context), getManaged(event), _nextState);
 	if(_nextState) {
 		*nextState = getNative(_nextState);
 	}
@@ -122,6 +121,7 @@ bool State::isSubState()
 Event::Event()
 {
 	m_nativeEvent = new native::Event(this);
+	m_nativeEvent->AddRef();
 }
 
 Event::~Event()
