@@ -81,6 +81,20 @@ public:
 internal:
 	NativeType* get() { return m_nativeState; }
 
+#pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
+	delegate HRESULT HandleEventDelegate(native::Context* context, native::Event* event, native::State** nextState);
+	typedef HRESULT (__stdcall *HandleEventCallback)(native::Context* context, native::Event* event, native::State** nextState);
+	HRESULT handleEventCallback(native::Context* context, native::Event* event, native::State** nextState);
+
+	delegate HRESULT EntryDelegate(native::Context* context, native::Event* event, native::State* previousState);
+	typedef HRESULT (__stdcall *EntryCallback)(native::Context* context, native::Event* event, native::State* previousState);
+	HRESULT entryCallback(native::Context* context, native::Event* event, native::State* previousState);
+
+	delegate HRESULT ExitDelegate(native::Context* context, native::Event* event, native::State* nextState);
+	typedef HRESULT(__stdcall *ExitCallback)(native::Context* context, native::Event* event, native::State* nextState);
+	HRESULT exitCallback(native::Context* context, native::Event* event, native::State* nextState);
+#pragma endregion
+
 protected:
 	NativeType* m_nativeState;
 };
@@ -106,7 +120,34 @@ public:
 internal:
 	NativeType* get() { return m_nativeEvent; }
 
+#pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
+	delegate HRESULT PreHandleDelegate(native::Context* context);
+	typedef HRESULT(__stdcall *PreHandleCallback)(native::Context* context);
+	HRESULT preHandleCallback(native::Context* context);
+
+	delegate HRESULT PostHandleDelegate(native::Context* context, HRESULT hr);
+	typedef HRESULT(__stdcall *PostHandleCallback)(native::Context* context, HRESULT hr);
+	HRESULT postHandleCallback(native::Context* context, HRESULT hr);
+#pragma endregion
+
 protected:
 	NativeType* m_nativeEvent;
 };
+
+namespace common
+{
+template<class C>
+typename C::NativeType* getNative(C^ managed)
+{
+	return managed ? managed->get() : nullptr;
+}
+
+template<class C>
+typename C::ManagedType^ getManaged(C* native)
+{
+	return native ? native->get() : nullptr;
+}
+
+}
+
 }

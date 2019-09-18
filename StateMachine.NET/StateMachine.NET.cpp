@@ -3,14 +3,9 @@
 #include "StateMachine.NET.h"
 #include "NativeObjects.h"
 
-template<class C>
-typename C::NativeType* getNative(C^ managed)
-{
-	return managed ? managed->get() : nullptr;
-}
-
 //-------------- Managed Context class. --------------------//
 using namespace tsm_NET;
+using namespace tsm_NET::common;
 
 Context::Context()
 {
@@ -87,10 +82,29 @@ State::!State()
 	}
 }
 
+HRESULT State::handleEventCallback(native::Context* context, native::Event* event, native::State** nextState)
+{
+	State^ _nextState = nullptr;
+	auto hr = handleEvent(getManaged(context), getManaged(event), *_nextState);
+	if(_nextState) {
+		*nextState = getNative(_nextState);
+	}
+	return (HRESULT)hr;
+}
+
+HRESULT State::entryCallback(native::Context* context, native::Event* event, native::State* previousState)
+{
+	return (HRESULT)entry(getManaged(context), getManaged(event), getManaged(previousState));
+}
+
+HRESULT State::exitCallback(native::Context* context, native::Event* event, native::State* nextState)
+{
+	return (HRESULT)entry(getManaged(context), getManaged(event), getManaged(nextState));
+}
+
 State^ State::getMasterState()
 {
-	auto masterState = m_nativeState->getMasterState();
-	return masterState ? masterState->get() : nullptr;
+	return getManaged(m_nativeState->getMasterState());
 }
 
 //State^ State::getSubState()
@@ -122,4 +136,14 @@ Event::!Event()
 		m_nativeEvent->Release();
 		m_nativeEvent = nullptr;
 	}
+}
+
+HRESULT Event::preHandleCallback(native::Context* context)
+{
+	return (HRESULT)preHandle(getManaged(context));
+}
+
+HRESULT Event::postHandleCallback(native::Context* context, HRESULT hr)
+{
+	return (HRESULT)postHandle(getManaged(context), (HResult)hr);
 }
