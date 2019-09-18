@@ -132,6 +132,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="GenericObject.h" />
     <ClInclude Include="NativeObjects.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StateMachine.NET.h" />
@@ -139,6 +140,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="GenericObject.cpp" />
     <ClCompile Include="NativeObjects.cpp" />
     <ClCompile Include="StateMachine.NET.cpp" />
     <ClCompile Include="stdafx.cpp">
