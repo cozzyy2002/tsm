@@ -7,9 +7,9 @@
 using namespace tsm_NET;
 using namespace tsm_NET::common;
 
-Context::Context()
+Context::Context(bool isAsync)
 {
-	m_nativeContext = new native::Context(this);
+	m_nativeContext = new native::Context(this, isAsync);
 }
 
 Context::~Context()

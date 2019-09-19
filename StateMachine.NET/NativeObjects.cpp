@@ -14,7 +14,8 @@ struct TimerHandle {};
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
-	: m_managedContext(context)
+	: m_isAsync(isAsync)
+	, m_managedContext(context)
 {
 }
 

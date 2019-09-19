@@ -51,17 +51,19 @@ protected:
 	C callback;
 };
 
-class Context : public tsm::AsyncContext<Event, State>
+class Context : public tsm::Context<Event, State>
 {
 public:
 	using ManagedType = tsm_NET::Context;
 
 	Context(ManagedType^ context, bool isAsync = true);
+	virtual bool isAsync() const override { return m_isAsync; }
 
 	ManagedType^ get() { return m_managedContext; }
 
 protected:
 	gcroot<ManagedType^> m_managedContext;
+	bool m_isAsync;
 };
 
 class State : public tsm::State<Context, Event, State>

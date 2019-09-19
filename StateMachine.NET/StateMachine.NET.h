@@ -27,7 +27,7 @@ public ref class Context
 public:
 	using NativeType = native::Context;
 
-	Context();
+	Context(bool isAsync);
 	virtual ~Context();
 	!Context();
 

@@ -11,6 +11,7 @@ generic<typename E, typename S>
 public ref class Context : public tsm_NET::Context
 {
 public:
+	Context(bool isAsync) : tsm_NET::Context(isAsync) {}
 	virtual ~Context() {}
 
 	HResult setup(S initialState, E event) { return tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
