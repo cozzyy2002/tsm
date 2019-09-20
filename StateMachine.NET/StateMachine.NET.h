@@ -24,10 +24,13 @@ public enum class HResult : int
 
 public ref class Context
 {
+	void construct(bool isAsync);
+
 public:
 	using NativeType = native::Context;
 
-	Context(bool isAsync);
+	Context() { construct(true); }
+	Context(bool isAsync) { construct(isAsync); }
 	virtual ~Context();
 	!Context();
 
