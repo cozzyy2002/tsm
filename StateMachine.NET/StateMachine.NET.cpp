@@ -98,7 +98,7 @@ HRESULT State::entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IS
 
 HRESULT State::exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
 {
-	return (HRESULT)entry(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
+	return (HRESULT)exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
 }
 
 State^ State::getMasterState()
