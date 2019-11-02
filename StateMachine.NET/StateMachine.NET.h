@@ -126,11 +126,11 @@ internal:
 #pragma region Definition of delegate, callback signature and callback method. See tsm::ICallback<> template class.
 	delegate HRESULT PreHandleDelegate(tsm::IContext* context);
 	typedef HRESULT(__stdcall *PreHandleCallback)(tsm::IContext* context);
-	HRESULT preHandleCallback(tsm::IContext* context);
+	virtual HRESULT preHandleCallback(tsm::IContext* context);
 
 	delegate HRESULT PostHandleDelegate(tsm::IContext* context, HRESULT hr);
 	typedef HRESULT(__stdcall *PostHandleCallback)(tsm::IContext* context, HRESULT hr);
-	HRESULT postHandleCallback(tsm::IContext* context, HRESULT hr);
+	virtual HRESULT postHandleCallback(tsm::IContext* context, HRESULT hr);
 #pragma endregion
 
 protected:

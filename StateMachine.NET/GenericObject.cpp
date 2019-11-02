@@ -29,5 +29,17 @@ namespace Generic {
 	{
 		return (HRESULT)exit((C)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)nextState));
 	}
+
+	generic<typename C>
+	HRESULT Event<C>::preHandleCallback(tsm::IContext* context)
+	{
+		return (HRESULT)preHandle((C)getManaged((native::Context*)context));
+	}
+
+	generic<typename C>
+	HRESULT Event<C>::postHandleCallback(tsm::IContext* context, HRESULT hr)
+	{
+		return (HRESULT)postHandle((C)getManaged((native::Context*)context), (HResult)hr);
+	}
 }
 }

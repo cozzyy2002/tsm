@@ -56,6 +56,7 @@ public:
 };
 
 generic<typename C>
+	where C : tsm_NET::Context
 public ref class Event : public tsm_NET::Event
 {
 public:
@@ -67,12 +68,8 @@ public:
 #pragma endregion
 
 #pragma region Methods that call sub class with generic parameters.
-	virtual HResult preHandle(tsm_NET::Context^ context) override {
-		return preHandle((C)context);
-	}
-	virtual HResult postHandle(tsm_NET::Context^ context, HResult hr) override {
-		return postHandle((C)context, hr);
-	}
+	virtual HRESULT preHandleCallback(tsm::IContext* context) override;
+	virtual HRESULT postHandleCallback(tsm::IContext* context, HRESULT hr) override;
 #pragma endregion
 };
 }
