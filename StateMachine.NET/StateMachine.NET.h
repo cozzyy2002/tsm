@@ -87,15 +87,15 @@ internal:
 #pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
 	delegate HRESULT HandleEventDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
 	typedef HRESULT (__stdcall *HandleEventCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
-	HRESULT handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
+	virtual HRESULT handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
 
 	delegate HRESULT EntryDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
 	typedef HRESULT (__stdcall *EntryCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
-	HRESULT entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
+	virtual HRESULT entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
 
 	delegate HRESULT ExitDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
 	typedef HRESULT(__stdcall *ExitCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
-	HRESULT exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
+	virtual HRESULT exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
 #pragma endregion
 
 protected:

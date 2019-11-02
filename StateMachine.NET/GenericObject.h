@@ -28,6 +28,9 @@ public:
 };
 
 generic<typename C, typename E, typename S>
+	where C : tsm_NET::Context
+	where E : tsm_NET::Event
+	where S : tsm_NET::State
 public ref class State : public tsm_NET::State
 {
 public:
@@ -42,20 +45,9 @@ public:
 #pragma endregion
 
 #pragma region Methods that call sub class with generic parameters.
-	virtual HResult handleEvent(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^% nextState) override {
-		S _nextState;
-		auto ret = handleEvent((C)context, (E)event, _nextState);
-		if(_nextState) {
-			nextState = (tsm_NET::State^)_nextState;
-		}
-		return ret;
-	}
-	virtual HResult entry(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ previousState) override {
-		return entry((C)context, (E)event, (S)previousState);
-	}
-	virtual HResult exit(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ nextState) override {
-		return exit((C)context, (E)event, (S)nextState);
-	}
+	virtual HRESULT handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState) override;
+	virtual HRESULT entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState) override;
+	virtual HRESULT exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState) override;
 #pragma endregion
 
 	S getMasterState() { return (S)tsm_NET::State::getMasterState(); }
