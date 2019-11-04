@@ -102,7 +102,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 		return HR_EXPECT_OK(timerClient->_setEventTimer(TimerClient::TimerType::HandleEvent, context, event));
 	}
 
-	std::unique_ptr<lock_t> _lock(context->_getHandleEventLock());
+	std::unique_ptr<lock_t> _lock(context->_getHandle()->getHandleEventLock());
 
 	IState* nextState = nullptr;
 	auto currentState = context->_getCurrentState();

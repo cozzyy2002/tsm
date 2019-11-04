@@ -2,8 +2,6 @@
 
 #include "Unknown.h"
 
-#include <mutex>
-
 namespace tsm {
 
 class IEvent;
@@ -15,9 +13,6 @@ class TimerClient;
 struct EventHandle;
 struct StateHandle;
 struct ContextHandle;
-
-using lock_object_t = std::recursive_mutex;
-using lock_t = std::lock_guard<lock_object_t>;
 
 template<class T, class H>
 class HandleOwner
@@ -54,8 +49,6 @@ public:
 
 	using OnAssertFailed = void(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
 	static OnAssertFailed* onAssertFailedProc;
-
-	virtual lock_t* _getHandleEventLock() = 0;
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
 

@@ -5,8 +5,12 @@
 #include <memory>
 #include <map>
 #include <deque>
+#include <mutex>
 
 namespace tsm {
+
+using lock_object_t = std::recursive_mutex;
+using lock_t = std::lock_guard<lock_object_t>;
 
 struct EventHandle
 {
@@ -47,10 +51,12 @@ struct ContextHandle
 
 	AsyncData* asyncData;
 
+	lock_t* getHandleEventLock() { return new lock_t(_handleEventLock); }
 	void callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller);
 
 protected:
 	std::unique_ptr<AsyncData> _asyncData;
+	lock_object_t _handleEventLock;
 };
 
 struct TimerHandle
