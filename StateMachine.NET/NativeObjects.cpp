@@ -14,30 +14,31 @@ struct TimerHandle {};
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
-	: m_managedContext(context)
+	: m_isAsync(isAsync)
+	, m_managedContext(context)
 {
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState)
-	: tsm::State<Context, Event, State>(getNative(masterState))
-	, m_managedState(state)
+	: m_managedState(state)
 	, m_handleEventCallback(state, gcnew ManagedType::HandleEventDelegate(state, &ManagedType::handleEventCallback))
 	, m_entryCallback(state, gcnew ManagedType::EntryDelegate(state, &ManagedType::entryCallback))
 	, m_exitCallback(state, gcnew ManagedType::ExitDelegate(state, &ManagedType::exitCallback))
+	, m_masterState(getNative(masterState))
 {
 }
 
-HRESULT State::handleEvent(Context* context, Event* event, State** nextState)
+HRESULT State::_handleEvent(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
 {
 	return m_handleEventCallback(context, event, nextState);
 }
 
-HRESULT State::entry(Context* context, Event* event, State* previousState)
+HRESULT State::_entry(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState)
 {
 	return m_entryCallback(context, event, previousState);
 }
 
-HRESULT State::exit(Context* context, Event* event, State* nextState)
+HRESULT State::_exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
 {
 	return m_exitCallback(context, event, nextState);
 }
@@ -46,15 +47,16 @@ Event::Event(ManagedType^ event)
 	: m_managedEvent(event)
 	, m_preHandleCallback(event, gcnew ManagedType::PreHandleDelegate(event, &ManagedType::preHandleCallback))
 	, m_postHandleCallback(event, gcnew ManagedType::PostHandleDelegate(event, &ManagedType::postHandleCallback))
+	, m_timerClient(nullptr)
 {
 }
 
-HRESULT Event::preHandle(Context* context)
+HRESULT Event::_preHandle(tsm::IContext* context)
 {
 	return m_preHandleCallback(context);
 }
 
-HRESULT Event::postHandle(Context* context, HRESULT hr)
+HRESULT Event::_postHandle(tsm::IContext* context, HRESULT hr)
 {
 	return m_postHandleCallback(context, hr);
 }

@@ -7,9 +7,9 @@
 using namespace tsm_NET;
 using namespace tsm_NET::common;
 
-Context::Context()
+void Context::construct(bool isAsync)
 {
-	m_nativeContext = new native::Context(this);
+	m_nativeContext = new native::Context(this, isAsync);
 }
 
 Context::~Context()
@@ -81,24 +81,24 @@ State::!State()
 	}
 }
 
-HRESULT State::handleEventCallback(native::Context* context, native::Event* event, native::State** nextState)
+HRESULT State::handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
 {
 	State^ _nextState = nullptr;
-	auto hr = handleEvent(getManaged(context), getManaged(event), _nextState);
+	auto hr = handleEvent(getManaged((native::Context*)context), getManaged((native::Event*)event), _nextState);
 	if(_nextState) {
 		*nextState = getNative(_nextState);
 	}
 	return (HRESULT)hr;
 }
 
-HRESULT State::entryCallback(native::Context* context, native::Event* event, native::State* previousState)
+HRESULT State::entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState)
 {
-	return (HRESULT)entry(getManaged(context), getManaged(event), getManaged(previousState));
+	return (HRESULT)entry(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previousState));
 }
 
-HRESULT State::exitCallback(native::Context* context, native::Event* event, native::State* nextState)
+HRESULT State::exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
 {
-	return (HRESULT)entry(getManaged(context), getManaged(event), getManaged(nextState));
+	return (HRESULT)exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
 }
 
 State^ State::getMasterState()
@@ -138,12 +138,12 @@ Event::!Event()
 	}
 }
 
-HRESULT Event::preHandleCallback(native::Context* context)
+HRESULT Event::preHandleCallback(tsm::IContext* context)
 {
-	return (HRESULT)preHandle(getManaged(context));
+	return (HRESULT)preHandle(getManaged((native::Context*)context));
 }
 
-HRESULT Event::postHandleCallback(native::Context* context, HRESULT hr)
+HRESULT Event::postHandleCallback(tsm::IContext* context, HRESULT hr)
 {
-	return (HRESULT)postHandle(getManaged(context), (HResult)hr);
+	return (HRESULT)postHandle(getManaged((native::Context*)context), (HResult)hr);
 }
