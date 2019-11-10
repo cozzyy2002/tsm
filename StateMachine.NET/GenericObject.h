@@ -44,15 +44,18 @@ public:
 	virtual HResult exit(C context, E event, S nextState) { return HResult::Ok; }
 #pragma endregion
 
+	S getMasterState() { return (S)tsm_NET::State::getMasterState(); }
+
+	property S MasterState { S get() { return getMasterState(); }}
+
+// NOTE: Callback methods that is called by native class should be `internal`
+//       to avoid `System.MissingMethodException` when NUnit runs with NSubstitute.
+internal:
 #pragma region Methods that call sub class with generic parameters.
 	virtual HRESULT handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState) override;
 	virtual HRESULT entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState) override;
 	virtual HRESULT exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState) override;
 #pragma endregion
-
-	S getMasterState() { return (S)tsm_NET::State::getMasterState(); }
-
-	property S MasterState { S get() { return getMasterState(); }}
 };
 
 generic<typename C>
