@@ -48,13 +48,6 @@ namespace StateMachine.NET.UnitTest.Generic
                 .entry(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>())
                 .Returns(x =>
                 {
-                    Console.Error.WriteLine($"{this.GetType().ToString()}.entry() is called.");
-                    return Enum.ToObject(typeof(HResult), 0xc0000002);
-                });
-            mockState
-                .entry(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>())
-                .Returns(x =>
-                {
                     Console.Error.WriteLine($"{this.GetType().ToString()}.handleEvent() is called.");
                     return tsm_NET.HResult.Ok;
                 });
@@ -66,8 +59,40 @@ namespace StateMachine.NET.UnitTest.Generic
 
             mockState.Received()
                 .entry(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
-            mockState.Received()
-                .entry(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
+            mockState.DidNotReceive()
+                .handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
+        }
+    }
+
+    public interface ICommand
+    {
+        void Execute();
+        event EventHandler Executed;
+    }
+
+    public class SomethingThatNeedsACommand
+    {
+        ICommand command;
+        public SomethingThatNeedsACommand(ICommand command)
+        {
+            this.command = command;
+        }
+        public void DoSomething() { command.Execute(); }
+        public void DontDoAnything() { }
+    }
+
+    public class Sample
+    {
+        [Test]
+        public void Should_execute_command()
+        {
+            //Arrange
+            var command = Substitute.For<ICommand>();
+            var something = new SomethingThatNeedsACommand(command);
+            //Act
+            something.DoSomething();
+            //Assert
+            command.Received().Execute();
         }
     }
 }

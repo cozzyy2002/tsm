@@ -26,8 +26,12 @@ namespace StateMachine.NET.UnitTest
                     return HResult.Ok;
                 });
             var c = new Context();
-            Assert.That(c.CurrentState, Is.EqualTo(null), "error");
+            Assert.That(c.CurrentState, Is.EqualTo(null));
+            Assert.That(HResult.Ok, Is.EqualTo(c.setup(mockState)));
+            Thread.Sleep(1000);
 
+            mockState.Received().entry(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
+            mockState.DidNotReceive().handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
         }
     }
 }
