@@ -70,6 +70,7 @@ public:
 	virtual HResult postHandle(C context, HResult hr) { return hr; }
 #pragma endregion
 
+internal:
 #pragma region Methods that call sub class with generic parameters.
 	virtual HRESULT preHandleCallback(tsm::IContext* context) override;
 	virtual HRESULT postHandleCallback(tsm::IContext* context, HRESULT hr) override;
