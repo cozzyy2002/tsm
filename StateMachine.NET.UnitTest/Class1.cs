@@ -42,34 +42,42 @@ namespace StateMachine.NET.UnitTest.Generic
         [Test]
         public void test1()
         {
-            var mockState = Substitute.For<State>();
+            var mockInitialState = Substitute.For<State>();
+            var mockNextState = Substitute.For<State>();
 
             var c = new Context();
+            var e = Substitute.For<Event>();
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 
-            mockState
-                .entry(Arg.Is<Context>(c), Arg.Is<Event>(x => x == null), Arg.Is<State>(x => x == null))
+            mockInitialState
+                .handleEvent(Arg.Is<Context>(c), Arg.Is(e), ref Arg.Any<State>())
                 .Returns(x =>
                 {
-                    Trace.WriteLine($"{mockState.GetType()}.entry({x[0]}) is called.");
+                    Trace.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
+                    x[2] = mockNextState;
                     return tsm_NET.HResult.Ok;
                 });
 
-            Assert.That(c.setup(mockState), Is.EqualTo(HResult.Ok));
-            Assert.That(c.CurrentState, Is.EqualTo(mockState), "Context has argument of setup() as initial state.");
-
-            var e = Substitute.For<Event>();
+            Assert.That(c.setup(mockInitialState), Is.EqualTo(HResult.Ok));
             Assert.That(c.triggerEvent(e), Is.EqualTo(HResult.Ok));
 
-            Thread.Sleep(1000);
+            Thread.Sleep(100);
 
             Received.InOrder(() =>
             {
-                mockState.Received()
+                mockInitialState.Received()
                     .entry(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null));
-                mockState.Received()
+                mockInitialState.Received()
                     .handleEvent(Arg.Is(c), Arg.Is(e), ref Arg.Is(State.Null));
+                mockInitialState.Received()
+                    .exit(Arg.Is(c), Arg.Is(e), mockNextState);
+                mockNextState.Received()
+                    .entry(Arg.Is(c), Arg.Is(e), Arg.Is(mockInitialState));
             });
+            mockNextState.DidNotReceive().handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
+            mockNextState.DidNotReceive().exit(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
+
+            Assert.That(c.CurrentState, Is.EqualTo(mockNextState));
         }
     }
 }
