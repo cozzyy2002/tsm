@@ -11,16 +11,11 @@ class Event;
 
 namespace tsm_NET
 {
+#include "HResult.h"
 
 ref class Context;
 ref class State;
 ref class Event;
-
-public enum class HResult : int
-{
-	Ok = S_OK,
-	False = S_FALSE,
-};
 
 public ref class Context
 {

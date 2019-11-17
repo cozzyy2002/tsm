@@ -7,6 +7,8 @@ namespace tsm_NET
 namespace Generic
 {
 
+#include "HResult.h"
+
 generic<typename E, typename S>
 public ref class Context : public tsm_NET::Context
 {
@@ -15,13 +17,13 @@ public:
 	Context(bool isAsync ) : tsm_NET::Context(isAsync) {}
 	virtual ~Context() {}
 
-	HResult setup(S initialState, E event) { return tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
-	HResult setup(S initialState) { return tsm_NET::Context::setup((tsm_NET::State^)initialState); }
-	HResult shutdown(TimeSpan timeout) { return tsm_NET::Context::shutdown(timeout); }
-	HResult shutdown() { return tsm_NET::Context::shutdown(); }
-	HResult triggerEvent(E event) { return tsm_NET::Context::triggerEvent((tsm_NET::Event^)event); }
-	HResult handleEvent(E event) { return tsm_NET::Context::handleEvent((tsm_NET::Event^)event); }
-	HResult waitReady(TimeSpan timeout) { return tsm_NET::Context::waitReady(timeout); }
+	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
+	HResult setup(S initialState) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState); }
+	HResult shutdown(TimeSpan timeout) { return (HResult)tsm_NET::Context::shutdown(timeout); }
+	HResult shutdown() { return (HResult)tsm_NET::Context::shutdown(); }
+	HResult triggerEvent(E event) { return (HResult)tsm_NET::Context::triggerEvent((tsm_NET::Event^)event); }
+	HResult handleEvent(E event) { return (HResult)tsm_NET::Context::handleEvent((tsm_NET::Event^)event); }
+	HResult waitReady(TimeSpan timeout) { return (HResult)tsm_NET::Context::waitReady(timeout); }
 	S getCurrentState() { return (S)tsm_NET::Context::getCurrentState(); }
 
 	property S CurrentState { S get() { return getCurrentState(); }}
