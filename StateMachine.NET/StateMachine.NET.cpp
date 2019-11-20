@@ -3,10 +3,12 @@
 #include "StateMachine.NET.h"
 #include "NativeObjects.h"
 
-//-------------- Managed Context class. --------------------//
 using namespace tsm_NET;
 using namespace tsm_NET::common;
 
+///*static*/ event EventHandler<IStateMonitor::AssertFailedEventArgs<HResult>^>^ IStateMonitor::AssertFailedEvent;
+
+//-------------- Managed Context class. --------------------//
 void Context::construct(bool isAsync)
 {
 	m_nativeContext = new native::Context(this, isAsync);
@@ -58,6 +60,17 @@ HResult Context::waitReady(TimeSpan timeout)
 State^ Context::getCurrentState()
 {
 	return getManaged(m_nativeContext->getCurrentState());
+}
+
+void Context::StateMonitor::set(IStateMonitor^ value)
+{
+	m_stateMonitor = value;
+	m_nativeContext->setStateMonitor(value);
+}
+
+void Context::onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
+{
+	m_stateMonitor->onStateChanged(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previous), getManaged((native::State*)next));
 }
 
 //-------------- Managed State class. --------------------//

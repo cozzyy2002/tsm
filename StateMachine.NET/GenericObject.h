@@ -9,6 +9,14 @@ namespace Generic
 
 #include "HResult.h"
 
+generic<typename C, typename E, typename S>
+public interface class IStateMonitor
+{
+	void onStateChanged(C context, E event, S previous, S next);
+
+	///*static*/ event EventHandler<tsm_NET::IStateMonitor::AssertFailedEventArgs<HResult>^>^ AssertFailedEvent;
+};
+
 generic<typename E, typename S>
 public ref class Context : public tsm_NET::Context
 {
@@ -26,7 +34,7 @@ public:
 	HResult waitReady(TimeSpan timeout) { return (HResult)tsm_NET::Context::waitReady(timeout); }
 	S getCurrentState() { return (S)tsm_NET::Context::getCurrentState(); }
 
-	property S CurrentState { S get() { return getCurrentState(); }}
+	property S CurrentState { S get() { return getCurrentState(); } }
 };
 
 generic<typename C, typename E, typename S>
@@ -48,7 +56,7 @@ public:
 
 	S getMasterState() { return (S)tsm_NET::State::getMasterState(); }
 
-	property S MasterState { S get() { return getMasterState(); }}
+	property S MasterState { S get() { return getMasterState(); } }
 
 // NOTE: Callback methods that is called by native class should be `internal`
 //       to avoid `System.MissingMethodException` when NUnit runs with NSubstitute.

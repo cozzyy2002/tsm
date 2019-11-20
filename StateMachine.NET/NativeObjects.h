@@ -51,6 +51,32 @@ protected:
 	C callback;
 };
 
+class StateMonitor : public tsm::IStateMonitor
+{
+public:
+	using ManagedType = tsm_NET::IStateMonitor;
+	using Context = tsm_NET::Context;
+
+	StateMonitor(ManagedType^ stateMonitor, Context^ context);
+
+	virtual void onIdle(tsm::IContext* context) override {};
+	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override {};
+	virtual void onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override {};
+
+	/**
+	 * When setup(), previous is nullptr.
+	 * When shutdown(), next is nullptr.
+	 */
+	virtual void onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
+	virtual void onTimerStarted(tsm::IContext* context, tsm::IEvent* event) override {}
+	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override {}
+
+protected:
+	gcroot<ManagedType^> m_managedStateMonitor;
+
+	Callback<ManagedType, Context::OnStateChangedDelegate, Context::OnStateChangedCallback> m_onStateChangedCallback;
+};
+
 class Context : public tsm::IContext, public tsm::TimerClient
 {
 public:
@@ -72,7 +98,8 @@ public:
 	virtual tsm::IState* _getCurrentState() override { return m_currentState; }
 	virtual void _setCurrentState(tsm::IState* state) override { m_currentState = state; }
 
-	virtual tsm::IStateMonitor* _getStateMonitor() override { return nullptr; }
+	virtual tsm::IStateMonitor* _getStateMonitor() override { return m_stateMonitor.get(); }
+	void setStateMonitor(tsm_NET::IStateMonitor^ value);
 
 	// Implementation of IContext::_getTimerClient().
 	virtual TimerClient* _getTimerClient() override { return this; }
@@ -87,6 +114,8 @@ protected:
 
 	std::unique_ptr<tsm::IStateMachine> m_stateMachine;
 	CComPtr<tsm::IState> m_currentState;
+
+	std::unique_ptr<StateMonitor> m_stateMonitor;
 };
 
 class State : public tsm::IState, public tsm::TimerClient
@@ -152,5 +181,4 @@ protected:
 	DWORD m_intervalTime;
 	tsm::TimerClient* m_timerClient;
 };
-
 }

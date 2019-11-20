@@ -6,7 +6,7 @@ using tsm_NET.Generic;
 
 namespace StateMachine.NET.UnitTest.Generic
 {
-    public class Context : Context<Event, State>
+    public class Context : Context<Event, State> //, IStateMonitor<Context, Event, State>
     {
     }
 
@@ -29,6 +29,7 @@ namespace StateMachine.NET.UnitTest.Generic
             var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
             var mockNextState = Substitute.For<State>();
+            var mockStateMonitor = Substitute.For<IStateMonitor<Context, Event, State>>();
 
             var c = new Context();
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
@@ -48,7 +49,7 @@ namespace StateMachine.NET.UnitTest.Generic
 
             Thread.Sleep(100);
 
-            // Check calls to State objects.
+            // Check calls to methods of State.
             Received.InOrder(() =>
             {
                 mockInitialState.Received()
@@ -62,6 +63,10 @@ namespace StateMachine.NET.UnitTest.Generic
             });
             mockNextState.DidNotReceive().handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
             mockNextState.DidNotReceive().exit(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
+
+            // Check calls to methods of IStateMonitor.
+            mockStateMonitor.Received()
+                .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
 
             // Current state should be mockNextState.
             Assert.That(c.CurrentState, Is.EqualTo(mockNextState));

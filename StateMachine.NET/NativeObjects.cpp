@@ -13,10 +13,25 @@ struct EventHandle {};
 struct TimerHandle {};
 }
 
+StateMonitor::StateMonitor(StateMonitor::ManagedType^ managed, StateMonitor::Context^ context)
+	: m_onStateChangedCallback(managed, gcnew Context::OnStateChangedDelegate(context, &Context::onStateChangedCallback))
+{
+}
+
+void StateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
+{
+	m_onStateChangedCallback(context, event, previous, next);
+}
+
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 	: m_isAsync(isAsync)
 	, m_managedContext(context)
 {
+}
+
+void Context::setStateMonitor(tsm_NET::IStateMonitor^ value)
+{
+	m_stateMonitor.reset(value ? new StateMonitor(value, get()) : nullptr);
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState)

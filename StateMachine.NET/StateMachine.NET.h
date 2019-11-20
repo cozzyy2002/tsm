@@ -17,6 +17,32 @@ ref class Context;
 ref class State;
 ref class Event;
 
+public interface class IStateMonitor
+{
+	void onStateChanged(Context^ context, Event^ event, State^ previous, State^ next);
+
+	generic<typename H>
+	ref class AssertFailedEventArgs : public EventArgs
+	{
+	public:
+		AssertFailedEventArgs(H hr, String^ expression, String^ sourceFile, int lineNumber)
+			: _hr(hr), _expression(expression), _sourceFile(sourceFile), _lineNumber(lineNumber) {}
+
+		property H hr { H get() { return _hr; } }
+		property String^ expression { String^ get() { return _expression; } }
+		property String^ sourceFile { String^ get() { return _sourceFile; } }
+		property int lineNumber { int get() { return _lineNumber; } }
+
+	protected:
+		H _hr;
+		String^ _expression;
+		String^ _sourceFile;
+		int _lineNumber;
+	};
+
+	///*static*/ event EventHandler<AssertFailedEventArgs<HResult>^>^ AssertFailedEvent;
+};
+
 public ref class Context
 {
 	void construct(bool isAsync);
@@ -39,16 +65,28 @@ public:
 	HResult waitReady(TimeSpan timeout);
 	State^ getCurrentState();
 
+	virtual property IStateMonitor^ StateMonitor {
+		IStateMonitor^ get() { return m_stateMonitor; }
+		void set(IStateMonitor^ value);
+	}
+
 #pragma region .NET properties
-	property bool IsAsync { bool get() { return isAsync(); }}
-	property State^ CurrentState { State^ get() { return getCurrentState(); }}
+	property bool IsAsync { bool get() { return isAsync(); } }
+	property State^ CurrentState { State^ get() { return getCurrentState(); } }
 #pragma endregion
 
 internal:
 	NativeType* get() { return m_nativeContext; }
 
+#pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
+	delegate void OnStateChangedDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+	typedef void (__stdcall *OnStateChangedCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+#pragma endregion
+
 protected:
 	NativeType* m_nativeContext;
+	IStateMonitor^ m_stateMonitor;
 };
 
 public ref class State
@@ -72,8 +110,8 @@ public:
 	bool isSubState();
 
 #pragma region .NET properties
-	property State^ MasterState { State^ get() { return getMasterState(); }}
-	property bool IsSubState { bool get() { return isSubState(); }}
+	property State^ MasterState { State^ get() { return getMasterState(); } }
+	property bool IsSubState { bool get() { return isSubState(); } }
 #pragma endregion
 
 internal:
