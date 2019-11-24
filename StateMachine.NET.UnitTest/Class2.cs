@@ -52,8 +52,13 @@ namespace StateMachine.NET.UnitTest
 
             // Check calls to methods of IStateMonitor.
             mockStateMonitor.Received()
-                //.onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
-                .onStateChanged(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>(), Arg.Any<State>());
+                .onEventTriggered(Arg.Is(c), Arg.Is(mockEvent));
+            mockStateMonitor.Received()
+                .onEventHandling(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+            mockStateMonitor.Received()
+                .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
+            mockStateMonitor.Received()
+                .onIdle(Arg.Is(c));
 
             Assert.That(c.CurrentState, Is.EqualTo(mockNextState));
         }

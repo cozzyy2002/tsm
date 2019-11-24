@@ -19,6 +19,9 @@ ref class Event;
 
 public interface class IStateMonitor
 {
+	void onIdle(Context^ context);
+	void onEventTriggered(Context^ context, Event^ event);
+	void onEventHandling(Context^ context, Event^ event, State^ current);
 	void onStateChanged(Context^ context, Event^ event, State^ previous, State^ next);
 
 	generic<typename H>
@@ -79,6 +82,19 @@ internal:
 	NativeType* get() { return m_nativeContext; }
 
 #pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
+	// IStateMonitor::onIdle()
+	delegate void OnIdleDelegate(tsm::IContext* context);
+	typedef void (__stdcall *OnIdleCallback)(tsm::IContext* context);
+	virtual void onIdleCallback(tsm::IContext* context);
+	// IstateMonitor::onEventTriggered()
+	delegate void OnEventTriggeredDelegate(tsm::IContext* context, tsm::IEvent* event);
+	typedef void (__stdcall *OnEventTriggeredCallback)(tsm::IContext* context, tsm::IEvent* event);
+	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event);
+	// IStateMonitor::onEventHandling()
+	delegate void OnEventHandlingDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
+	typedef void (__stdcall *OnEventHandlingCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
+	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
+	// IStateMonitor::onStateChanged()
 	delegate void OnStateChangedDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	typedef void (__stdcall *OnStateChangedCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);

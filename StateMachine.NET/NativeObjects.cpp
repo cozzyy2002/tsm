@@ -14,8 +14,26 @@ struct TimerHandle {};
 }
 
 StateMonitor::StateMonitor(StateMonitor::ManagedType^ managed, StateMonitor::Context^ context)
-	: m_onStateChangedCallback(managed, gcnew Context::OnStateChangedDelegate(context, &Context::onStateChangedCallback))
+	: m_onIdleCallback(managed, gcnew Context::OnIdleDelegate(context, &Context::onIdleCallback))
+	, m_onEventTriggeredCallback(managed, gcnew Context::OnEventTriggeredDelegate(context, &Context::onEventTriggeredCallback))
+	, m_onEventHandlingCallback(managed, gcnew Context::OnEventHandlingDelegate(context, &Context::onEventHandlingCallback))
+	, m_onStateChangedCallback(managed, gcnew Context::OnStateChangedDelegate(context, &Context::onStateChangedCallback))
 {
+}
+
+void StateMonitor::onIdle(tsm::IContext* context)
+{
+	m_onIdleCallback(context);
+}
+
+void StateMonitor::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
+{
+	m_onEventTriggeredCallback(context, event);
+}
+
+void StateMonitor::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
+{
+	m_onEventHandlingCallback(context, event, current);
 }
 
 void StateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)

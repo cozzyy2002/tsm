@@ -68,6 +68,21 @@ void Context::StateMonitor::set(IStateMonitor^ value)
 	m_nativeContext->setStateMonitor(value);
 }
 
+void Context::onIdleCallback(tsm::IContext* context)
+{
+	m_stateMonitor->onIdle(getManaged((native::Context*)context));
+}
+
+void Context::onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event)
+{
+	m_stateMonitor->onEventTriggered(getManaged((native::Context*)context), getManaged((native::Event*)event));
+}
+
+void Context::onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
+{
+	m_stateMonitor->onEventHandling(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)current));
+}
+
 void Context::onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
 	m_stateMonitor->onStateChanged(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previous), getManaged((native::State*)next));

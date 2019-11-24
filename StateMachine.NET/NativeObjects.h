@@ -59,9 +59,9 @@ public:
 
 	StateMonitor(ManagedType^ stateMonitor, Context^ context);
 
-	virtual void onIdle(tsm::IContext* context) override {};
-	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override {};
-	virtual void onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override {};
+	virtual void onIdle(tsm::IContext* context) override;
+	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override;
+	virtual void onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override;
 
 	/**
 	 * When setup(), previous is nullptr.
@@ -74,6 +74,9 @@ public:
 protected:
 	gcroot<ManagedType^> m_managedStateMonitor;
 
+	Callback<ManagedType, Context::OnIdleDelegate, Context::OnIdleCallback> m_onIdleCallback;
+	Callback<ManagedType, Context::OnEventTriggeredDelegate, Context::OnEventTriggeredCallback> m_onEventTriggeredCallback;
+	Callback<ManagedType, Context::OnEventHandlingDelegate, Context::OnEventHandlingCallback> m_onEventHandlingCallback;
 	Callback<ManagedType, Context::OnStateChangedDelegate, Context::OnStateChangedCallback> m_onStateChangedCallback;
 };
 
