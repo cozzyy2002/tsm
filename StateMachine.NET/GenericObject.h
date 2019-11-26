@@ -13,16 +13,14 @@ generic<typename C, typename E, typename S>
 public interface class IStateMonitor
 {
 	void onStateChanged(C context, E event, S previous, S next);
-
-	///*static*/ event EventHandler<tsm_NET::IStateMonitor::AssertFailedEventArgs<HResult>^>^ AssertFailedEvent;
 };
 
 generic<typename E, typename S>
 public ref class Context : public tsm_NET::Context
 {
 public:
-	Context() : tsm_NET::Context(true) {}
-	Context(bool isAsync ) : tsm_NET::Context(isAsync) {}
+	Context() : tsm_NET::Context(true), m_stateMonitor(nullptr) {}
+	Context(bool isAsync ) : tsm_NET::Context(isAsync), m_stateMonitor(nullptr) {}
 	virtual ~Context() {}
 
 	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
@@ -35,6 +33,17 @@ public:
 	S getCurrentState() { return (S)tsm_NET::Context::getCurrentState(); }
 
 	property S CurrentState { S get() { return getCurrentState(); } }
+
+#pragma region .NET properties
+	property IStateMonitor<Context^, E, S>^ StateMonitor
+	{
+		IStateMonitor<Context^, E, S>^ get() { return m_stateMonitor; }
+		void set(IStateMonitor<Context^, E, S>^ value);
+	}
+#pragma endregion
+
+protected:
+	IStateMonitor<Context^, E, S>^ m_stateMonitor;
 };
 
 generic<typename C, typename E, typename S>

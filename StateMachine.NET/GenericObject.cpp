@@ -2,10 +2,38 @@
 #include "GenericObject.h"
 #include "NativeObjects.h"
 
-namespace tsm_NET {
+namespace tsm_NET
+{
 using namespace common;
 
-namespace Generic {
+namespace Generic
+{
+	// Internal IStateMonitor implemantation that calls method of user's IStateMonitor.
+	generic<typename C, typename E, typename S>
+		where C : tsm_NET::Context
+		where E : tsm_NET::Event
+		where S : tsm_NET::State
+	ref class StateMonitor : tsm_NET::IStateMonitor
+	{
+	internal:
+		StateMonitor(IStateMonitor<C, E, S>^ stateMonitor) : m_stateMonitor(stateMonitor) {}
+
+	public:
+		virtual void onIdle(tsm_NET::Context^ context) {}
+		virtual void onEventTriggered(tsm_NET::Context^ context, tsm_NET::Event^ event) {}
+		virtual void onEventHandling(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ current) {}
+		virtual void onStateChanged(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ previous, tsm_NET::State^ next) {
+			m_stateMonitor->onStateChanged((C)context, (E)event, (S)previous, (S)next);
+		}
+
+	protected:
+		IStateMonitor<C, E, S>^ m_stateMonitor;
+	};
+
+	generic<typename E, typename S>
+	void Context<E, S>::StateMonitor::set(IStateMonitor<Context<E, S>^, E, S>^ value)
+	{
+	}
 
 	generic<typename C, typename E, typename S>
 	HRESULT State<C, E, S>::handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)

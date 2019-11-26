@@ -55,9 +55,9 @@ class StateMonitor : public tsm::IStateMonitor
 {
 public:
 	using ManagedType = tsm_NET::IStateMonitor;
-	using Context = tsm_NET::Context;
+	using OwnerType = tsm_NET::StateMonitorCaller;
 
-	StateMonitor(ManagedType^ stateMonitor, Context^ context);
+	StateMonitor(ManagedType^ stateMonitor, OwnerType^ owner);
 
 	virtual void onIdle(tsm::IContext* context) override;
 	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override;
@@ -72,12 +72,10 @@ public:
 	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override {}
 
 protected:
-	gcroot<ManagedType^> m_managedStateMonitor;
-
-	Callback<ManagedType, Context::OnIdleDelegate, Context::OnIdleCallback> m_onIdleCallback;
-	Callback<ManagedType, Context::OnEventTriggeredDelegate, Context::OnEventTriggeredCallback> m_onEventTriggeredCallback;
-	Callback<ManagedType, Context::OnEventHandlingDelegate, Context::OnEventHandlingCallback> m_onEventHandlingCallback;
-	Callback<ManagedType, Context::OnStateChangedDelegate, Context::OnStateChangedCallback> m_onStateChangedCallback;
+	Callback<ManagedType, OwnerType::OnIdleDelegate, OwnerType::OnIdleCallback> m_onIdleCallback;
+	Callback<ManagedType, OwnerType::OnEventTriggeredDelegate, OwnerType::OnEventTriggeredCallback> m_onEventTriggeredCallback;
+	Callback<ManagedType, OwnerType::OnEventHandlingDelegate, OwnerType::OnEventHandlingCallback> m_onEventHandlingCallback;
+	Callback<ManagedType, OwnerType::OnStateChangedDelegate, OwnerType::OnStateChangedCallback> m_onStateChangedCallback;
 };
 
 class Context : public tsm::IContext, public tsm::TimerClient
@@ -101,8 +99,8 @@ public:
 	virtual tsm::IState* _getCurrentState() override { return m_currentState; }
 	virtual void _setCurrentState(tsm::IState* state) override { m_currentState = state; }
 
-	virtual tsm::IStateMonitor* _getStateMonitor() override { return m_stateMonitor.get(); }
-	void setStateMonitor(tsm_NET::IStateMonitor^ value);
+	virtual tsm::IStateMonitor* _getStateMonitor() override { return m_stateMonitor; }
+	void setStateMonitor(tsm::IStateMonitor* stateMonitor) { m_stateMonitor = stateMonitor; }
 
 	// Implementation of IContext::_getTimerClient().
 	virtual TimerClient* _getTimerClient() override { return this; }
@@ -118,7 +116,7 @@ protected:
 	std::unique_ptr<tsm::IStateMachine> m_stateMachine;
 	CComPtr<tsm::IState> m_currentState;
 
-	std::unique_ptr<StateMonitor> m_stateMonitor;
+	tsm::IStateMonitor* m_stateMonitor;
 };
 
 class State : public tsm::IState, public tsm::TimerClient

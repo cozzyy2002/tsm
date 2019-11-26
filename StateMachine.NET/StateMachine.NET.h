@@ -7,6 +7,7 @@ namespace native
 class Context;
 class State;
 class Event;
+class StateMonitor;
 }
 
 namespace tsm_NET
@@ -46,6 +47,43 @@ public interface class IStateMonitor
 	///*static*/ event EventHandler<AssertFailedEventArgs<HResult>^>^ AssertFailedEvent;
 };
 
+public ref class StateMonitorCaller
+{
+internal:
+	StateMonitorCaller(IStateMonitor^ stateMonitor);
+	virtual ~StateMonitorCaller();
+	!StateMonitorCaller();
+
+public:
+	using NativeType = native::StateMonitor;
+
+internal:
+#pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
+	// IStateMonitor::onIdle()
+	delegate void OnIdleDelegate(tsm::IContext* context);
+	typedef void(__stdcall *OnIdleCallback)(tsm::IContext* context);
+	virtual void onIdleCallback(tsm::IContext* context);
+	// IstateMonitor::onEventTriggered()
+	delegate void OnEventTriggeredDelegate(tsm::IContext* context, tsm::IEvent* event);
+	typedef void(__stdcall *OnEventTriggeredCallback)(tsm::IContext* context, tsm::IEvent* event);
+	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event);
+	// IStateMonitor::onEventHandling()
+	delegate void OnEventHandlingDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
+	typedef void(__stdcall *OnEventHandlingCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
+	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
+	// IStateMonitor::onStateChanged()
+	delegate void OnStateChangedDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+	typedef void(__stdcall *OnStateChangedCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+#pragma endregion
+
+	NativeType* get() { return m_nativeStateMonitor; }
+
+protected:
+	NativeType* m_nativeStateMonitor;
+	IStateMonitor^ m_stateMonitor;
+};
+
 public ref class Context
 {
 	void construct(bool isAsync);
@@ -68,12 +106,12 @@ public:
 	HResult waitReady(TimeSpan timeout);
 	State^ getCurrentState();
 
-	virtual property IStateMonitor^ StateMonitor {
+#pragma region .NET properties
+	property IStateMonitor^ StateMonitor {
 		IStateMonitor^ get() { return m_stateMonitor; }
 		void set(IStateMonitor^ value);
 	}
 
-#pragma region .NET properties
 	property bool IsAsync { bool get() { return isAsync(); } }
 	property State^ CurrentState { State^ get() { return getCurrentState(); } }
 #pragma endregion
@@ -81,28 +119,10 @@ public:
 internal:
 	NativeType* get() { return m_nativeContext; }
 
-#pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
-	// IStateMonitor::onIdle()
-	delegate void OnIdleDelegate(tsm::IContext* context);
-	typedef void (__stdcall *OnIdleCallback)(tsm::IContext* context);
-	virtual void onIdleCallback(tsm::IContext* context);
-	// IstateMonitor::onEventTriggered()
-	delegate void OnEventTriggeredDelegate(tsm::IContext* context, tsm::IEvent* event);
-	typedef void (__stdcall *OnEventTriggeredCallback)(tsm::IContext* context, tsm::IEvent* event);
-	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event);
-	// IStateMonitor::onEventHandling()
-	delegate void OnEventHandlingDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
-	typedef void (__stdcall *OnEventHandlingCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
-	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
-	// IStateMonitor::onStateChanged()
-	delegate void OnStateChangedDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
-	typedef void (__stdcall *OnStateChangedCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
-	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
-#pragma endregion
-
 protected:
 	NativeType* m_nativeContext;
-	IStateMonitor^ m_stateMonitor;
+	tsm_NET::IStateMonitor^ m_stateMonitor;
+	StateMonitorCaller^ m_stateMonitorCaller;
 };
 
 public ref class State

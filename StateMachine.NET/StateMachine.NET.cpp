@@ -8,6 +8,46 @@ using namespace tsm_NET::common;
 
 ///*static*/ event EventHandler<IStateMonitor::AssertFailedEventArgs<HResult>^>^ IStateMonitor::AssertFailedEvent;
 
+//-------------- Implementation of IStateMonitorCaller. --------------------//
+StateMonitorCaller::StateMonitorCaller(IStateMonitor^ stateMonitor)
+	: m_stateMonitor(stateMonitor)
+{
+	m_nativeStateMonitor = new native::StateMonitor(stateMonitor, this);
+}
+
+StateMonitorCaller::~StateMonitorCaller()
+{
+	this->!StateMonitorCaller();
+}
+
+StateMonitorCaller::!StateMonitorCaller()
+{
+	if(m_nativeStateMonitor) {
+		delete m_nativeStateMonitor;
+		m_nativeStateMonitor = nullptr;
+	}
+}
+
+void StateMonitorCaller::onIdleCallback(tsm::IContext* context)
+{
+	m_stateMonitor->onIdle(getManaged((native::Context*)context));
+}
+
+void StateMonitorCaller::onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event)
+{
+	m_stateMonitor->onEventTriggered(getManaged((native::Context*)context), getManaged((native::Event*)event));
+}
+
+void StateMonitorCaller::onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
+{
+	m_stateMonitor->onEventHandling(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)current));
+}
+
+void StateMonitorCaller::onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
+{
+	m_stateMonitor->onStateChanged(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previous), getManaged((native::State*)next));
+}
+
 //-------------- Managed Context class. --------------------//
 void Context::construct(bool isAsync)
 {
@@ -65,27 +105,14 @@ State^ Context::getCurrentState()
 void Context::StateMonitor::set(IStateMonitor^ value)
 {
 	m_stateMonitor = value;
-	m_nativeContext->setStateMonitor(value);
-}
-
-void Context::onIdleCallback(tsm::IContext* context)
-{
-	m_stateMonitor->onIdle(getManaged((native::Context*)context));
-}
-
-void Context::onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event)
-{
-	m_stateMonitor->onEventTriggered(getManaged((native::Context*)context), getManaged((native::Event*)event));
-}
-
-void Context::onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
-{
-	m_stateMonitor->onEventHandling(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)current));
-}
-
-void Context::onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
-{
-	m_stateMonitor->onStateChanged(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previous), getManaged((native::State*)next));
+	if(value) {
+		m_stateMonitorCaller = gcnew tsm_NET::StateMonitorCaller(value);
+		m_nativeContext->setStateMonitor(m_stateMonitorCaller->get());
+	} else {
+		delete m_stateMonitorCaller;
+		m_stateMonitorCaller = nullptr;
+		m_nativeContext->setStateMonitor(nullptr);
+	}
 }
 
 //-------------- Managed State class. --------------------//

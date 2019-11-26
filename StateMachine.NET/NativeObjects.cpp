@@ -13,11 +13,11 @@ struct EventHandle {};
 struct TimerHandle {};
 }
 
-StateMonitor::StateMonitor(StateMonitor::ManagedType^ managed, StateMonitor::Context^ context)
-	: m_onIdleCallback(managed, gcnew Context::OnIdleDelegate(context, &Context::onIdleCallback))
-	, m_onEventTriggeredCallback(managed, gcnew Context::OnEventTriggeredDelegate(context, &Context::onEventTriggeredCallback))
-	, m_onEventHandlingCallback(managed, gcnew Context::OnEventHandlingDelegate(context, &Context::onEventHandlingCallback))
-	, m_onStateChangedCallback(managed, gcnew Context::OnStateChangedDelegate(context, &Context::onStateChangedCallback))
+StateMonitor::StateMonitor(StateMonitor::ManagedType^ managed, StateMonitor::OwnerType^ owner)
+	: m_onIdleCallback(managed, gcnew OwnerType::OnIdleDelegate(owner, &OwnerType::onIdleCallback))
+	, m_onEventTriggeredCallback(managed, gcnew OwnerType::OnEventTriggeredDelegate(owner, &OwnerType::onEventTriggeredCallback))
+	, m_onEventHandlingCallback(managed, gcnew OwnerType::OnEventHandlingDelegate(owner, &OwnerType::onEventHandlingCallback))
+	, m_onStateChangedCallback(managed, gcnew OwnerType::OnStateChangedDelegate(owner, &OwnerType::onStateChangedCallback))
 {
 }
 
@@ -44,12 +44,8 @@ void StateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, ts
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 	: m_isAsync(isAsync)
 	, m_managedContext(context)
+	, m_stateMonitor(nullptr)
 {
-}
-
-void Context::setStateMonitor(tsm_NET::IStateMonitor^ value)
-{
-	m_stateMonitor.reset(value ? new StateMonitor(value, get()) : nullptr);
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState)
