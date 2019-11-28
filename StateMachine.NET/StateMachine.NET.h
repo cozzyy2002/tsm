@@ -61,19 +61,19 @@ internal:
 #pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
 	// IStateMonitor::onIdle()
 	delegate void OnIdleDelegate(tsm::IContext* context);
-	typedef void(__stdcall *OnIdleCallback)(tsm::IContext* context);
+	using OnIdleCallback = void(__stdcall *)(tsm::IContext* context);
 	virtual void onIdleCallback(tsm::IContext* context);
 	// IstateMonitor::onEventTriggered()
 	delegate void OnEventTriggeredDelegate(tsm::IContext* context, tsm::IEvent* event);
-	typedef void(__stdcall *OnEventTriggeredCallback)(tsm::IContext* context, tsm::IEvent* event);
+	using OnEventTriggeredCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event);
 	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event);
 	// IStateMonitor::onEventHandling()
 	delegate void OnEventHandlingDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
-	typedef void(__stdcall *OnEventHandlingCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
+	using OnEventHandlingCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
 	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
 	// IStateMonitor::onStateChanged()
 	delegate void OnStateChangedDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
-	typedef void(__stdcall *OnStateChangedCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+	using OnStateChangedCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 #pragma endregion
 
@@ -155,15 +155,15 @@ internal:
 
 #pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
 	delegate HRESULT HandleEventDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
-	typedef HRESULT (__stdcall *HandleEventCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
+	using HandleEventCallback = HRESULT (__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
 	virtual HRESULT handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
 
 	delegate HRESULT EntryDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
-	typedef HRESULT (__stdcall *EntryCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
+	using EntryCallback = HRESULT (__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
 	virtual HRESULT entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
 
 	delegate HRESULT ExitDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
-	typedef HRESULT(__stdcall *ExitCallback)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
+	using ExitCallback = HRESULT(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
 	virtual HRESULT exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
 #pragma endregion
 
@@ -194,11 +194,11 @@ internal:
 
 #pragma region Definition of delegate, callback signature and callback method. See tsm::ICallback<> template class.
 	delegate HRESULT PreHandleDelegate(tsm::IContext* context);
-	typedef HRESULT(__stdcall *PreHandleCallback)(tsm::IContext* context);
+	using PreHandleCallback = HRESULT(__stdcall *)(tsm::IContext* context);
 	virtual HRESULT preHandleCallback(tsm::IContext* context);
 
 	delegate HRESULT PostHandleDelegate(tsm::IContext* context, HRESULT hr);
-	typedef HRESULT(__stdcall *PostHandleCallback)(tsm::IContext* context, HRESULT hr);
+	using PostHandleCallback = HRESULT(__stdcall *)(tsm::IContext* context, HRESULT hr);
 	virtual HRESULT postHandleCallback(tsm::IContext* context, HRESULT hr);
 #pragma endregion
 
