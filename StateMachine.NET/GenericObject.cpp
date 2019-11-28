@@ -8,31 +8,31 @@ using namespace common;
 
 namespace Generic
 {
-	// Internal IStateMonitor implemantation that calls method of user's IStateMonitor.
-	generic<typename C, typename E, typename S>
-		where C : tsm_NET::Context
-		where E : tsm_NET::Event
-		where S : tsm_NET::State
-	ref class StateMonitor : tsm_NET::IStateMonitor
+	generic<typename E, typename S>
+	StateMonitorCaller<E, S>::StateMonitorCaller(IStateMonitor<E, S>^ stateMonitor)
+		: tsm_NET::StateMonitorCaller(nullptr)
+		, m_stateMonitor(stateMonitor)
 	{
-	internal:
-		StateMonitor(IStateMonitor<C, E, S>^ stateMonitor) : m_stateMonitor(stateMonitor) {}
-
-	public:
-		virtual void onIdle(tsm_NET::Context^ context) {}
-		virtual void onEventTriggered(tsm_NET::Context^ context, tsm_NET::Event^ event) {}
-		virtual void onEventHandling(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ current) {}
-		virtual void onStateChanged(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ previous, tsm_NET::State^ next) {
-			m_stateMonitor->onStateChanged((C)context, (E)event, (S)previous, (S)next);
-		}
-
-	protected:
-		IStateMonitor<C, E, S>^ m_stateMonitor;
-	};
+	}
 
 	generic<typename E, typename S>
-	void Context<E, S>::StateMonitor::set(IStateMonitor<Context<E, S>^, E, S>^ value)
+	void StateMonitorCaller<E, S>::onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 	{
+		m_stateMonitor->onStateChanged((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)previous), (S)getManaged((native::State*)next));
+	}
+
+	generic<typename E, typename S>
+	void Context<E, S>::StateMonitor::set(IStateMonitor<E, S>^ value)
+	{
+		m_stateMonitor = value;
+		if(value) {
+			m_stateMonitorCaller = gcnew StateMonitorCaller<E, S>(value);
+			m_nativeContext->setStateMonitor(m_stateMonitorCaller->get());
+		} else {
+			delete m_stateMonitorCaller;
+			m_stateMonitorCaller = nullptr;
+			m_nativeContext->setStateMonitor(nullptr);
+		}
 	}
 
 	generic<typename C, typename E, typename S>

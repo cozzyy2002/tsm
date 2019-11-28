@@ -56,6 +56,8 @@ namespace StateMachine.NET.UnitTest
             mockStateMonitor.Received()
                 .onEventHandling(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
             mockStateMonitor.Received()
+                .onStateChanged(Arg.Is(c), Arg.Is((Event)null), Arg.Is((State)null), Arg.Is(mockInitialState));
+            mockStateMonitor.Received()
                 .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
             mockStateMonitor.Received()
                 .onIdle(Arg.Is(c));

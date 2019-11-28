@@ -6,7 +6,7 @@ using tsm_NET.Generic;
 
 namespace StateMachine.NET.UnitTest.Generic
 {
-    public class Context : Context<Event, State> //, IStateMonitor<Context, Event, State>
+    public class Context : Context<Event, State>
     {
     }
 
@@ -29,9 +29,10 @@ namespace StateMachine.NET.UnitTest.Generic
             var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
             var mockNextState = Substitute.For<State>();
-            var mockStateMonitor = Substitute.For<IStateMonitor<Context, Event, State>>();
+            var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
 
             var c = new Context();
+            c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 
             // mockInitialState handles mockEvent and changes state to nextState.
@@ -65,6 +66,8 @@ namespace StateMachine.NET.UnitTest.Generic
             mockNextState.DidNotReceive().exit(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
 
             // Check calls to methods of IStateMonitor.
+            mockStateMonitor.Received()
+                .onStateChanged(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null), Arg.Is(mockInitialState));
             mockStateMonitor.Received()
                 .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
 

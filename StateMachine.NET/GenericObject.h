@@ -9,10 +9,28 @@ namespace Generic
 
 #include "HResult.h"
 
-generic<typename C, typename E, typename S>
+generic<typename E, typename S>
+ref class Context;
+
+generic<typename E, typename S>
 public interface class IStateMonitor
 {
-	void onStateChanged(C context, E event, S previous, S next);
+	void onStateChanged(Context<E, S>^ context, E event, S previous, S next);
+};
+
+generic<typename E, typename S>
+public ref class StateMonitorCaller : public tsm_NET::StateMonitorCaller
+{
+internal:
+	StateMonitorCaller(IStateMonitor<E, S>^ stateMonitor);
+
+	virtual void onIdleCallback(tsm::IContext* context) override {}
+	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event) override {}
+	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override {}
+	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
+
+protected:
+	IStateMonitor<E, S>^ m_stateMonitor;
 };
 
 generic<typename E, typename S>
@@ -35,15 +53,16 @@ public:
 	property S CurrentState { S get() { return getCurrentState(); } }
 
 #pragma region .NET properties
-	property IStateMonitor<Context^, E, S>^ StateMonitor
+	property IStateMonitor<E, S>^ StateMonitor
 	{
-		IStateMonitor<Context^, E, S>^ get() { return m_stateMonitor; }
-		void set(IStateMonitor<Context^, E, S>^ value);
+		IStateMonitor<E, S>^ get() { return m_stateMonitor; }
+		void set(IStateMonitor<E, S>^ value);
 	}
 #pragma endregion
 
 protected:
-	IStateMonitor<Context^, E, S>^ m_stateMonitor;
+	IStateMonitor<E, S>^ m_stateMonitor;
+	StateMonitorCaller<E, S>^ m_stateMonitorCaller;
 };
 
 generic<typename C, typename E, typename S>

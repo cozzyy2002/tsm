@@ -106,7 +106,7 @@ void Context::StateMonitor::set(IStateMonitor^ value)
 {
 	m_stateMonitor = value;
 	if(value) {
-		m_stateMonitorCaller = gcnew tsm_NET::StateMonitorCaller(value);
+		m_stateMonitorCaller = gcnew StateMonitorCaller(value);
 		m_nativeContext->setStateMonitor(m_stateMonitorCaller->get());
 	} else {
 		delete m_stateMonitorCaller;
