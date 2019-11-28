@@ -15,6 +15,9 @@ ref class Context;
 generic<typename E, typename S>
 public interface class IStateMonitor
 {
+	void onIdle(Context<E, S>^ context);
+	void onEventTriggered(Context<E, S>^ context, E event);
+	void onEventHandling(Context<E, S>^ context, E event, S current);
 	void onStateChanged(Context<E, S>^ context, E event, S previous, S next);
 };
 
@@ -24,9 +27,9 @@ public ref class StateMonitorCaller : public tsm_NET::StateMonitorCaller
 internal:
 	StateMonitorCaller(IStateMonitor<E, S>^ stateMonitor);
 
-	virtual void onIdleCallback(tsm::IContext* context) override {}
-	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event) override {}
-	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override {}
+	virtual void onIdleCallback(tsm::IContext* context) override;
+	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event) override;
+	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override;
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
 
 protected:

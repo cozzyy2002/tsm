@@ -47,7 +47,6 @@ namespace StateMachine.NET.UnitTest.Generic
 
             Assert.That(c.setup(mockInitialState), Is.EqualTo(HResult.Ok));
             Assert.That(c.triggerEvent(mockEvent), Is.EqualTo(HResult.Ok));
-
             Thread.Sleep(100);
 
             // Check calls to methods of State.
@@ -66,10 +65,20 @@ namespace StateMachine.NET.UnitTest.Generic
             mockNextState.DidNotReceive().exit(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
 
             // Check calls to methods of IStateMonitor.
+            Received.InOrder(() =>
+            {
+                mockStateMonitor.Received()
+                    .onEventTriggered(Arg.Is(c), Arg.Is(mockEvent));
+                mockStateMonitor.Received()
+                    .onEventHandling(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                mockStateMonitor.Received()
+                    .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
+                mockStateMonitor.Received()
+                    .onIdle(Arg.Is(c));
+            });
+            // onStateChanged() caused by Context.setup() might be called before or after onEventTriggerd().
             mockStateMonitor.Received()
                 .onStateChanged(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null), Arg.Is(mockInitialState));
-            mockStateMonitor.Received()
-                .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
 
             // Current state should be mockNextState.
             Assert.That(c.CurrentState, Is.EqualTo(mockNextState));

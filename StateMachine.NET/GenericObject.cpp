@@ -16,6 +16,24 @@ namespace Generic
 	}
 
 	generic<typename E, typename S>
+	void StateMonitorCaller<E, S>::onIdleCallback(tsm::IContext* context)
+	{
+		m_stateMonitor->onIdle((Context<E, S>^)getManaged((native::Context*)context));
+	}
+
+	generic<typename E, typename S>
+	void StateMonitorCaller<E, S>::onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event)
+	{
+		m_stateMonitor->onEventTriggered((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event));
+	}
+
+	generic<typename E, typename S>
+	void StateMonitorCaller<E, S>::onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
+	{
+		m_stateMonitor->onEventHandling((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)current));
+	}
+
+	generic<typename E, typename S>
 	void StateMonitorCaller<E, S>::onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 	{
 		m_stateMonitor->onStateChanged((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)previous), (S)getManaged((native::State*)next));
