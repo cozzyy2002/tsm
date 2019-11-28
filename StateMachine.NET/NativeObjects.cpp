@@ -13,11 +13,11 @@ struct EventHandle {};
 struct TimerHandle {};
 }
 
-StateMonitor::StateMonitor(StateMonitor::ManagedType^ managed, StateMonitor::OwnerType^ owner)
-	: m_onIdleCallback(managed, gcnew OwnerType::OnIdleDelegate(owner, &OwnerType::onIdleCallback))
-	, m_onEventTriggeredCallback(managed, gcnew OwnerType::OnEventTriggeredDelegate(owner, &OwnerType::onEventTriggeredCallback))
-	, m_onEventHandlingCallback(managed, gcnew OwnerType::OnEventHandlingDelegate(owner, &OwnerType::onEventHandlingCallback))
-	, m_onStateChangedCallback(managed, gcnew OwnerType::OnStateChangedDelegate(owner, &OwnerType::onStateChangedCallback))
+StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner)
+	: m_onIdleCallback(gcnew OwnerType::OnIdleDelegate(owner, &OwnerType::onIdleCallback))
+	, m_onEventTriggeredCallback(gcnew OwnerType::OnEventTriggeredDelegate(owner, &OwnerType::onEventTriggeredCallback))
+	, m_onEventHandlingCallback(gcnew OwnerType::OnEventHandlingDelegate(owner, &OwnerType::onEventHandlingCallback))
+	, m_onStateChangedCallback(gcnew OwnerType::OnStateChangedDelegate(owner, &OwnerType::onStateChangedCallback))
 {
 }
 
@@ -50,9 +50,9 @@ Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 
 State::State(ManagedType^ state, ManagedType^ masterState)
 	: m_managedState(state)
-	, m_handleEventCallback(state, gcnew ManagedType::HandleEventDelegate(state, &ManagedType::handleEventCallback))
-	, m_entryCallback(state, gcnew ManagedType::EntryDelegate(state, &ManagedType::entryCallback))
-	, m_exitCallback(state, gcnew ManagedType::ExitDelegate(state, &ManagedType::exitCallback))
+	, m_handleEventCallback(gcnew ManagedType::HandleEventDelegate(state, &ManagedType::handleEventCallback))
+	, m_entryCallback(gcnew ManagedType::EntryDelegate(state, &ManagedType::entryCallback))
+	, m_exitCallback(gcnew ManagedType::ExitDelegate(state, &ManagedType::exitCallback))
 	, m_masterState(getNative(masterState))
 {
 }
@@ -74,8 +74,8 @@ HRESULT State::_exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* ne
 
 Event::Event(ManagedType^ event)
 	: m_managedEvent(event)
-	, m_preHandleCallback(event, gcnew ManagedType::PreHandleDelegate(event, &ManagedType::preHandleCallback))
-	, m_postHandleCallback(event, gcnew ManagedType::PostHandleDelegate(event, &ManagedType::postHandleCallback))
+	, m_preHandleCallback(gcnew ManagedType::PreHandleDelegate(event, &ManagedType::preHandleCallback))
+	, m_postHandleCallback(gcnew ManagedType::PostHandleDelegate(event, &ManagedType::postHandleCallback))
 	, m_timerClient(nullptr)
 {
 }

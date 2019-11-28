@@ -12,7 +12,7 @@ using namespace tsm_NET::common;
 StateMonitorCaller::StateMonitorCaller(IStateMonitor^ stateMonitor)
 	: m_stateMonitor(stateMonitor)
 {
-	m_nativeStateMonitor = new native::StateMonitor(stateMonitor, this);
+	m_nativeStateMonitor = new native::StateMonitor(this);
 }
 
 StateMonitorCaller::~StateMonitorCaller()

@@ -23,10 +23,10 @@ class Event;
 		HRESULT xxxCallback(...) { method body }		// callback method
 
 	2. Declare member variable of this class in native class.
-		Callback<ManagedClass, XxxDelegate, XxxCallback> m_xxxCallback;
+		Callback<XxxDelegate, XxxCallback> m_xxxCallback;
 
 	3. Initialize the member variable in the constructor of native class.
-		m_xxxCallback(managedObject, gcnew XxxDelegate(managedObject, &ManagedClass::xxxCallback))
+		m_xxxCallback(gcnew XxxDelegate(managedObject, &ManagedClass::xxxCallback))
 
 	4. Callback from native class.
 		m_xxxCallback(...);
@@ -36,11 +36,11 @@ class Event;
 
 	See http://lambert.geek.nz/2007/05/unmanaged-appdomain-callback/.
 */
-template<class M, class D, class C>
+template<class D, class C>
 class Callback
 {
 public:
-	Callback(M^ managed, D^ del) : del(del) {
+	Callback(D^ del) : del(del) {
 		callback = (C)Marshal::GetFunctionPointerForDelegate(del).ToPointer();
 	}
 
@@ -54,10 +54,9 @@ protected:
 class StateMonitor : public tsm::IStateMonitor
 {
 public:
-	using ManagedType = tsm_NET::IStateMonitor;
 	using OwnerType = tsm_NET::StateMonitorCaller;
 
-	StateMonitor(ManagedType^ stateMonitor, OwnerType^ owner);
+	StateMonitor(OwnerType^ owner);
 
 	virtual void onIdle(tsm::IContext* context) override;
 	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override;
@@ -72,10 +71,10 @@ public:
 	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override {}
 
 protected:
-	Callback<ManagedType, OwnerType::OnIdleDelegate, OwnerType::OnIdleCallback> m_onIdleCallback;
-	Callback<ManagedType, OwnerType::OnEventTriggeredDelegate, OwnerType::OnEventTriggeredCallback> m_onEventTriggeredCallback;
-	Callback<ManagedType, OwnerType::OnEventHandlingDelegate, OwnerType::OnEventHandlingCallback> m_onEventHandlingCallback;
-	Callback<ManagedType, OwnerType::OnStateChangedDelegate, OwnerType::OnStateChangedCallback> m_onStateChangedCallback;
+	Callback<OwnerType::OnIdleDelegate, OwnerType::OnIdleCallback> m_onIdleCallback;
+	Callback<OwnerType::OnEventTriggeredDelegate, OwnerType::OnEventTriggeredCallback> m_onEventTriggeredCallback;
+	Callback<OwnerType::OnEventHandlingDelegate, OwnerType::OnEventHandlingCallback> m_onEventHandlingCallback;
+	Callback<OwnerType::OnStateChangedDelegate, OwnerType::OnStateChangedCallback> m_onStateChangedCallback;
 };
 
 class Context : public tsm::IContext, public tsm::TimerClient
@@ -145,9 +144,9 @@ public:
 protected:
 	gcroot<ManagedType^> m_managedState;
 
-	Callback<ManagedType, ManagedType::HandleEventDelegate, ManagedType::HandleEventCallback> m_handleEventCallback;
-	Callback<ManagedType, ManagedType::EntryDelegate, ManagedType::EntryCallback> m_entryCallback;
-	Callback<ManagedType, ManagedType::ExitDelegate, ManagedType::ExitCallback> m_exitCallback;
+	Callback<ManagedType::HandleEventDelegate, ManagedType::HandleEventCallback> m_handleEventCallback;
+	Callback<ManagedType::EntryDelegate, ManagedType::EntryCallback> m_entryCallback;
+	Callback<ManagedType::ExitDelegate, ManagedType::ExitCallback> m_exitCallback;
 
 	CComPtr<State> m_masterState;
 };
@@ -174,8 +173,8 @@ public:
 protected:
 	gcroot<ManagedType^> m_managedEvent;
 
-	Callback<ManagedType, ManagedType::PreHandleDelegate, ManagedType::PreHandleCallback> m_preHandleCallback;
-	Callback<ManagedType, ManagedType::PostHandleDelegate, ManagedType::PostHandleCallback> m_postHandleCallback;
+	Callback<ManagedType::PreHandleDelegate, ManagedType::PreHandleCallback> m_preHandleCallback;
+	Callback<ManagedType::PostHandleDelegate, ManagedType::PostHandleCallback> m_postHandleCallback;
 
 	int m_priority;
 	DWORD m_delayTime;
