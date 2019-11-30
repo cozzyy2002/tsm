@@ -48,6 +48,16 @@ void StateMonitorCaller::onStateChangedCallback(tsm::IContext* context, tsm::IEv
 	m_stateMonitor->onStateChanged(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previous), getManaged((native::State*)next));
 }
 
+void StateMonitorCaller::onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event)
+{
+	m_stateMonitor->onTimerStarted(getManaged((native::Context*)context), getManaged((native::Event*)event));
+}
+
+void StateMonitorCaller::onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode)
+{
+	m_stateMonitor->onWorkerThreadExit(getManaged((native::Context*)context), (HResult)exitCode);
+}
+
 //-------------- Managed Context class. --------------------//
 void Context::construct(bool isAsync)
 {

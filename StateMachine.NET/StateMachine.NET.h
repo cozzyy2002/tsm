@@ -12,6 +12,7 @@ class StateMonitor;
 
 namespace tsm_NET
 {
+// Define HResult in tsm_NET namespace
 #include "HResult.h"
 
 ref class Context;
@@ -24,6 +25,8 @@ public interface class IStateMonitor
 	void onEventTriggered(Context^ context, Event^ event);
 	void onEventHandling(Context^ context, Event^ event, State^ current);
 	void onStateChanged(Context^ context, Event^ event, State^ previous, State^ next);
+	void onTimerStarted(Context^ context, Event^ event) = 0;
+	void onWorkerThreadExit(Context^ context, HResult exitCode) = 0;
 
 	generic<typename H>
 	ref class AssertFailedEventArgs : public EventArgs
@@ -59,22 +62,30 @@ public:
 
 internal:
 #pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
-	// IStateMonitor::onIdle()
+	// void IStateMonitor::onIdle()
 	delegate void OnIdleDelegate(tsm::IContext* context);
 	using OnIdleCallback = void(__stdcall *)(tsm::IContext* context);
 	virtual void onIdleCallback(tsm::IContext* context);
-	// IstateMonitor::onEventTriggered()
+	// void IstateMonitor::onEventTriggered()
 	delegate void OnEventTriggeredDelegate(tsm::IContext* context, tsm::IEvent* event);
 	using OnEventTriggeredCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event);
 	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event);
-	// IStateMonitor::onEventHandling()
+	// void IStateMonitor::onEventHandling()
 	delegate void OnEventHandlingDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
 	using OnEventHandlingCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
 	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
-	// IStateMonitor::onStateChanged()
+	// void IStateMonitor::onStateChanged()
 	delegate void OnStateChangedDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	using OnStateChangedCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
+	// void IStateMonitor::onTimerStarted()
+	delegate void OnTimerStartedDelegate(tsm::IContext* context, tsm::IEvent* event);
+	using OnTimerStartedCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event);
+	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event);
+	// void IStateMonitor::onWorkerThreadExit()
+	delegate void OnWorkerThreadExitDelegate(tsm::IContext* context, HRESULT exitCode);
+	using OnWorkerThreadExitCallback = void(__stdcall *)(tsm::IContext* context, HRESULT exitCode);
+	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode);
 #pragma endregion
 
 	NativeType* get() { return m_nativeStateMonitor; }

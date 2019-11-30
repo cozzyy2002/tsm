@@ -7,10 +7,10 @@ using tsm_NET;
 namespace StateMachine.NET.UnitTest
 {
     [TestFixture]
-    public class Class1
+    public class TestCase
     {
         [Test]
-        public void test1()
+        public void BasicTest()
         {
             var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
@@ -34,6 +34,9 @@ namespace StateMachine.NET.UnitTest
             Assert.That(c.setup(mockInitialState), Is.EqualTo(HResult.Ok));
             Assert.That(c.triggerEvent(mockEvent), Is.EqualTo(HResult.Ok));
             Thread.Sleep(100);
+            // Current state should be mockNextState.
+            Assume.That(c.CurrentState, Is.EqualTo(mockNextState));
+            Assume.That(c.shutdown(), Is.EqualTo(HResult.Ok));
 
             // Check calls to methods of State.
             Received.InOrder(() =>
@@ -65,9 +68,6 @@ namespace StateMachine.NET.UnitTest
             // onStateChanged() caused by Context.setup() might be called before or after onEventTriggerd().
             mockStateMonitor.Received()
                 .onStateChanged(Arg.Is(c), Arg.Is((Event)null), Arg.Is((State)null), Arg.Is(mockInitialState));
-
-            // Current state should be mockNextState.
-            Assert.That(c.CurrentState, Is.EqualTo(mockNextState));
         }
     }
 }

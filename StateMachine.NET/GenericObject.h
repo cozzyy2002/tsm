@@ -6,7 +6,7 @@ namespace tsm_NET
 {
 namespace Generic
 {
-
+// Define HResult in tsm_NET::Getneric namespace
 #include "HResult.h"
 
 generic<typename E, typename S>
@@ -19,6 +19,8 @@ public interface class IStateMonitor
 	void onEventTriggered(Context<E, S>^ context, E event);
 	void onEventHandling(Context<E, S>^ context, E event, S current);
 	void onStateChanged(Context<E, S>^ context, E event, S previous, S next);
+	void onTimerStarted(Context<E, S>^ context, E event);
+	void onWorkerThreadExit(Context<E, S>^ context, HResult exitCode);
 };
 
 generic<typename E, typename S>
@@ -31,6 +33,8 @@ internal:
 	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event) override;
 	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override;
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
+	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event) override;
+	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode) override;
 
 protected:
 	IStateMonitor<E, S>^ m_stateMonitor;

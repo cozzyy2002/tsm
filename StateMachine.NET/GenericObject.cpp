@@ -40,6 +40,18 @@ namespace Generic
 	}
 
 	generic<typename E, typename S>
+	void StateMonitorCaller<E, S>::onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event)
+	{
+		m_stateMonitor->onTimerStarted((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event));
+	}
+
+	generic<typename E, typename S>
+	void StateMonitorCaller<E, S>::onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode)
+	{
+		m_stateMonitor->onWorkerThreadExit((Context<E, S>^)getManaged((native::Context*)context), (HResult)exitCode);
+	}
+
+	generic<typename E, typename S>
 	void Context<E, S>::StateMonitor::set(IStateMonitor<E, S>^ value)
 	{
 		m_stateMonitor = value;

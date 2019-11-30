@@ -18,6 +18,8 @@ StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner)
 	, m_onEventTriggeredCallback(gcnew OwnerType::OnEventTriggeredDelegate(owner, &OwnerType::onEventTriggeredCallback))
 	, m_onEventHandlingCallback(gcnew OwnerType::OnEventHandlingDelegate(owner, &OwnerType::onEventHandlingCallback))
 	, m_onStateChangedCallback(gcnew OwnerType::OnStateChangedDelegate(owner, &OwnerType::onStateChangedCallback))
+	, m_onTimerStartedCallback(gcnew OwnerType::OnTimerStartedDelegate(owner, &OwnerType::onTimerStartedCallback))
+	, m_onWorkerThreadCallback(gcnew OwnerType::OnWorkerThreadExitDelegate(owner, &OwnerType::onWorkerThreadExitCallback))
 {
 }
 
@@ -39,6 +41,16 @@ void StateMonitor::onEventHandling(tsm::IContext* context, tsm::IEvent* event, t
 void StateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
 	m_onStateChangedCallback(context, event, previous, next);
+}
+
+void StateMonitor::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
+{
+	m_onTimerStartedCallback(context, event);
+}
+
+void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
+{
+	m_onWorkerThreadCallback(context, exitCode);
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)

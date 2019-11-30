@@ -67,14 +67,16 @@ public:
 	 * When shutdown(), next is nullptr.
 	 */
 	virtual void onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
-	virtual void onTimerStarted(tsm::IContext* context, tsm::IEvent* event) override {}
-	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override {}
+	virtual void onTimerStarted(tsm::IContext* context, tsm::IEvent* event) override;
+	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override;
 
 protected:
 	Callback<OwnerType::OnIdleDelegate, OwnerType::OnIdleCallback> m_onIdleCallback;
 	Callback<OwnerType::OnEventTriggeredDelegate, OwnerType::OnEventTriggeredCallback> m_onEventTriggeredCallback;
 	Callback<OwnerType::OnEventHandlingDelegate, OwnerType::OnEventHandlingCallback> m_onEventHandlingCallback;
 	Callback<OwnerType::OnStateChangedDelegate, OwnerType::OnStateChangedCallback> m_onStateChangedCallback;
+	Callback<OwnerType::OnTimerStartedDelegate, OwnerType::OnTimerStartedCallback> m_onTimerStartedCallback;
+	Callback<OwnerType::OnWorkerThreadExitDelegate, OwnerType::OnWorkerThreadExitCallback> m_onWorkerThreadCallback;
 };
 
 class Context : public tsm::IContext, public tsm::TimerClient

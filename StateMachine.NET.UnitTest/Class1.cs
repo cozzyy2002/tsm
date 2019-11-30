@@ -12,19 +12,19 @@ namespace StateMachine.NET.UnitTest.Generic
 
     public class Event : Event<Context>
     {
-        public static Event Null = null;
+        public static Event Null { get; } = null;
     }
 
     public class State : State<Context, Event, State>
     {
-        public static State Null = null;
+        public static State Null { get; } = null;
     }
 
     [TestFixture]
-    public class Class1
+    public class GenericTestCase
     {
         [Test]
-        public void test1()
+        public void BasicTest()
         {
             var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
@@ -48,6 +48,10 @@ namespace StateMachine.NET.UnitTest.Generic
             Assert.That(c.setup(mockInitialState), Is.EqualTo(HResult.Ok));
             Assert.That(c.triggerEvent(mockEvent), Is.EqualTo(HResult.Ok));
             Thread.Sleep(100);
+
+            // Current state should be mockNextState.
+            Assume.That(c.CurrentState, Is.EqualTo(mockNextState));
+            Assume.That(c.shutdown(), Is.EqualTo(HResult.Ok));
 
             // Check calls to methods of State.
             Received.InOrder(() =>
@@ -75,13 +79,12 @@ namespace StateMachine.NET.UnitTest.Generic
                     .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
                 mockStateMonitor.Received()
                     .onIdle(Arg.Is(c));
+                mockStateMonitor.Received()
+                    .onWorkerThreadExit(Arg.Is(c), HResult.Ok);
             });
             // onStateChanged() caused by Context.setup() might be called before or after onEventTriggerd().
             mockStateMonitor.Received()
                 .onStateChanged(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null), Arg.Is(mockInitialState));
-
-            // Current state should be mockNextState.
-            Assert.That(c.CurrentState, Is.EqualTo(mockNextState));
         }
     }
 }
