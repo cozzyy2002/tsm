@@ -62,10 +62,10 @@ Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 
 State::State(ManagedType^ state, ManagedType^ masterState)
 	: m_managedState(state)
+	, m_masterState(getNative(masterState))
 	, m_handleEventCallback(gcnew ManagedType::HandleEventDelegate(state, &ManagedType::handleEventCallback))
 	, m_entryCallback(gcnew ManagedType::EntryDelegate(state, &ManagedType::entryCallback))
 	, m_exitCallback(gcnew ManagedType::ExitDelegate(state, &ManagedType::exitCallback))
-	, m_masterState(getNative(masterState))
 {
 }
 
@@ -82,6 +82,11 @@ HRESULT State::_entry(tsm::IContext* context, tsm::IEvent* event, tsm::IState* p
 HRESULT State::_exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
 {
 	return m_exitCallback(context, event, nextState);
+}
+
+bool State::_callExitOnShutdown() const
+{
+	return m_managedState->CallExitOnShutdown;
 }
 
 Event::Event(ManagedType^ event)

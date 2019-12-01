@@ -51,7 +51,11 @@ namespace StateMachine.NET.UnitTest.Generic
 
             // Current state should be mockNextState.
             Assume.That(c.CurrentState, Is.EqualTo(mockNextState));
+
+            // Shutdown
+            mockNextState.CallExitOnShutdown = true;
             Assume.That(c.shutdown(), Is.EqualTo(HResult.Ok));
+            Thread.Sleep(100);
 
             // Check calls to methods of State.
             Received.InOrder(() =>
@@ -64,9 +68,10 @@ namespace StateMachine.NET.UnitTest.Generic
                     .exit(Arg.Is(c), Arg.Is(mockEvent), mockNextState);
                 mockNextState.Received()
                     .entry(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                mockNextState.Received()
+                    .exit(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null));
             });
             mockNextState.DidNotReceive().handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
-            mockNextState.DidNotReceive().exit(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>());
 
             // Check calls to methods of IStateMonitor.
             Received.InOrder(() =>

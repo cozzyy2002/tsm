@@ -57,10 +57,8 @@ internal:
 	virtual ~StateMonitorCaller();
 	!StateMonitorCaller();
 
-public:
 	using NativeType = native::StateMonitor;
 
-internal:
 #pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
 	// void IStateMonitor::onIdle()
 	delegate void OnIdleDelegate(tsm::IContext* context);
@@ -159,6 +157,7 @@ public:
 #pragma region .NET properties
 	property State^ MasterState { State^ get() { return getMasterState(); } }
 	property bool IsSubState { bool get() { return isSubState(); } }
+	property bool CallExitOnShutdown;
 #pragma endregion
 
 internal:

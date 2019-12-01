@@ -130,6 +130,7 @@ State::State(State^ masterState)
 {
 	m_nativeState = new native::State(this, masterState);
 	m_nativeState->AddRef();
+	CallExitOnShutdown = false;
 }
 
 State::~State()
