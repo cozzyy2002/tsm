@@ -119,9 +119,9 @@ void Context::StateMonitor::set(IStateMonitor^ value)
 		m_stateMonitorCaller = gcnew StateMonitorCaller(value);
 		m_nativeContext->setStateMonitor(m_stateMonitorCaller->get());
 	} else {
+		m_nativeContext->setStateMonitor(nullptr);
 		delete m_stateMonitorCaller;
 		m_stateMonitorCaller = nullptr;
-		m_nativeContext->setStateMonitor(nullptr);
 	}
 }
 
