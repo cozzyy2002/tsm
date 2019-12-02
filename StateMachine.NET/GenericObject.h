@@ -6,25 +6,70 @@ namespace tsm_NET
 {
 namespace Generic
 {
+// Define HResult in tsm_NET::Getneric namespace
+#include "HResult.h"
+
+generic<typename E, typename S>
+ref class Context;
+
+generic<typename E, typename S>
+public interface class IStateMonitor
+{
+	void onIdle(Context<E, S>^ context);
+	void onEventTriggered(Context<E, S>^ context, E event);
+	void onEventHandling(Context<E, S>^ context, E event, S current);
+	void onStateChanged(Context<E, S>^ context, E event, S previous, S next);
+	void onTimerStarted(Context<E, S>^ context, E event);
+	void onWorkerThreadExit(Context<E, S>^ context, HResult exitCode);
+};
+
+generic<typename E, typename S>
+public ref class StateMonitorCaller : public tsm_NET::StateMonitorCaller
+{
+internal:
+	StateMonitorCaller(IStateMonitor<E, S>^ stateMonitor);
+
+	virtual void onIdleCallback(tsm::IContext* context) override;
+	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event) override;
+	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override;
+	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
+	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event) override;
+	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode) override;
+
+protected:
+	IStateMonitor<E, S>^ m_stateMonitor;
+};
 
 generic<typename E, typename S>
 public ref class Context : public tsm_NET::Context
 {
 public:
-	Context() : tsm_NET::Context(true) {}
-	Context(bool isAsync ) : tsm_NET::Context(isAsync) {}
+	Context() : tsm_NET::Context(true), m_stateMonitor(nullptr) {}
+	Context(bool isAsync ) : tsm_NET::Context(isAsync), m_stateMonitor(nullptr) {}
 	virtual ~Context() {}
 
-	HResult setup(S initialState, E event) { return tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
-	HResult setup(S initialState) { return tsm_NET::Context::setup((tsm_NET::State^)initialState); }
-	HResult shutdown(TimeSpan timeout) { return tsm_NET::Context::shutdown(timeout); }
-	HResult shutdown() { return tsm_NET::Context::shutdown(); }
-	HResult triggerEvent(E event) { return tsm_NET::Context::triggerEvent((tsm_NET::Event^)event); }
-	HResult handleEvent(E event) { return tsm_NET::Context::handleEvent((tsm_NET::Event^)event); }
-	HResult waitReady(TimeSpan timeout) { return tsm_NET::Context::waitReady(timeout); }
+	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
+	HResult setup(S initialState) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState); }
+	HResult shutdown(TimeSpan timeout) { return (HResult)tsm_NET::Context::shutdown(timeout); }
+	HResult shutdown() { return (HResult)tsm_NET::Context::shutdown(); }
+	HResult triggerEvent(E event) { return (HResult)tsm_NET::Context::triggerEvent((tsm_NET::Event^)event); }
+	HResult handleEvent(E event) { return (HResult)tsm_NET::Context::handleEvent((tsm_NET::Event^)event); }
+	HResult waitReady(TimeSpan timeout) { return (HResult)tsm_NET::Context::waitReady(timeout); }
 	S getCurrentState() { return (S)tsm_NET::Context::getCurrentState(); }
 
-	property S CurrentState { S get() { return getCurrentState(); }}
+	property S CurrentState { S get() { return getCurrentState(); } }
+
+#pragma region .NET properties
+	property IStateMonitor<E, S>^ StateMonitor
+	{
+		IStateMonitor<E, S>^ get() { return m_stateMonitor; }
+		void set(IStateMonitor<E, S>^ value);
+	}
+#pragma endregion
+
+protected:
+	IStateMonitor<E, S>^ m_stateMonitor;
+	StateMonitorCaller<E, S>^ m_stateMonitorCaller;
 };
 
 generic<typename C, typename E, typename S>
@@ -46,7 +91,7 @@ public:
 
 	S getMasterState() { return (S)tsm_NET::State::getMasterState(); }
 
-	property S MasterState { S get() { return getMasterState(); }}
+	property S MasterState { S get() { return getMasterState(); } }
 
 // NOTE: Callback methods that is called by native class should be `internal`
 //       to avoid `System.MissingMethodException` when NUnit runs with NSubstitute.

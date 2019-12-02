@@ -21,3 +21,6 @@
 *.vcxproj.filters
 *.BAK
 /test.json.txt
+/StateMachineConsole.NET
+/StateMachineUnitTest.NET
+/TestResult.xml

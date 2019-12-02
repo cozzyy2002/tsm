@@ -58,7 +58,7 @@ protected:
 	CMFCPropertyGridProperty* nextStateProperty;
 	CList* nextStates;
 	CMFCPropertyGridProperty* masterStates;
-	CMFCPropertyGridProperty* callExitOnShutdownProperty;
+	CMFCPropertyGridProperty* isExitCalledOnShutdownProperty;
 
 	class CHResultProperty;
 	CHResultProperty* preHandleHResultProperty;

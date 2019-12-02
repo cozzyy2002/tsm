@@ -128,7 +128,7 @@ static const CReportView::Column statesColumns[] = {
 	{ CReportView::Column::Type::String, _T("Name"), CReportView::remainingColumnWidth },
 	{ CReportView::Column::Type::Number, _T("Address"), (sizeof(void*) * 2) + 5 },
 	{ CReportView::Column::Type::Bool, _T("isSubState"), CReportView::autoColumnWidth },
-	{ CReportView::Column::Type::Bool, _T("callExitOnShutdown"), CReportView::autoColumnWidth },
+	{ CReportView::Column::Type::Bool, _T("isExitCalledOnShutdown"), CReportView::autoColumnWidth },
 };
 
 // CStateMachineManualTestDlg message handlers
@@ -261,7 +261,7 @@ afx_msg LRESULT CStateMachineManualTestDlg::OnStateChanged(WPARAM wParam, LPARAM
 			CVar(state->MyObject::getName()),
 			CVar((MyObject*)state),		// In log window, address of state object is shown as pointer of MyObject class.
 			CVar(state->isSubState()),
-			CVar(state->_callExitOnShutdown()),
+			CVar(state->_isExitCalledOnShutdown()),
 		};
 		m_statesView.addItems(items, state);
 	}

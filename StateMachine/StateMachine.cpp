@@ -206,7 +206,7 @@ HRESULT StateMachine::callExit(IState* state, IContext* context, IEvent* event, 
 	HR_ASSERT_OK(state->_getTimerClient()->cancelAllEventTimers());
 
 	// On shutdown, nextState is nullptr.
-	return ((nextState != nullptr) || state->_callExitOnShutdown()) ?
+	return ((nextState != nullptr) || state->_isExitCalledOnShutdown()) ?
 		state->_exit(context, event, nextState) :
 		S_OK;
 }
