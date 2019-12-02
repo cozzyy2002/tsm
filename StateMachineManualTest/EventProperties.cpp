@@ -65,9 +65,9 @@ void CEventProperties::Init()
 
 	// Next state
 	nextStateProperty = new CMFCPropertyGridProperty(_T("Next state"));
-	VARIANT _callExitOnShutdown = { VT_BOOL };
-	callExitOnShutdownProperty = new CMFCPropertyGridProperty(_T("callExitOnShutdown"), COleVariant(_callExitOnShutdown));
-	nextStateProperty->AddSubItem(callExitOnShutdownProperty);
+	VARIANT _isExitCalledOnShutdown = { VT_BOOL };
+	isExitCalledOnShutdownProperty = new CMFCPropertyGridProperty(_T("isExitCalledOnShutdown"), COleVariant(_isExitCalledOnShutdown));
+	nextStateProperty->AddSubItem(isExitCalledOnShutdownProperty);
 	AddProperty(nextStateProperty);
 	updateStates();
 
@@ -127,7 +127,7 @@ void CEventProperties::updateStates()
 	}
 	nextStates->AddOption(_T(""));
 	masterStates->AddOption(_T(""));
-	nextStateProperty->RemoveSubItem(callExitOnShutdownProperty, FALSE);
+	nextStateProperty->RemoveSubItem(isExitCalledOnShutdownProperty, FALSE);
 
 	stateList.clear();
 	for(auto state = context->getCurrentState(); state; state = state->getMasterState()) {
@@ -142,7 +142,7 @@ void CEventProperties::updateStates()
 
 	nextStateProperty->AddSubItem(nextStates);
 	nextStateProperty->AddSubItem(masterStates);
-	nextStateProperty->AddSubItem(callExitOnShutdownProperty);
+	nextStateProperty->AddSubItem(isExitCalledOnShutdownProperty);
 	updateNextStates();
 }
 
@@ -193,7 +193,7 @@ MyEvent * CEventProperties::createEvent()
 			// Master state should be nullptr or selected from stateList list box including top state(current state)
 			auto masterState = getOptionPropertyValue(stateList, masterStates, (MyState*)nullptr);
 			e->nextState = new MyState(*context, nextStateName, masterState);
-			e->nextState.p->callExitOnShutDown = getBoolPropertyValue(callExitOnShutdownProperty);
+			e->nextState.p->isExitCalledOnShutdown = getBoolPropertyValue(isExitCalledOnShutdownProperty);
 
 			// Clear next state name.
 			nextStates->SetValue(_T(""));
@@ -207,7 +207,7 @@ MyEvent * CEventProperties::createEvent()
 }
 
 // Called when next state is changed.
-// Determines either master state and callExitOnShutDown are visible or not
+// Determines either master state and isExitCalledOnShutdown are visible or not
 // depending on value of next state.
 void CEventProperties::updateNextStates()
 {
@@ -215,12 +215,12 @@ void CEventProperties::updateNextStates()
 	auto nextStateName = getStringPropertyValue(nextStates);
 	if(!nextStateName.empty() && !stateList.empty()) {
 		auto nextState = getOptionPropertyValue(stateList, nextStates, (MyState*)nullptr);
-		// If next state is selected from state list, specifying master state and callExitOnShutDown is not necessary.
+		// If next state is selected from state list, specifying master state and isExitCalledOnShutdown is not necessary.
 		// See createEvent() method.
 		enable = nextState ? FALSE : TRUE;
 	}
 	masterStates->Enable(enable);
-	callExitOnShutdownProperty->Enable(enable);
+	isExitCalledOnShutdownProperty->Enable(enable);
 
 	RedrawWindow();
 }

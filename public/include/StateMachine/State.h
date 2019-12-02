@@ -23,7 +23,7 @@ public:
 		return exit((C*)context, (E*)event, (S*)nextState);
 	}
 
-	virtual bool _callExitOnShutdown() const override { return false; }
+	virtual bool _isExitCalledOnShutdown() const override { return false; }
 	virtual IState* _getMasterState() const override { return m_masterState; }
 
 	virtual TimerClient* _getTimerClient() override { return this; }

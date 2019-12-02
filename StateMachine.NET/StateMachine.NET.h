@@ -157,7 +157,7 @@ public:
 #pragma region .NET properties
 	property State^ MasterState { State^ get() { return getMasterState(); } }
 	property bool IsSubState { bool get() { return isSubState(); } }
-	property bool CallExitOnShutdown;
+	property bool IsExitCalledOnShutdown;
 #pragma endregion
 
 internal:

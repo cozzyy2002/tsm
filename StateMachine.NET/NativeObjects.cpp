@@ -84,9 +84,9 @@ HRESULT State::_exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* ne
 	return m_exitCallback(context, event, nextState);
 }
 
-bool State::_callExitOnShutdown() const
+bool State::_isExitCalledOnShutdown() const
 {
-	return m_managedState->CallExitOnShutdown;
+	return m_managedState->IsExitCalledOnShutdown;
 }
 
 Event::Event(ManagedType^ event)

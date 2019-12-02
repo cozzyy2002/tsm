@@ -132,7 +132,7 @@ public:
 	virtual HRESULT _entry(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState) override;
 	virtual HRESULT _exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState) override;
 
-	virtual bool _callExitOnShutdown() const override;
+	virtual bool _isExitCalledOnShutdown() const override;
 
 	virtual IState* _getMasterState() const override { return m_masterState; }
 

@@ -53,7 +53,7 @@ namespace StateMachine.NET.UnitTest.Generic
             Assume.That(c.CurrentState, Is.EqualTo(mockNextState));
 
             // Shutdown
-            mockNextState.CallExitOnShutdown = true;
+            mockNextState.IsExitCalledOnShutdown = true;
             Assume.That(c.shutdown(), Is.EqualTo(HResult.Ok));
             Thread.Sleep(100);
 
