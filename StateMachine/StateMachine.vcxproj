@@ -159,6 +159,7 @@
     <ClInclude Include="..\public\include\StateMachine\Unknown.h" />
     <ClInclude Include="AsyncStateMachine.h" />
     <ClInclude Include="Handles.h" />
+    <ClInclude Include="MemoryWeight.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowProcStateMachine.h" />

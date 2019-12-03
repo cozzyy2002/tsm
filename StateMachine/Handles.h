@@ -7,6 +7,11 @@
 #include <deque>
 #include <mutex>
 
+#define MEMORY_WEIGHT_MBYTE 500
+#if MEMORY_WEIGHT_MBYTE
+#include "MemoryWeight.h"
+#endif
+
 namespace tsm {
 
 using lock_object_t = std::recursive_mutex;
@@ -20,6 +25,9 @@ struct EventHandle
 };
 
 struct StateHandle
+#if MEMORY_WEIGHT_MBYTE
+	: public MemoryWeight
+#endif
 {
 	StateHandle(IState*);
 
