@@ -13,13 +13,19 @@ struct EventHandle {};
 struct TimerHandle {};
 }
 
-StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner)
-	: m_onIdleCallback(gcnew OwnerType::OnIdleDelegate(owner, &OwnerType::onIdleCallback))
-	, m_onEventTriggeredCallback(gcnew OwnerType::OnEventTriggeredDelegate(owner, &OwnerType::onEventTriggeredCallback))
-	, m_onEventHandlingCallback(gcnew OwnerType::OnEventHandlingDelegate(owner, &OwnerType::onEventHandlingCallback))
-	, m_onStateChangedCallback(gcnew OwnerType::OnStateChangedDelegate(owner, &OwnerType::onStateChangedCallback))
-	, m_onTimerStartedCallback(gcnew OwnerType::OnTimerStartedDelegate(owner, &OwnerType::onTimerStartedCallback))
-	, m_onWorkerThreadCallback(gcnew OwnerType::OnWorkerThreadExitDelegate(owner, &OwnerType::onWorkerThreadExitCallback))
+StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner,
+				OwnerType::OnIdleCallback onIdleCallback,
+				OwnerType::OnEventTriggeredCallback onEventTriggeredCallback,
+				OwnerType::OnEventHandlingCallback onEventHandlingCallback,
+				OwnerType::OnStateChangedCallback onStateChangedCallback,
+				OwnerType::OnTimerStartedCallback onTimerStartedCallback,
+				OwnerType::OnWorkerThreadExitCallback onWorkerThreadExitCallback)
+	: m_onIdleCallback(onIdleCallback)
+	, m_onEventTriggeredCallback(onEventTriggeredCallback)
+	, m_onEventHandlingCallback(onEventHandlingCallback)
+	, m_onStateChangedCallback(onStateChangedCallback)
+	, m_onTimerStartedCallback(onTimerStartedCallback)
+	, m_onWorkerThreadExitCallback(onWorkerThreadExitCallback)
 {
 }
 
@@ -50,7 +56,7 @@ void StateMonitor::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
 
 void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 {
-	m_onWorkerThreadCallback(context, exitCode);
+	m_onWorkerThreadExitCallback(context, exitCode);
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
@@ -60,13 +66,21 @@ Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 {
 }
 
-State::State(ManagedType^ state, ManagedType^ masterState)
+State::State(ManagedType^ state, ManagedType^ masterState,
+				ManagedType::HandleEventCallback handleEventCallback,
+				ManagedType::EntryCallback entryCallback,
+				ManagedType::ExitCallback exitCallback)
 	: m_managedState(state)
 	, m_masterState(getNative(masterState))
-	, m_handleEventCallback(gcnew ManagedType::HandleEventDelegate(state, &ManagedType::handleEventCallback))
-	, m_entryCallback(gcnew ManagedType::EntryDelegate(state, &ManagedType::entryCallback))
-	, m_exitCallback(gcnew ManagedType::ExitDelegate(state, &ManagedType::exitCallback))
+	, m_handleEventCallback(handleEventCallback)
+	, m_entryCallback(entryCallback)
+	, m_exitCallback(exitCallback)
 {
+}
+
+State::~State()
+{
+	m_managedState = nullptr;
 }
 
 HRESULT State::_handleEvent(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
@@ -89,10 +103,12 @@ bool State::_isExitCalledOnShutdown() const
 	return m_managedState->IsExitCalledOnShutdown;
 }
 
-Event::Event(ManagedType^ event)
+Event::Event(ManagedType^ event,
+				ManagedType::PreHandleCallback preHandleCallback,
+				ManagedType::PostHandleCallback postHandleCallback)
 	: m_managedEvent(event)
-	, m_preHandleCallback(gcnew ManagedType::PreHandleDelegate(event, &ManagedType::preHandleCallback))
-	, m_postHandleCallback(gcnew ManagedType::PostHandleDelegate(event, &ManagedType::postHandleCallback))
+	, m_preHandleCallback(preHandleCallback)
+	, m_postHandleCallback(postHandleCallback)
 	, m_timerClient(nullptr)
 {
 }

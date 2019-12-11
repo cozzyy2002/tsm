@@ -13,11 +13,10 @@ namespace StateMachine.NET.TestConsole
         {
             var context = new Context();
             context.setup(new State());
-            context.waitReady(new TimeSpan(0, 0, 1));
+            context.StateMonitor = new StateMonitor();
 
             while (true)
             {
-                Console.Write("> ");
                 var str = Console.ReadLine();
                 if (string.IsNullOrEmpty(str)) { break; }
 
@@ -72,6 +71,16 @@ namespace StateMachine.NET.TestConsole
             return HResult.Ok;
         }
 
+        public override HResult exit(Context context, Event @event, State nextState)
+        {
+            if(MasterState.generation == @event.NextGeneration)
+            {
+                Console.WriteLine("Force a garbage collection.");
+                GC.Collect();
+            }
+            return HResult.Ok;
+        }
+
         public override string ToString()
         {
             return string.Format("State: generation={0}", generation);
@@ -93,5 +102,23 @@ namespace StateMachine.NET.TestConsole
         }
 
         public readonly int NextGeneration;
+    }
+
+    class StateMonitor : IStateMonitor<Event, State>
+    {
+        public void onEventHandling(Context<Event, State> context, Event @event, State current) { }
+
+        public void onEventTriggered(Context<Event, State> context, Event @event) { }
+
+        public void onIdle(Context<Event, State> context)
+        {
+            Console.Write("{0} > ", GC.GetTotalMemory(true));
+        }
+
+        public void onStateChanged(Context<Event, State> context, Event @event, State previous, State next) { }
+
+        public void onTimerStarted(Context<Event, State> context, Event @event) { }
+
+        public void onWorkerThreadExit(Context<Event, State> context, HResult exitCode) { }
     }
 }

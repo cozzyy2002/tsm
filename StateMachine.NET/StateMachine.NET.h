@@ -8,6 +8,9 @@ class Context;
 class State;
 class Event;
 class StateMonitor;
+
+template<class D, class C>
+class Callback;
 }
 
 namespace tsm_NET
@@ -91,6 +94,13 @@ internal:
 protected:
 	NativeType* m_nativeStateMonitor;
 	IStateMonitor^ m_stateMonitor;
+
+	native::Callback<OnIdleDelegate, OnIdleCallback>* m_onIdleCallback;
+	native::Callback<OnEventTriggeredDelegate, OnEventTriggeredCallback>* m_onEventTriggeredCallback;
+	native::Callback<OnEventHandlingDelegate, OnEventHandlingCallback>* m_onEventHandlingCallback;
+	native::Callback<OnStateChangedDelegate, OnStateChangedCallback>* m_onStateChangedCallback;
+	native::Callback<OnTimerStartedDelegate, OnTimerStartedCallback>* m_onTimerStartedCallback;
+	native::Callback<OnWorkerThreadExitDelegate, OnWorkerThreadExitCallback>* m_onWorkerThreadExitCallback;
 };
 
 public ref class Context
@@ -179,6 +189,10 @@ internal:
 
 protected:
 	NativeType* m_nativeState;
+
+	native::Callback<HandleEventDelegate, HandleEventCallback>* m_handleEventCallback;
+	native::Callback<EntryDelegate, EntryCallback>* m_entryCallback;
+	native::Callback<ExitDelegate, ExitCallback>* m_exitCallback;
 };
 
 public ref class Event
@@ -214,6 +228,9 @@ internal:
 
 protected:
 	NativeType* m_nativeEvent;
+
+	native::Callback<PreHandleDelegate, PreHandleCallback>* m_preHandleCallback;
+	native::Callback<PostHandleDelegate, PostHandleCallback>* m_postHandleCallback;
 };
 
 namespace common
