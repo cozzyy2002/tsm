@@ -11,6 +11,8 @@ namespace StateMachine.NET.TestConsole
     {
         static void Main(string[] args)
         {
+            State.MemoryWeight = Event.MemoryWeight = 100;
+
             var context = new Context();
             context.setup(new State());
             context.StateMonitor = new StateMonitor();

@@ -3,6 +3,7 @@
 
 using namespace native;
 using namespace tsm_NET::common;
+using namespace System::Diagnostics;
 
 // Dummy difinition to suppress `warning LNK4248: unresolved typeref token`
 namespace tsm
@@ -80,7 +81,7 @@ State::State(ManagedType^ state, ManagedType^ masterState,
 
 State::~State()
 {
-	m_managedState = nullptr;
+	delete m_managedState;
 }
 
 HRESULT State::_handleEvent(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
@@ -95,6 +96,7 @@ HRESULT State::_entry(tsm::IContext* context, tsm::IEvent* event, tsm::IState* p
 
 HRESULT State::_exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
 {
+	Trace::WriteLine(String::Format("native::State::_exit(): Current AppDomain={0}", System::AppDomain::CurrentDomain->FriendlyName));
 	return m_exitCallback(context, event, nextState);
 }
 
@@ -111,6 +113,11 @@ Event::Event(ManagedType^ event,
 	, m_postHandleCallback(postHandleCallback)
 	, m_timerClient(nullptr)
 {
+}
+
+Event::~Event()
+{
+	delete m_managedEvent;
 }
 
 HRESULT Event::_preHandle(tsm::IContext* context)

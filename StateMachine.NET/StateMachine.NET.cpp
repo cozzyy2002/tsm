@@ -6,6 +6,7 @@
 
 using namespace tsm_NET;
 using namespace tsm_NET::common;
+using namespace System::Diagnostics;
 
 ///*static*/ event EventHandler<IStateMonitor::AssertFailedEventArgs<HResult>^>^ IStateMonitor::AssertFailedEvent;
 
@@ -192,7 +193,10 @@ HRESULT State::entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IS
 
 HRESULT State::exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
 {
-	return (HRESULT)exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
+	Trace::WriteLine(String::Format("State::exitCallback(): Current AppDomain={0}", System::AppDomain::CurrentDomain->FriendlyName));
+	auto ret = exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
+	//m_nativeState->Release();
+	return (HRESULT)ret;
 }
 
 State^ State::getMasterState()
@@ -209,6 +213,16 @@ State^ State::getMasterState()
 bool State::isSubState()
 {
 	return m_nativeState->isSubState();
+}
+
+int State::MemoryWeight::get()
+{
+	return tsm::IState::getMemoryWeight();
+}
+
+void State::MemoryWeight::set(int value)
+{
+	tsm::IState::setMemoryWeight(value);
 }
 
 //-------------- Managed Event class. --------------------//
@@ -246,5 +260,17 @@ HRESULT Event::preHandleCallback(tsm::IContext* context)
 
 HRESULT Event::postHandleCallback(tsm::IContext* context, HRESULT hr)
 {
-	return (HRESULT)postHandle(getManaged((native::Context*)context), (HResult)hr);
+	auto ret = (HRESULT)postHandle(getManaged((native::Context*)context), (HResult)hr);
+	//m_nativeEvent->Release();
+	return (HRESULT)ret;
+}
+
+int Event::MemoryWeight::get()
+{
+	return tsm::IEvent::getMemoryWeight();
+}
+
+void Event::MemoryWeight::set(int value)
+{
+	tsm::IEvent::setMemoryWeight(value);
 }

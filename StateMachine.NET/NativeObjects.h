@@ -128,6 +128,7 @@ public:
 	Event(ManagedType^ event,
 			ManagedType::PreHandleCallback preHandleCallback,
 			ManagedType::PostHandleCallback postHandleCallback);
+	virtual ~Event();
 
 #pragma region Implementation of IState that call methods of managed class.
 	virtual HRESULT _preHandle(tsm::IContext* Icontext) override;

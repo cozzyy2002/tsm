@@ -14,6 +14,8 @@ struct EventHandle;
 struct StateHandle;
 struct ContextHandle;
 
+struct MByteUnit;
+
 template<class T, class H>
 class HandleOwner
 {
@@ -63,8 +65,11 @@ public:
 
 class IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
 {
+protected:
+	IEvent();
+
 public:
-	virtual ~IEvent() {}
+	virtual ~IEvent();
 
 	virtual int _getPriority() const = 0;
 
@@ -78,12 +83,22 @@ public:
 	virtual DWORD _getIntervalTime() const = 0;
 	virtual TimerClient* _getTimerClient() const = 0;
 #pragma endregion
+
+	static void setMemoryWeight(int memoryWeightMByte) { s_memoryWeightMByte = memoryWeightMByte; }
+	static int getMemoryWeight() { return s_memoryWeightMByte; }
+
+private:
+	static int s_memoryWeightMByte;
+	MByteUnit* m_memoryWeight;
 };
 
 class IState : public HandleOwner<IState, StateHandle>, public Unknown
 {
+protected:
+	IState();
+
 public:
-	virtual ~IState() {}
+	virtual ~IState();
 
 #pragma region Methods to be called by StateMachine.
 	virtual HRESULT _handleEvent(IContext* context, IEvent* event, IState** nextState) = 0;
@@ -97,6 +112,13 @@ public:
 	// Returns TimerClient instance.
 	// Sub class may returns this pointer.
 	virtual TimerClient* _getTimerClient() = 0;
+
+	static void setMemoryWeight(int memoryWeightMByte) { s_memoryWeightMByte = memoryWeightMByte; }
+	static int getMemoryWeight() { return s_memoryWeightMByte; }
+
+private:
+	static int s_memoryWeightMByte;
+	MByteUnit* m_memoryWeight;
 };
 
 class IStateMachine
