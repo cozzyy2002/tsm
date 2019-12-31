@@ -215,6 +215,11 @@ bool State::isSubState()
 	return m_nativeState->isSubState();
 }
 
+long State::SequenceNumber::get()
+{
+	return m_nativeState->getSequenceNumber();
+}
+
 int State::MemoryWeight::get()
 {
 	return tsm::IState::getMemoryWeight();
@@ -263,6 +268,11 @@ HRESULT Event::postHandleCallback(tsm::IContext* context, HRESULT hr)
 	auto ret = (HRESULT)postHandle(getManaged((native::Context*)context), (HResult)hr);
 	//m_nativeEvent->Release();
 	return (HRESULT)ret;
+}
+
+long Event::SequenceNumber::get()
+{
+	return m_nativeEvent->getSequenceNumber();
 }
 
 int Event::MemoryWeight::get()

@@ -84,10 +84,17 @@ public:
 	virtual TimerClient* _getTimerClient() const = 0;
 #pragma endregion
 
+	// Sequence number that indicates creation order.
+	// If this method return Zero, it means that overflow occurred.
+	long getSequenceNumber() const { return m_sequenceNumber; }
+
 	static void setMemoryWeight(int memoryWeightMByte) { s_memoryWeightMByte = memoryWeightMByte; }
 	static int getMemoryWeight() { return s_memoryWeightMByte; }
 
 private:
+	static LONG s_sequenceNumber;
+	const long m_sequenceNumber;
+
 	static int s_memoryWeightMByte;
 	MByteUnit* m_memoryWeight;
 };
@@ -113,10 +120,17 @@ public:
 	// Sub class may returns this pointer.
 	virtual TimerClient* _getTimerClient() = 0;
 
+	// Sequence number that indicates creation order.
+	// If this method return Zero, it means that overflow occurred.
+	long getSequenceNumber() const { return m_sequenceNumber; }
+
 	static void setMemoryWeight(int memoryWeightMByte) { s_memoryWeightMByte = memoryWeightMByte; }
 	static int getMemoryWeight() { return s_memoryWeightMByte; }
 
 private:
+	static LONG s_sequenceNumber;
+	const long m_sequenceNumber;
+
 	static int s_memoryWeightMByte;
 	MByteUnit* m_memoryWeight;
 };

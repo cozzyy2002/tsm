@@ -12,11 +12,14 @@ struct MByteUnit
 
 }
 
+/*static*/ LONG IEvent::s_sequenceNumber = 0;
 /*static*/ int IEvent::s_memoryWeightMByte = 0;
+/*static*/ LONG IState::s_sequenceNumber = 0;
 /*static*/ int IState::s_memoryWeightMByte = 0;
 
 IEvent::IEvent()
-	: m_memoryWeight(s_memoryWeightMByte ? new MByteUnit[s_memoryWeightMByte] : nullptr)
+	: m_sequenceNumber(InterlockedIncrement(&s_sequenceNumber))
+	, m_memoryWeight(s_memoryWeightMByte ? new MByteUnit[s_memoryWeightMByte] : nullptr)
 {
 
 }
@@ -27,7 +30,8 @@ IEvent::~IEvent()
 }
 
 IState::IState()
-	: m_memoryWeight(s_memoryWeightMByte ? new MByteUnit[s_memoryWeightMByte] : nullptr)
+	: m_sequenceNumber(InterlockedIncrement(&s_sequenceNumber))
+	, m_memoryWeight(s_memoryWeightMByte ? new MByteUnit[s_memoryWeightMByte] : nullptr)
 {
 
 }

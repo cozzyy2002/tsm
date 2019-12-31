@@ -85,7 +85,7 @@ namespace StateMachine.NET.TestConsole
 
         public override string ToString()
         {
-            return string.Format("State: generation={0}", generation);
+            return string.Format("State({0}): generation={1}", SequenceNumber, generation);
         }
 
         int generation;
@@ -100,7 +100,7 @@ namespace StateMachine.NET.TestConsole
 
         public override string ToString()
         {
-            return string.Format("Event: NextGeneration={0}", NextGeneration);
+            return string.Format("Event({0}): NextGeneration={1}", SequenceNumber, NextGeneration);
         }
 
         public readonly int NextGeneration;

@@ -170,6 +170,7 @@ public:
 	property bool IsSubState { bool get() { return isSubState(); } }
 	property bool IsExitCalledOnShutdown;
 
+	property long SequenceNumber { long get(); }
 	static property int MemoryWeight { int get(); void set(int value); }
 #pragma endregion
 
@@ -218,6 +219,7 @@ public:
 	//
 
 #pragma region .NET properties
+	property long SequenceNumber { long get(); }
 	static property int MemoryWeight { int get(); void set(int value); }
 #pragma endregion
 
