@@ -138,6 +138,7 @@
   <ItemGroup>
     <ClInclude Include="GenericObject.h" />
     <ClInclude Include="HResult.h" />
+    <ClInclude Include="NativeCallback.h" />
     <ClInclude Include="NativeObjects.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="StateMachine.NET.h" />

@@ -44,6 +44,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StateMachine.NET", "StateMa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateMachine.NET.UnitTest", "StateMachine.NET.UnitTest\StateMachine.NET.UnitTest.csproj", "{0ED7EA28-76F3-4C7F-90FB-C30FEFF3C5D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateMachine.NET.TestConsole", "StateMachine.NET.TestConsole\StateMachine.NET.TestConsole.csproj", "{C5DB67FE-9B51-4035-A6A5-A38613F30424}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,6 +128,18 @@ Global
 		{0ED7EA28-76F3-4C7F-90FB-C30FEFF3C5D3}.Release|x64.Build.0 = Release|Any CPU
 		{0ED7EA28-76F3-4C7F-90FB-C30FEFF3C5D3}.Release|x86.ActiveCfg = Release|Any CPU
 		{0ED7EA28-76F3-4C7F-90FB-C30FEFF3C5D3}.Release|x86.Build.0 = Release|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Debug|x64.Build.0 = Debug|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Debug|x86.Build.0 = Debug|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Release|x64.ActiveCfg = Release|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Release|x64.Build.0 = Release|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Release|x86.ActiveCfg = Release|Any CPU
+		{C5DB67FE-9B51-4035-A6A5-A38613F30424}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

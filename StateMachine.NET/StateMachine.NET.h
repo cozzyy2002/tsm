@@ -8,6 +8,9 @@ class Context;
 class State;
 class Event;
 class StateMonitor;
+
+template<class D, class C>
+class Callback;
 }
 
 namespace tsm_NET
@@ -91,6 +94,14 @@ internal:
 protected:
 	NativeType* m_nativeStateMonitor;
 	IStateMonitor^ m_stateMonitor;
+
+internal:
+	native::Callback<OnIdleDelegate, OnIdleCallback>* m_onIdleCallback;
+	native::Callback<OnEventTriggeredDelegate, OnEventTriggeredCallback>* m_onEventTriggeredCallback;
+	native::Callback<OnEventHandlingDelegate, OnEventHandlingCallback>* m_onEventHandlingCallback;
+	native::Callback<OnStateChangedDelegate, OnStateChangedCallback>* m_onStateChangedCallback;
+	native::Callback<OnTimerStartedDelegate, OnTimerStartedCallback>* m_onTimerStartedCallback;
+	native::Callback<OnWorkerThreadExitDelegate, OnWorkerThreadExitCallback>* m_onWorkerThreadExitCallback;
 };
 
 public ref class Context
@@ -158,6 +169,9 @@ public:
 	property State^ MasterState { State^ get() { return getMasterState(); } }
 	property bool IsSubState { bool get() { return isSubState(); } }
 	property bool IsExitCalledOnShutdown;
+
+	property long SequenceNumber { long get(); }
+	static property int MemoryWeight { int get(); void set(int value); }
 #pragma endregion
 
 internal:
@@ -179,6 +193,11 @@ internal:
 
 protected:
 	NativeType* m_nativeState;
+
+internal:
+	native::Callback<HandleEventDelegate, HandleEventCallback>* m_handleEventCallback;
+	native::Callback<EntryDelegate, EntryCallback>* m_entryCallback;
+	native::Callback<ExitDelegate, ExitCallback>* m_exitCallback;
 };
 
 public ref class Event
@@ -199,6 +218,11 @@ public:
 	// TODO: Implement setTimer() method.
 	//
 
+#pragma region .NET properties
+	property long SequenceNumber { long get(); }
+	static property int MemoryWeight { int get(); void set(int value); }
+#pragma endregion
+
 internal:
 	NativeType* get() { return m_nativeEvent; }
 
@@ -214,6 +238,10 @@ internal:
 
 protected:
 	NativeType* m_nativeEvent;
+
+internal:
+	native::Callback<PreHandleDelegate, PreHandleCallback>* m_preHandleCallback;
+	native::Callback<PostHandleDelegate, PostHandleCallback>* m_postHandleCallback;
 };
 
 namespace common

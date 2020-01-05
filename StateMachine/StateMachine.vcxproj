@@ -166,6 +166,7 @@
   <ItemGroup>
     <ClCompile Include="AsyncStateMachine.cpp" />
     <ClCompile Include="Handles.cpp" />
+    <ClCompile Include="Interface.cpp" />
     <ClCompile Include="TimerClient.cpp" />
     <ClCompile Include="Unknown.cpp" />
     <ClCompile Include="StateMachine.cpp" />
