@@ -38,12 +38,21 @@ protected:
 	std::unique_ptr<H, HandleFactory> m_handle;
 };
 
+class IAsyncDispatcher
+{
+public:
+	using Method = DWORD(WINAPI *)(LPVOID lpParam);
+	virtual HANDLE dispatch(Method, LPVOID) = 0;
+};
+
 class IContext : public HandleOwner<IContext, ContextHandle>
 {
 public:
 	virtual ~IContext() {}
 
 	virtual bool isAsync() const = 0;
+	virtual IAsyncDispatcher* _getAsyncDispatcher() { return nullptr; }
+	virtual void _setAsyncDispatcher(IAsyncDispatcher* disp) {};
 
 	virtual IStateMachine* _getStateMachine() = 0;
 	virtual IState* _getCurrentState() = 0;

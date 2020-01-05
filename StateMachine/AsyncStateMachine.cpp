@@ -16,6 +16,15 @@ namespace tsm {
 	return context->isAsync() ? new AsyncStateMachine() : new StateMachine();
 }
 
+class DefaultAsyncDispatcher : public IAsyncDispatcher
+{
+public:
+	virtual HANDLE dispatch(Method method, LPVOID param) override
+	{
+		return CreateThread(nullptr, 0, method, param, 0, nullptr);
+	}
+};
+
 HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEvent * event)
 {
 	// Ensure to release object on error.
@@ -38,7 +47,12 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 	asyncData->hEventShutdown.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 	// param will be deleted in worker thread.
 	auto param = new SetupParam(context, this, event);
-	asyncData->hWorkerThread.Attach(CreateThread(nullptr, 0, workerThreadProc, param, 0, nullptr));
+
+	auto& dispatcher = asyncData->asyncDispatcher;
+	if(!dispatcher) {
+		dispatcher.reset(new DefaultAsyncDispatcher());
+	}
+	asyncData->hWorkerThread.Attach(dispatcher->dispatch(workerThreadProc, param));
 	if(!asyncData->hWorkerThread) {
 		delete param;
 		return HRESULT_FROM_WIN32(GetLastError());
