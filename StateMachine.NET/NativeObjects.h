@@ -49,6 +49,7 @@ public:
 
 	Context(ManagedType^ context, bool isAsync = true);
 	virtual bool isAsync() const override { return m_isAsync; }
+	virtual tsm::IAsyncDispatcher* _createAsyncDispatcher() override;
 
 	HRESULT setup(tsm::IState* initialState, tsm::IEvent* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }

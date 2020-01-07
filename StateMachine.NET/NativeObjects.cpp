@@ -60,6 +60,63 @@ void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 	m_onWorkerThreadExitCallback(context, exitCode);
 }
 
+/**
+ * Managed class to dispatch tsm::IAsyncDispatcher::Method(lpParam) in managed worker thread.
+ */
+ref class ManagedDispatcher
+{
+public:
+	ManagedDispatcher(tsm::IAsyncDispatcher::Method method, LPVOID lpParam)
+		: method(method), lpParam(lpParam)
+	{
+		exitThreadEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+		auto threadStart = gcnew Threading::ThreadStart(this, &ManagedDispatcher::threadMethod);
+		auto thread = gcnew Threading::Thread(threadStart);
+		thread->Start();
+	}
+
+	~ManagedDispatcher()
+	{
+		this->!ManagedDispatcher();
+	}
+
+	!ManagedDispatcher()
+	{
+		CloseHandle(exitThreadEvent);
+	}
+
+	HANDLE exitThreadEvent;
+
+protected:
+	tsm::IAsyncDispatcher::Method method;
+	LPVOID lpParam;
+
+	// Method called in the managed worker thread.
+	void threadMethod() {
+		method(lpParam);
+
+		// Set event to notify that worker thread exit.
+		SetEvent(exitThreadEvent);
+	}
+};
+
+/**
+ * Implementation of tsm::IAsyncDispatcher
+ */
+class AsyncDispatcher : public tsm::IAsyncDispatcher
+{
+public:
+	virtual HANDLE dispatch(Method method, LPVOID lpParam) override {
+		auto md = gcnew ManagedDispatcher(method, lpParam);
+		return md->exitThreadEvent;
+	}
+};
+
+tsm::IAsyncDispatcher* Context::_createAsyncDispatcher()
+{
+	return isAsync() ? new AsyncDispatcher() : nullptr;
+}
+
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 	: m_isAsync(isAsync)
 	, m_managedContext(context)

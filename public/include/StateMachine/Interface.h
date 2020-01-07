@@ -38,11 +38,25 @@ protected:
 	std::unique_ptr<H, HandleFactory> m_handle;
 };
 
+/**
+ * IAsyncDispatcher interface
+ */
 class IAsyncDispatcher
 {
 public:
+	/**
+	 * Signature of method to be dispatched.
+	 */
 	using Method = DWORD(WINAPI *)(LPVOID lpParam);
-	virtual HANDLE dispatch(Method, LPVOID) = 0;
+
+	/**
+	 * dispathc method.
+	 *
+	 * method: Method to be dispatched.
+	 * lpParam: Pointer to parameter to be passed to `method`.
+	 * Returns event handle that is set when the method terminates.
+	 */
+	virtual HANDLE dispatch(Method method, LPVOID lpParam) = 0;
 };
 
 class IContext : public HandleOwner<IContext, ContextHandle>
@@ -51,8 +65,7 @@ public:
 	virtual ~IContext() {}
 
 	virtual bool isAsync() const = 0;
-	virtual IAsyncDispatcher* _getAsyncDispatcher() { return nullptr; }
-	virtual void _setAsyncDispatcher(IAsyncDispatcher* disp) {};
+	virtual IAsyncDispatcher* _createAsyncDispatcher() = 0;
 
 	virtual IStateMachine* _getStateMachine() = 0;
 	virtual IState* _getCurrentState() = 0;

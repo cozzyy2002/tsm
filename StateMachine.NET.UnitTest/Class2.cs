@@ -1,6 +1,6 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
-using System.Diagnostics;
+using System;
 using System.Threading;
 using tsm_NET;
 
@@ -26,7 +26,7 @@ namespace StateMachine.NET.UnitTest
                 .handleEvent(Arg.Is(c), Arg.Is(mockEvent), ref Arg.Is((State)null))
                 .Returns(x =>
                 {
-                    Trace.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
+                    Console.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
                     x[2] = mockNextState;
                     return HResult.Ok;
                 });

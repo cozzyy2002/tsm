@@ -13,6 +13,7 @@ public:
 	virtual ~Context() {}
 
 	virtual bool isAsync() const { return false; }
+	virtual IAsyncDispatcher* _createAsyncDispatcher() override { return nullptr; }
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
@@ -43,10 +44,22 @@ protected:
 template<class E = IEvent, class S = IState>
 class AsyncContext : public Context<E, S>
 {
+	class AsyncDispatcher : public IAsyncDispatcher
+	{
+	public:
+		virtual HANDLE dispatch(Method method, LPVOID param) override
+		{
+			return CreateThread(nullptr, 0, method, param, 0, nullptr);
+		}
+	};
+
 public:
 	virtual ~AsyncContext() {}
 
 	virtual bool isAsync() const { return true; }
+	virtual IAsyncDispatcher* _createAsyncDispatcher() override {
+		return new AsyncDispatcher();
+	}
 };
 
 }
