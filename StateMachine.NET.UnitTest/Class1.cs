@@ -121,7 +121,7 @@ namespace StateMachine.NET.UnitTest.Generic
             // Shutdown
             mockNextState.IsExitCalledOnShutdown = true;
             Assume.That(c.shutdown(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
-            Thread.Sleep(1000);
+            Thread.Sleep(100);
 
             // Check calls to methods of State.
             Received.InOrder(() =>
