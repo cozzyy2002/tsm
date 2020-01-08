@@ -60,44 +60,25 @@ void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 	m_onWorkerThreadExitCallback(context, exitCode);
 }
 
+class AsyncDispatcher;
+
 /**
  * Managed class to dispatch tsm::IAsyncDispatcher::Method(lpParam) in managed worker thread.
  */
 ref class ManagedDispatcher
 {
 public:
-	ManagedDispatcher(tsm::IAsyncDispatcher::Method method, LPVOID lpParam)
-		: method(method), lpParam(lpParam)
+	ManagedDispatcher(AsyncDispatcher* asyncDispatcher)
+		: asyncDispatcher(asyncDispatcher)
 	{
-		exitThreadEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 		auto threadStart = gcnew Threading::ThreadStart(this, &ManagedDispatcher::threadMethod);
 		auto thread = gcnew Threading::Thread(threadStart);
 		thread->Start();
 	}
 
-	~ManagedDispatcher()
-	{
-		this->!ManagedDispatcher();
-	}
-
-	!ManagedDispatcher()
-	{
-		CloseHandle(exitThreadEvent);
-	}
-
-	HANDLE exitThreadEvent;
-
 protected:
-	tsm::IAsyncDispatcher::Method method;
-	LPVOID lpParam;
-
-	// Method called in the managed worker thread.
-	void threadMethod() {
-		method(lpParam);
-
-		// Set event to notify that worker thread exit.
-		SetEvent(exitThreadEvent);
-	}
+	void threadMethod();
+	AsyncDispatcher* asyncDispatcher;
 };
 
 /**
@@ -107,10 +88,32 @@ class AsyncDispatcher : public tsm::IAsyncDispatcher
 {
 public:
 	virtual HANDLE dispatch(Method method, LPVOID lpParam) override {
-		auto md = gcnew ManagedDispatcher(method, lpParam);
-		return md->exitThreadEvent;
+		this->method = method;
+		this->lpParam = lpParam;
+		gcnew ManagedDispatcher(this);
+
+		exitThreadEvent.Attach(CreateEvent(nullptr, TRUE, FALSE, nullptr));
+		return exitThreadEvent;
 	}
+
+	/**
+	 * Method called in the managed thread and call IAsyncDispatcher::Method.
+	 */
+	void threadMethod() {
+		method(lpParam);
+		SetEvent(exitThreadEvent);
+	}
+
+protected:
+	Method method;
+	LPVOID lpParam;
+	CHandle exitThreadEvent;
 };
+
+void ManagedDispatcher::threadMethod()
+{
+	asyncDispatcher->threadMethod();
+}
 
 tsm::IAsyncDispatcher* Context::_createAsyncDispatcher()
 {
