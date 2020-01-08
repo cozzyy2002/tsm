@@ -33,6 +33,9 @@ namespace StateMachine.NET.TestConsole
 
                 }
             }
+
+            var hr = context.shutdown();
+            Console.WriteLine($"Context.shutdown() returns {hr}");
         }
     }
 
