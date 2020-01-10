@@ -66,38 +66,38 @@ namespace Generic
 	}
 
 	generic<typename C, typename E, typename S>
-	HRESULT State<C, E, S>::handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
+	tsm_NET::HResult State<C, E, S>::handleEvent(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^% nextState)
 	{
 		S _nextState;
-		auto hr = handleEvent((C)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), _nextState);
+		auto hr = handleEvent((C)context, (E)event, _nextState);
 		if(_nextState) {
-			*nextState = _nextState->get();
+			nextState = (S)_nextState;
 		}
-		return (HRESULT)hr;
+		return (tsm_NET::HResult)hr;
 	}
 
 	generic<typename C, typename E, typename S>
-	HRESULT State<C, E, S>::entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState)
+		tsm_NET::HResult State<C, E, S>::entry(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ previousState)
 	{
-		return (HRESULT)entry((C)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)previousState));
+		return (tsm_NET::HResult)entry((C)context, (E)event, (S)previousState);
 	}
 
 	generic<typename C, typename E, typename S>
-	HRESULT State<C, E, S>::exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
+	tsm_NET::HResult State<C, E, S>::exit(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ nextState)
 	{
-		return (HRESULT)exit((C)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)nextState));
+		return (tsm_NET::HResult)exit((C)context, (E)event, (S)nextState);
 	}
 
 	generic<typename C>
-	HRESULT Event<C>::preHandleCallback(tsm::IContext* context)
+	tsm_NET::HResult Event<C>::preHandle(tsm_NET::Context^ context)
 	{
-		return (HRESULT)preHandle((C)getManaged((native::Context*)context));
+		return (tsm_NET::HResult)preHandle((C)context);
 	}
 
 	generic<typename C>
-	HRESULT Event<C>::postHandleCallback(tsm::IContext* context, HRESULT hr)
+	tsm_NET::HResult Event<C>::postHandle(tsm_NET::Context^ context, tsm_NET::HResult hr)
 	{
-		return (HRESULT)postHandle((C)getManaged((native::Context*)context), (HResult)hr);
+		return (tsm_NET::HResult)postHandle((C)context, (HResult)hr);
 	}
 }
 }

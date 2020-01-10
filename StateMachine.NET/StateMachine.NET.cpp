@@ -2,7 +2,6 @@
 
 #include "StateMachine.NET.h"
 #include "NativeObjects.h"
-#include "NativeCallback.h"
 
 using namespace tsm_NET;
 using namespace tsm_NET::common;
@@ -20,14 +19,7 @@ using namespace System::Diagnostics;
 StateMonitorCaller::StateMonitorCaller(IStateMonitor^ stateMonitor)
 	: m_stateMonitor(stateMonitor)
 {
-	m_onIdleCallback = new native::Callback<OnIdleDelegate, OnIdleCallback>(gcnew OnIdleDelegate(this, &StateMonitorCaller::onIdleCallback));
-	m_onEventTriggeredCallback = new native::Callback<OnEventTriggeredDelegate, OnEventTriggeredCallback>(gcnew OnEventTriggeredDelegate(this, &StateMonitorCaller::onEventTriggeredCallback));
-	m_onEventHandlingCallback = new native::Callback<OnEventHandlingDelegate, OnEventHandlingCallback>(gcnew OnEventHandlingDelegate(this, &StateMonitorCaller::onEventHandlingCallback));
-	m_onStateChangedCallback = new native::Callback<OnStateChangedDelegate, OnStateChangedCallback>(gcnew OnStateChangedDelegate(this, &StateMonitorCaller::onStateChangedCallback));
-	m_onTimerStartedCallback = new native::Callback<OnTimerStartedDelegate, OnTimerStartedCallback>(gcnew OnTimerStartedDelegate(this, &StateMonitorCaller::onTimerStartedCallback));
-	m_onWorkerThreadExitCallback = new native::Callback<OnWorkerThreadExitDelegate, OnWorkerThreadExitCallback>(gcnew OnWorkerThreadExitDelegate(this, &StateMonitorCaller::onWorkerThreadExitCallback));
-
-	m_nativeStateMonitor = new native::StateMonitor(this, *m_onIdleCallback, *m_onEventTriggeredCallback, * m_onEventHandlingCallback, *m_onStateChangedCallback, *m_onTimerStartedCallback, *m_onWorkerThreadExitCallback);
+	m_nativeStateMonitor = new native::StateMonitor(this);
 }
 
 StateMonitorCaller::~StateMonitorCaller()
@@ -38,13 +30,6 @@ StateMonitorCaller::~StateMonitorCaller()
 StateMonitorCaller::!StateMonitorCaller()
 {
 	SAFE_RELEASE(m_nativeStateMonitor);
-
-	SAFE_RELEASE(m_onIdleCallback);
-	SAFE_RELEASE(m_onEventTriggeredCallback);
-	SAFE_RELEASE(m_onEventHandlingCallback);
-	SAFE_RELEASE(m_onStateChangedCallback);
-	SAFE_RELEASE(m_onTimerStartedCallback);
-	SAFE_RELEASE(m_onWorkerThreadExitCallback);
 }
 
 void StateMonitorCaller::onIdleCallback(tsm::IContext* context)
@@ -147,12 +132,7 @@ void Context::StateMonitor::set(IStateMonitor^ value)
 //-------------- Managed State class. --------------------//
 State::State(State^ masterState)
 {
-	m_handleEventCallback = new native::Callback<HandleEventDelegate, HandleEventCallback>(gcnew HandleEventDelegate(this, &State::handleEventCallback));
-	m_entryCallback = new native::Callback <EntryDelegate, EntryCallback>(gcnew EntryDelegate(this, &State::entryCallback));
-	m_exitCallback = new native::Callback <ExitDelegate, ExitCallback>(gcnew ExitDelegate(this, &State::exitCallback));
-
-	m_nativeState = new native::State(this, masterState, *m_handleEventCallback, *m_entryCallback, *m_exitCallback);
-	//m_nativeState->AddRef();
+	m_nativeState = new native::State(this, masterState);
 
 	IsExitCalledOnShutdown = false;
 }
@@ -170,33 +150,6 @@ State::!State()
 		Console::WriteLine("Released State {0}, ref={1}", (IntPtr)m_nativeState, c);
 		m_nativeState = nullptr;
 	}
-
-	SAFE_RELEASE(m_handleEventCallback);
-	SAFE_RELEASE(m_entryCallback);
-	SAFE_RELEASE(m_exitCallback);
-}
-
-HRESULT State::handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
-{
-	State^ _nextState = nullptr;
-	auto hr = handleEvent(getManaged((native::Context*)context), getManaged((native::Event*)event), _nextState);
-	if(_nextState) {
-		*nextState = getNative(_nextState);
-	}
-	return (HRESULT)hr;
-}
-
-HRESULT State::entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState)
-{
-	return (HRESULT)entry(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previousState));
-}
-
-HRESULT State::exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
-{
-	Trace::WriteLine(String::Format("State::exitCallback(): Current AppDomain={0}", System::AppDomain::CurrentDomain->FriendlyName));
-	auto ret = exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
-	//m_nativeState->Release();
-	return (HRESULT)ret;
 }
 
 State^ State::getMasterState()
@@ -233,10 +186,7 @@ void State::MemoryWeight::set(int value)
 //-------------- Managed Event class. --------------------//
 Event::Event()
 {
-	m_preHandleCallback = new native::Callback<PreHandleDelegate, PreHandleCallback>(gcnew PreHandleDelegate(this, &Event::preHandleCallback));
-	m_postHandleCallback = new native::Callback<PostHandleDelegate, PostHandleCallback>(gcnew PostHandleDelegate(this, &Event::postHandleCallback));
-
-	m_nativeEvent = new native::Event(this, *m_preHandleCallback, *m_postHandleCallback);
+	m_nativeEvent = new native::Event(this);
 	//m_nativeEvent->AddRef();
 }
 
@@ -253,21 +203,6 @@ Event::!Event()
 		Console::WriteLine("Released Event {0}, ref={1}", (IntPtr)m_nativeEvent, c);
 		m_nativeEvent = nullptr;
 	}
-
-	SAFE_RELEASE(m_preHandleCallback);
-	SAFE_RELEASE(m_postHandleCallback);
-}
-
-HRESULT Event::preHandleCallback(tsm::IContext* context)
-{
-	return (HRESULT)preHandle(getManaged((native::Context*)context));
-}
-
-HRESULT Event::postHandleCallback(tsm::IContext* context, HRESULT hr)
-{
-	auto ret = (HRESULT)postHandle(getManaged((native::Context*)context), (HResult)hr);
-	//m_nativeEvent->Release();
-	return (HRESULT)ret;
 }
 
 long Event::SequenceNumber::get()
