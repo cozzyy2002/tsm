@@ -9,12 +9,6 @@ using namespace System::Diagnostics;
 
 ///*static*/ event EventHandler<IStateMonitor::AssertFailedEventArgs<HResult>^>^ IStateMonitor::AssertFailedEvent;
 
-#define SAFE_RELEASE(ptr)	\
-	if(ptr) {				\
-		delete ptr;			\
-		ptr = nullptr;		\
-	}
-
 //-------------- Implementation of IStateMonitorCaller. --------------------//
 StateMonitorCaller::StateMonitorCaller(IStateMonitor^ stateMonitor)
 	: m_stateMonitor(stateMonitor)
@@ -29,7 +23,10 @@ StateMonitorCaller::~StateMonitorCaller()
 
 StateMonitorCaller::!StateMonitorCaller()
 {
-	SAFE_RELEASE(m_nativeStateMonitor);
+	if(m_nativeStateMonitor) {
+		delete m_nativeStateMonitor;
+		m_nativeStateMonitor = nullptr;
+	}
 }
 
 void StateMonitorCaller::onIdleCallback(tsm::IContext* context)
@@ -137,21 +134,6 @@ State::State(State^ masterState)
 	IsExitCalledOnShutdown = false;
 }
 
-State::~State()
-{
-	this->!State();
-}
-
-State::!State()
-{
-	if(m_nativeState)
-	{
-		auto c = 0;// m_nativeState->Release();
-		Console::WriteLine("Released State {0}, ref={1}", (IntPtr)m_nativeState, c);
-		m_nativeState = nullptr;
-	}
-}
-
 State^ State::getMasterState()
 {
 	return getManaged(m_nativeState->getMasterState());
@@ -188,21 +170,6 @@ Event::Event()
 {
 	m_nativeEvent = new native::Event(this);
 	//m_nativeEvent->AddRef();
-}
-
-Event::~Event()
-{
-	this->!Event();
-}
-
-Event::!Event()
-{
-	if(m_nativeEvent)
-	{
-		auto c = 0;// m_nativeEvent->Release();
-		Console::WriteLine("Released Event {0}, ref={1}", (IntPtr)m_nativeEvent, c);
-		m_nativeEvent = nullptr;
-	}
 }
 
 long Event::SequenceNumber::get()

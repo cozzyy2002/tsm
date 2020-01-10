@@ -129,8 +129,6 @@ public:
 
 	State() : State(nullptr) {}
 	State(State^ masterState);
-	virtual ~State();
-	!State();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
@@ -164,8 +162,6 @@ public:
 	using NativeType = native::Event;
 
 	Event();
-	virtual ~Event();
-	!Event();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
