@@ -40,9 +40,8 @@ namespace StateMachine.NET.TestConsole
         }
     }
 
-    class Context : tsm_NET.Generic.Context<Event, State>
+    class Context : tsm_NET.Generic.AsyncContext<Event, State>
     {
-        public Context() : base(ThreadType.Native) { }
     }
 
     class State : tsm_NET.Generic.State<Context, Event, State>

@@ -6,27 +6,25 @@ using tsm_NET.Generic;
 
 namespace StateMachine.NET.UnitTest.Generic
 {
-    public class Context : Context<Event, State>
-    {
-        public Context() { }
-        public Context(ThreadType threadType) : base(threadType) { }
-    }
-
-    public class Event : Event<Context>
-    {
-        public static Event Null { get; } = null;
-    }
-
-    public class State : State<Context, Event, State>
-    {
-        public static State Null { get; } = null;
-    }
-
     [TestFixture]
-    public class GenericTestCase
+    public class TestCase
     {
+        public class Context : Context<Event, State>
+        {
+        }
+
+        public class Event : Event<Context>
+        {
+            public static Event Null { get; } = null;
+        }
+
+        public class State : State<Context, Event, State>
+        {
+            public static State Null { get; } = null;
+        }
+
         [Test]
-        public void SyncContextTest()
+        public void BasicTest()
         {
             var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
@@ -88,16 +86,36 @@ namespace StateMachine.NET.UnitTest.Generic
             mockStateMonitor.DidNotReceive().onIdle(Arg.Any<Context>());
             mockStateMonitor.DidNotReceive().onWorkerThreadExit(Arg.Any<Context>(), Arg.Any<HResult>());
         }
+    }
+
+    [TestFixture]
+    public class AsyncTestCase
+    {
+        public class Context : AsyncContext<Event, State>
+        {
+            // StateMachine should run on managed thread to test on NUnit. 
+            public Context() : base(true) { }
+        }
+
+        public class Event : Event<Context>
+        {
+            public static Event Null { get; } = null;
+        }
+
+        public class State : State<Context, Event, State>
+        {
+            public static State Null { get; } = null;
+        }
 
         [Test]
         public void BasicTest()
         {
-            var mockEvent = Substitute.For<Event>();
+        var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
             var mockNextState = Substitute.For<State>();
             var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
 
-            var c = new Context(Context.ThreadType.Managed);
+            var c = new Context();
             c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 

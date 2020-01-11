@@ -7,7 +7,7 @@ using tsm_NET;
 namespace StateMachine.NET.UnitTest
 {
     [TestFixture]
-    public class TestCase
+    public class AsyncTestCase
     {
         [Test]
         public void BasicTest()
@@ -17,7 +17,8 @@ namespace StateMachine.NET.UnitTest
             var mockNextState = Substitute.For<State>();
             var mockStateMonitor = Substitute.For<IStateMonitor>();
 
-            var c = new Context(Context.ThreadType.Managed);
+            // StateMachine should run on managed thread to test on NUnit. 
+            var c = new AsyncContext(true);
             c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 

@@ -43,9 +43,11 @@ protected:
 generic<typename E, typename S>
 public ref class Context : public tsm_NET::Context
 {
+protected:
+	Context(bool isAsync, bool useNativeThread) : tsm_NET::Context(isAsync, useNativeThread), m_stateMonitor(nullptr) {}
+
 public:
-	Context() : tsm_NET::Context(), m_stateMonitor(nullptr) {}
-	Context(ThreadType threadType) : tsm_NET::Context(threadType), m_stateMonitor(nullptr) {}
+	Context() : tsm_NET::Context(false, false), m_stateMonitor(nullptr) {}
 	virtual ~Context() {}
 
 	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
@@ -70,6 +72,14 @@ public:
 protected:
 	IStateMonitor<E, S>^ m_stateMonitor;
 	StateMonitorCaller<E, S>^ m_stateMonitorCaller;
+};
+
+generic<typename E, typename S>
+public ref class AsyncContext : public Context<E, S>
+{
+public:
+	AsyncContext() : Context(true, false) {}
+	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
 };
 
 generic<typename C, typename E, typename S>

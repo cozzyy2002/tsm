@@ -83,22 +83,13 @@ protected:
 
 public ref class Context
 {
-public:
-	// Worker thread type on which StateMachine runs.
-	enum class ThreadType
-	{
-					// Description			Thread creation				StateMachine class
-		None,		// No worker thread.	None						tsm::StateMachine
-		Native,		// Use native thread.	CreateThread() Win32 API	tsm::AsyncStateMachine
-		Managed,	// Use managed thiread	System::Threading::Thread	tsm::AsyncStateMachine
-	};
+	void construct(bool isAsync, bool useNativeThread);
 
-private:
-	void construct(ThreadType threadType);
+protected:
+	Context(bool isAsync, bool useNativeThread) { construct(isAsync, useNativeThread); }
 
 public:
-	Context() { construct(ThreadType::None); }
-	Context(ThreadType threadType) { construct(threadType); }
+	Context() { construct(false, false); }
 	virtual ~Context();
 	!Context();
 
@@ -131,8 +122,17 @@ internal:
 protected:
 	NativeType* m_nativeContext;
 	bool m_useNativeThread;
-	tsm_NET::IStateMonitor^ m_stateMonitor;
 	StateMonitorCaller^ m_stateMonitorCaller;
+	tsm_NET::IStateMonitor^ m_stateMonitor;
+};
+
+public ref class AsyncContext : public Context
+{
+public:
+	AsyncContext() : Context(true, false) {}
+	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
+
+protected:
 };
 
 public ref class State
