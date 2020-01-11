@@ -8,9 +8,6 @@ class Context;
 class State;
 class Event;
 class StateMonitor;
-
-template<class D, class C>
-class Callback;
 }
 
 namespace tsm_NET
@@ -64,28 +61,16 @@ internal:
 
 #pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
 	// void IStateMonitor::onIdle()
-	delegate void OnIdleDelegate(tsm::IContext* context);
-	using OnIdleCallback = void(__stdcall *)(tsm::IContext* context);
 	virtual void onIdleCallback(tsm::IContext* context);
 	// void IstateMonitor::onEventTriggered()
-	delegate void OnEventTriggeredDelegate(tsm::IContext* context, tsm::IEvent* event);
-	using OnEventTriggeredCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event);
 	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event);
 	// void IStateMonitor::onEventHandling()
-	delegate void OnEventHandlingDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
-	using OnEventHandlingCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
 	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
 	// void IStateMonitor::onStateChanged()
-	delegate void OnStateChangedDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
-	using OnStateChangedCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	// void IStateMonitor::onTimerStarted()
-	delegate void OnTimerStartedDelegate(tsm::IContext* context, tsm::IEvent* event);
-	using OnTimerStartedCallback = void(__stdcall *)(tsm::IContext* context, tsm::IEvent* event);
 	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event);
 	// void IStateMonitor::onWorkerThreadExit()
-	delegate void OnWorkerThreadExitDelegate(tsm::IContext* context, HRESULT exitCode);
-	using OnWorkerThreadExitCallback = void(__stdcall *)(tsm::IContext* context, HRESULT exitCode);
 	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode);
 #pragma endregion
 
@@ -94,25 +79,17 @@ internal:
 protected:
 	NativeType* m_nativeStateMonitor;
 	IStateMonitor^ m_stateMonitor;
-
-internal:
-	native::Callback<OnIdleDelegate, OnIdleCallback>* m_onIdleCallback;
-	native::Callback<OnEventTriggeredDelegate, OnEventTriggeredCallback>* m_onEventTriggeredCallback;
-	native::Callback<OnEventHandlingDelegate, OnEventHandlingCallback>* m_onEventHandlingCallback;
-	native::Callback<OnStateChangedDelegate, OnStateChangedCallback>* m_onStateChangedCallback;
-	native::Callback<OnTimerStartedDelegate, OnTimerStartedCallback>* m_onTimerStartedCallback;
-	native::Callback<OnWorkerThreadExitDelegate, OnWorkerThreadExitCallback>* m_onWorkerThreadExitCallback;
 };
 
 public ref class Context
 {
-	void construct(bool isAsync);
+	void construct(bool isAsync, bool useNativeThread);
+
+protected:
+	Context(bool isAsync, bool useNativeThread) { construct(isAsync, useNativeThread); }
 
 public:
-	using NativeType = native::Context;
-
-	Context() { construct(true); }
-	Context(bool isAsync) { construct(isAsync); }
+	Context() { construct(false, false); }
 	virtual ~Context();
 	!Context();
 
@@ -137,23 +114,32 @@ public:
 #pragma endregion
 
 internal:
+	using NativeType = native::Context;
+
 	NativeType* get() { return m_nativeContext; }
+	property bool useNativeThread { bool get() { return m_useNativeThread; } }
 
 protected:
 	NativeType* m_nativeContext;
-	tsm_NET::IStateMonitor^ m_stateMonitor;
+	bool m_useNativeThread;
 	StateMonitorCaller^ m_stateMonitorCaller;
+	tsm_NET::IStateMonitor^ m_stateMonitor;
+};
+
+public ref class AsyncContext : public Context
+{
+public:
+	AsyncContext() : Context(true, false) {}
+	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
+
+protected:
 };
 
 public ref class State
 {
 public:
-	using NativeType = native::State;
-
 	State() : State(nullptr) {}
 	State(State^ masterState);
-	virtual ~State();
-	!State();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
@@ -175,39 +161,18 @@ public:
 #pragma endregion
 
 internal:
+	using NativeType = native::State;
+
 	NativeType* get() { return m_nativeState; }
-
-#pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
-	delegate HRESULT HandleEventDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
-	using HandleEventCallback = HRESULT (__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
-	virtual HRESULT handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState);
-
-	delegate HRESULT EntryDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
-	using EntryCallback = HRESULT (__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
-	virtual HRESULT entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState);
-
-	delegate HRESULT ExitDelegate(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
-	using ExitCallback = HRESULT(__stdcall *)(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
-	virtual HRESULT exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState);
-#pragma endregion
 
 protected:
 	NativeType* m_nativeState;
-
-internal:
-	native::Callback<HandleEventDelegate, HandleEventCallback>* m_handleEventCallback;
-	native::Callback<EntryDelegate, EntryCallback>* m_entryCallback;
-	native::Callback<ExitDelegate, ExitCallback>* m_exitCallback;
 };
 
 public ref class Event
 {
 public:
-	using NativeType = native::Event;
-
 	Event();
-	virtual ~Event();
-	!Event();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
@@ -224,24 +189,12 @@ public:
 #pragma endregion
 
 internal:
+	using NativeType = native::Event;
+
 	NativeType* get() { return m_nativeEvent; }
-
-#pragma region Definition of delegate, callback signature and callback method. See tsm::ICallback<> template class.
-	delegate HRESULT PreHandleDelegate(tsm::IContext* context);
-	using PreHandleCallback = HRESULT(__stdcall *)(tsm::IContext* context);
-	virtual HRESULT preHandleCallback(tsm::IContext* context);
-
-	delegate HRESULT PostHandleDelegate(tsm::IContext* context, HRESULT hr);
-	using PostHandleCallback = HRESULT(__stdcall *)(tsm::IContext* context, HRESULT hr);
-	virtual HRESULT postHandleCallback(tsm::IContext* context, HRESULT hr);
-#pragma endregion
 
 protected:
 	NativeType* m_nativeEvent;
-
-internal:
-	native::Callback<PreHandleDelegate, PreHandleCallback>* m_preHandleCallback;
-	native::Callback<PostHandleDelegate, PostHandleCallback>* m_postHandleCallback;
 };
 
 namespace common

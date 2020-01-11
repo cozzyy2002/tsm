@@ -32,6 +32,7 @@ struct ContextHandle
 
 	// Data for IAsyncContext used to perform async operation.
 	struct AsyncData {
+		std::unique_ptr<IAsyncDispatcher> asyncDispatcher;
 		std::deque<CComPtr<IEvent>> eventQueue;		// FIFO of IEvent to be handled.
 		std::recursive_mutex eventQueueLock;		// Lock to modify IEvent queue.
 		CHandle hEventReady;						// Event handle set when ready to handle IEvent(entry() of Initial state completes).

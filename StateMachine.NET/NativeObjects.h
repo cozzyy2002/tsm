@@ -13,13 +13,7 @@ class StateMonitor : public tsm::IStateMonitor
 public:
 	using OwnerType = tsm_NET::StateMonitorCaller;
 
-	StateMonitor(OwnerType^ owner,
-					OwnerType::OnIdleCallback onIdleCallback,
-					OwnerType::OnEventTriggeredCallback onEventTriggeredCallback,
-					OwnerType::OnEventHandlingCallback onEventHandlingCallback,
-					OwnerType::OnStateChangedCallback onStateChangedCallback,
-					OwnerType::OnTimerStartedCallback onTimerStartedCallback,
-					OwnerType::OnWorkerThreadExitCallback onWorkerThreadExitCallback);
+	StateMonitor(OwnerType^ owner);
 
 	virtual void onIdle(tsm::IContext* context) override;
 	virtual void onEventTriggered(tsm::IContext* context, tsm::IEvent* event) override;
@@ -34,12 +28,7 @@ public:
 	virtual void onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode) override;
 
 protected:
-	OwnerType::OnIdleCallback m_onIdleCallback;
-	OwnerType::OnEventTriggeredCallback m_onEventTriggeredCallback;
-	OwnerType::OnEventHandlingCallback m_onEventHandlingCallback;
-	OwnerType::OnStateChangedCallback m_onStateChangedCallback;
-	OwnerType::OnTimerStartedCallback m_onTimerStartedCallback;
-	OwnerType::OnWorkerThreadExitCallback m_onWorkerThreadExitCallback;
+	gcroot<OwnerType^> m_owner;
 };
 
 class Context : public tsm::IContext, public tsm::TimerClient
@@ -49,6 +38,7 @@ public:
 
 	Context(ManagedType^ context, bool isAsync = true);
 	virtual bool isAsync() const override { return m_isAsync; }
+	virtual tsm::IAsyncDispatcher* _createAsyncDispatcher() override;
 
 	HRESULT setup(tsm::IState* initialState, tsm::IEvent* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }
@@ -88,10 +78,7 @@ class State : public tsm::IState, public tsm::TimerClient
 public:
 	using ManagedType = tsm_NET::State;
 
-	State(ManagedType^ state, ManagedType^ masterState,
-			ManagedType::HandleEventCallback handleEventCallback,
-			ManagedType::EntryCallback entryCallback,
-			ManagedType::ExitCallback exitCallback);
+	State(ManagedType^ state, ManagedType^ masterState);
 	virtual ~State();
 
 #pragma region Implementation of IState that call methods of managed class.
@@ -114,10 +101,6 @@ public:
 protected:
 	gcroot<ManagedType^> m_managedState;
 	CComPtr<State> m_masterState;
-
-	ManagedType::HandleEventCallback m_handleEventCallback;
-	ManagedType::EntryCallback m_entryCallback;
-	ManagedType::ExitCallback m_exitCallback;
 };
 
 class Event : public tsm::IEvent
@@ -125,9 +108,7 @@ class Event : public tsm::IEvent
 public:
 	using ManagedType = tsm_NET::Event;
 
-	Event(ManagedType^ event,
-			ManagedType::PreHandleCallback preHandleCallback,
-			ManagedType::PostHandleCallback postHandleCallback);
+	Event(ManagedType^ event);
 	virtual ~Event();
 
 #pragma region Implementation of IState that call methods of managed class.
@@ -144,9 +125,6 @@ public:
 
 protected:
 	gcroot<ManagedType^> m_managedEvent;
-
-	ManagedType::PreHandleCallback m_preHandleCallback;
-	ManagedType::PostHandleCallback m_postHandleCallback;
 
 	int m_priority;
 	DWORD m_delayTime;

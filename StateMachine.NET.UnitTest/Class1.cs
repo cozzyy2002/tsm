@@ -1,33 +1,30 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
 using System;
-using System.Diagnostics;
 using System.Threading;
 using tsm_NET.Generic;
 
 namespace StateMachine.NET.UnitTest.Generic
 {
-    public class Context : Context<Event, State>
-    {
-        public Context() : base(true) { }
-        public Context(bool isAsync) : base(isAsync) { }
-    }
-
-    public class Event : Event<Context>
-    {
-        public static Event Null { get; } = null;
-    }
-
-    public class State : State<Context, Event, State>
-    {
-        public static State Null { get; } = null;
-    }
-
     [TestFixture]
-    public class GenericTestCase
+    public class TestCase
     {
+        public class Context : Context<Event, State>
+        {
+        }
+
+        public class Event : Event<Context>
+        {
+            public static Event Null { get; } = null;
+        }
+
+        public class State : State<Context, Event, State>
+        {
+            public static State Null { get; } = null;
+        }
+
         [Test]
-        public void SyncContextTest()
+        public void BasicTest()
         {
             var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
@@ -35,7 +32,7 @@ namespace StateMachine.NET.UnitTest.Generic
             var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
 
             // Create synchronous Context object.
-            var c = new Context(false);
+            var c = new Context();
             c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 
@@ -89,11 +86,31 @@ namespace StateMachine.NET.UnitTest.Generic
             mockStateMonitor.DidNotReceive().onIdle(Arg.Any<Context>());
             mockStateMonitor.DidNotReceive().onWorkerThreadExit(Arg.Any<Context>(), Arg.Any<HResult>());
         }
+    }
+
+    [TestFixture]
+    public class AsyncTestCase
+    {
+        public class Context : AsyncContext<Event, State>
+        {
+            // StateMachine should run on managed thread to test on NUnit. 
+            public Context() : base(true) { }
+        }
+
+        public class Event : Event<Context>
+        {
+            public static Event Null { get; } = null;
+        }
+
+        public class State : State<Context, Event, State>
+        {
+            public static State Null { get; } = null;
+        }
 
         [Test]
         public void BasicTest()
         {
-            var mockEvent = Substitute.For<Event>();
+        var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
             var mockNextState = Substitute.For<State>();
             var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
@@ -122,7 +139,7 @@ namespace StateMachine.NET.UnitTest.Generic
             // Shutdown
             mockNextState.IsExitCalledOnShutdown = true;
             Assume.That(c.shutdown(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
-            Thread.Sleep(1000);
+            Thread.Sleep(100);
 
             // Check calls to methods of State.
             Received.InOrder(() =>
@@ -144,8 +161,6 @@ namespace StateMachine.NET.UnitTest.Generic
             Received.InOrder(() =>
             {
                 mockStateMonitor.Received()
-                    .onEventTriggered(Arg.Is(c), Arg.Is(mockEvent));
-                mockStateMonitor.Received()
                     .onEventHandling(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
                 mockStateMonitor.Received()
                     .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
@@ -157,6 +172,9 @@ namespace StateMachine.NET.UnitTest.Generic
             // onStateChanged() caused by Context.setup() might be called before or after onEventTriggerd().
             mockStateMonitor.Received()
                 .onStateChanged(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null), Arg.Is(mockInitialState));
+            // onEventTriggered() might be called before or after onEventHandling().
+            mockStateMonitor.Received()
+                .onEventTriggered(Arg.Is(c), Arg.Is(mockEvent));
         }
     }
 }

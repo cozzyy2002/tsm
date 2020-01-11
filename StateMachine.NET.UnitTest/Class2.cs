@@ -1,13 +1,13 @@
 ﻿using NSubstitute;
 using NUnit.Framework;
-using System.Diagnostics;
+using System;
 using System.Threading;
 using tsm_NET;
 
 namespace StateMachine.NET.UnitTest
 {
     [TestFixture]
-    public class TestCase
+    public class AsyncTestCase
     {
         [Test]
         public void BasicTest()
@@ -17,7 +17,8 @@ namespace StateMachine.NET.UnitTest
             var mockNextState = Substitute.For<State>();
             var mockStateMonitor = Substitute.For<IStateMonitor>();
 
-            var c = new Context();
+            // StateMachine should run on managed thread to test on NUnit. 
+            var c = new AsyncContext(true);
             c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 
@@ -26,7 +27,7 @@ namespace StateMachine.NET.UnitTest
                 .handleEvent(Arg.Is(c), Arg.Is(mockEvent), ref Arg.Is((State)null))
                 .Returns(x =>
                 {
-                    Trace.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
+                    Console.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
                     x[2] = mockNextState;
                     return HResult.Ok;
                 });
@@ -63,8 +64,6 @@ namespace StateMachine.NET.UnitTest
             Received.InOrder(() =>
             {
                 mockStateMonitor.Received()
-                    .onEventTriggered(Arg.Is(c), Arg.Is(mockEvent));
-                mockStateMonitor.Received()
                     .onEventHandling(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
                 mockStateMonitor.Received()
                     .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
@@ -76,6 +75,9 @@ namespace StateMachine.NET.UnitTest
             // onStateChanged() caused by Context.setup() might be called before or after onEventTriggerd().
             mockStateMonitor.Received()
                 .onStateChanged(Arg.Is(c), Arg.Is((Event)null), Arg.Is((State)null), Arg.Is(mockInitialState));
+            // onEventTriggered() might be called before or after onEventHandling().
+            mockStateMonitor.Received()
+                .onEventTriggered(Arg.Is(c), Arg.Is(mockEvent));
         }
     }
 }

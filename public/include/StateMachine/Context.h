@@ -13,6 +13,7 @@ public:
 	virtual ~Context() {}
 
 	virtual bool isAsync() const { return false; }
+	virtual IAsyncDispatcher* _createAsyncDispatcher() override { return nullptr; }
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
 	HRESULT shutdown(DWORD timeout = 100) { return _getStateMachine()->shutdown(this, timeout); }

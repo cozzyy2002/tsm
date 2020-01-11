@@ -43,9 +43,11 @@ protected:
 generic<typename E, typename S>
 public ref class Context : public tsm_NET::Context
 {
+protected:
+	Context(bool isAsync, bool useNativeThread) : tsm_NET::Context(isAsync, useNativeThread), m_stateMonitor(nullptr) {}
+
 public:
-	Context() : tsm_NET::Context(true), m_stateMonitor(nullptr) {}
-	Context(bool isAsync ) : tsm_NET::Context(isAsync), m_stateMonitor(nullptr) {}
+	Context() : tsm_NET::Context(false, false), m_stateMonitor(nullptr) {}
 	virtual ~Context() {}
 
 	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
@@ -72,6 +74,14 @@ protected:
 	StateMonitorCaller<E, S>^ m_stateMonitorCaller;
 };
 
+generic<typename E, typename S>
+public ref class AsyncContext : public Context<E, S>
+{
+public:
+	AsyncContext() : Context(true, false) {}
+	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
+};
+
 generic<typename C, typename E, typename S>
 	where C : tsm_NET::Context
 	where E : tsm_NET::Event
@@ -81,7 +91,6 @@ public ref class State : public tsm_NET::State
 public:
 	State() : tsm_NET::State(nullptr) {}
 	State(S masterState) : tsm_NET::State((tsm_NET::State^)masterState) {}
-	~State() {}
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(C context, E event, S% nextState) { return HResult::Ok; }
@@ -93,13 +102,10 @@ public:
 
 	property S MasterState { S get() { return getMasterState(); } }
 
-// NOTE: Callback methods that is called by native class should be `internal`
-//       to avoid `System.MissingMethodException` when NUnit runs with NSubstitute.
-internal:
-#pragma region Methods that call sub class with generic parameters.
-	virtual HRESULT handleEventCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState) override;
-	virtual HRESULT entryCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState) override;
-	virtual HRESULT exitCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState) override;
+#pragma region Override methods of tsm_NET::State that call sub class with generic parameters.
+	virtual tsm_NET::HResult handleEvent(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^% nextState) override sealed;
+	virtual tsm_NET::HResult entry(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ previousState) override sealed;
+	virtual tsm_NET::HResult exit(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ nextState) override sealed;
 #pragma endregion
 };
 
@@ -108,17 +114,15 @@ generic<typename C>
 public ref class Event : public tsm_NET::Event
 {
 public:
-	~Event() {}
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(C context) { return HResult::Ok; }
 	virtual HResult postHandle(C context, HResult hr) { return hr; }
 #pragma endregion
 
-internal:
 #pragma region Methods that call sub class with generic parameters.
-	virtual HRESULT preHandleCallback(tsm::IContext* context) override;
-	virtual HRESULT postHandleCallback(tsm::IContext* context, HRESULT hr) override;
+	virtual tsm_NET::HResult preHandle(tsm_NET::Context^ context) override sealed;
+	virtual tsm_NET::HResult postHandle(tsm_NET::Context^ context, tsm_NET::HResult hr) override sealed;
 #pragma endregion
 };
 }

@@ -33,10 +33,14 @@ namespace StateMachine.NET.TestConsole
 
                 }
             }
+
+            var hr = context.shutdown();
+            Console.WriteLine($"Context.shutdown() returns {hr}.\nKey in [Enter] to exit.");
+            Console.ReadLine();
         }
     }
 
-    class Context : tsm_NET.Generic.Context<Event, State>
+    class Context : tsm_NET.Generic.AsyncContext<Event, State>
     {
     }
 

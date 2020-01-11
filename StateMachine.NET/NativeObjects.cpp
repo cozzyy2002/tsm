@@ -14,50 +14,99 @@ struct EventHandle {};
 struct TimerHandle {};
 }
 
-StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner,
-				OwnerType::OnIdleCallback onIdleCallback,
-				OwnerType::OnEventTriggeredCallback onEventTriggeredCallback,
-				OwnerType::OnEventHandlingCallback onEventHandlingCallback,
-				OwnerType::OnStateChangedCallback onStateChangedCallback,
-				OwnerType::OnTimerStartedCallback onTimerStartedCallback,
-				OwnerType::OnWorkerThreadExitCallback onWorkerThreadExitCallback)
-	: m_onIdleCallback(onIdleCallback)
-	, m_onEventTriggeredCallback(onEventTriggeredCallback)
-	, m_onEventHandlingCallback(onEventHandlingCallback)
-	, m_onStateChangedCallback(onStateChangedCallback)
-	, m_onTimerStartedCallback(onTimerStartedCallback)
-	, m_onWorkerThreadExitCallback(onWorkerThreadExitCallback)
+StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner)
+	: m_owner(owner)
 {
 }
 
 void StateMonitor::onIdle(tsm::IContext* context)
 {
-	m_onIdleCallback(context);
+	m_owner->onIdleCallback(context);
 }
 
 void StateMonitor::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
 {
-	m_onEventTriggeredCallback(context, event);
+	m_owner->onEventTriggeredCallback(context, event);
 }
 
 void StateMonitor::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
 {
-	m_onEventHandlingCallback(context, event, current);
+	m_owner->onEventHandlingCallback(context, event, current);
 }
 
 void StateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
-	m_onStateChangedCallback(context, event, previous, next);
+	m_owner->onStateChangedCallback(context, event, previous, next);
 }
 
 void StateMonitor::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
 {
-	m_onTimerStartedCallback(context, event);
+	m_owner->onTimerStartedCallback(context, event);
 }
 
 void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 {
-	m_onWorkerThreadExitCallback(context, exitCode);
+	m_owner->onWorkerThreadExitCallback(context, exitCode);
+}
+
+class AsyncDispatcher;
+
+/**
+ * Managed class to dispatch tsm::IAsyncDispatcher::Method(lpParam) in managed worker thread.
+ */
+ref class ManagedDispatcher
+{
+public:
+	ManagedDispatcher(AsyncDispatcher* asyncDispatcher)
+		: asyncDispatcher(asyncDispatcher)
+	{
+		auto threadStart = gcnew Threading::ThreadStart(this, &ManagedDispatcher::threadMethod);
+		auto thread = gcnew Threading::Thread(threadStart);
+		thread->Start();
+	}
+
+protected:
+	void threadMethod();
+	AsyncDispatcher* asyncDispatcher;
+};
+
+/**
+ * Implementation of tsm::IAsyncDispatcher
+ */
+class AsyncDispatcher : public tsm::IAsyncDispatcher
+{
+public:
+	virtual HANDLE dispatch(Method method, LPVOID lpParam) override {
+		this->method = method;
+		this->lpParam = lpParam;
+		gcnew ManagedDispatcher(this);
+
+		exitThreadEvent.Attach(CreateEvent(nullptr, TRUE, FALSE, nullptr));
+		return exitThreadEvent;
+	}
+
+	/**
+	 * Method called in the managed thread and call IAsyncDispatcher::Method.
+	 */
+	void threadMethod() {
+		method(lpParam);
+		SetEvent(exitThreadEvent);
+	}
+
+protected:
+	Method method;
+	LPVOID lpParam;
+	CHandle exitThreadEvent;
+};
+
+void ManagedDispatcher::threadMethod()
+{
+	asyncDispatcher->threadMethod();
+}
+
+tsm::IAsyncDispatcher* Context::_createAsyncDispatcher()
+{
+	return m_managedContext->useNativeThread ? new AsyncDispatcher() : nullptr;
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
@@ -67,15 +116,9 @@ Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 {
 }
 
-State::State(ManagedType^ state, ManagedType^ masterState,
-				ManagedType::HandleEventCallback handleEventCallback,
-				ManagedType::EntryCallback entryCallback,
-				ManagedType::ExitCallback exitCallback)
+State::State(ManagedType^ state, ManagedType^ masterState)
 	: m_managedState(state)
 	, m_masterState(getNative(masterState))
-	, m_handleEventCallback(handleEventCallback)
-	, m_entryCallback(entryCallback)
-	, m_exitCallback(exitCallback)
 {
 }
 
@@ -86,18 +129,22 @@ State::~State()
 
 HRESULT State::_handleEvent(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
 {
-	return m_handleEventCallback(context, event, nextState);
+	ManagedType^ _nextState = nullptr;
+	auto hr = m_managedState->handleEvent(getManaged((native::Context*)context), getManaged((native::Event*)event), _nextState);
+	if(_nextState) {
+		*nextState = _nextState->get();
+	}
+	return (HRESULT)hr;
 }
 
 HRESULT State::_entry(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState)
 {
-	return m_entryCallback(context, event, previousState);
+	return (HRESULT)m_managedState->entry(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previousState));
 }
 
 HRESULT State::_exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
 {
-	Trace::WriteLine(String::Format("native::State::_exit(): Current AppDomain={0}", System::AppDomain::CurrentDomain->FriendlyName));
-	return m_exitCallback(context, event, nextState);
+	return (HRESULT)m_managedState->exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
 }
 
 bool State::_isExitCalledOnShutdown() const
@@ -105,12 +152,8 @@ bool State::_isExitCalledOnShutdown() const
 	return m_managedState->IsExitCalledOnShutdown;
 }
 
-Event::Event(ManagedType^ event,
-				ManagedType::PreHandleCallback preHandleCallback,
-				ManagedType::PostHandleCallback postHandleCallback)
+Event::Event(ManagedType^ event)
 	: m_managedEvent(event)
-	, m_preHandleCallback(preHandleCallback)
-	, m_postHandleCallback(postHandleCallback)
 	, m_timerClient(nullptr)
 {
 }
@@ -122,10 +165,10 @@ Event::~Event()
 
 HRESULT Event::_preHandle(tsm::IContext* context)
 {
-	return m_preHandleCallback(context);
+	return (HRESULT)m_managedEvent->preHandle(getManaged((native::Context*)context));
 }
 
 HRESULT Event::_postHandle(tsm::IContext* context, HRESULT hr)
 {
-	return m_postHandleCallback(context, hr);
+	return (HRESULT)m_managedEvent->postHandle(getManaged((native::Context*)context), (tsm_NET::HResult)hr);
 }
