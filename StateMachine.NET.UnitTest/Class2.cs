@@ -17,7 +17,7 @@ namespace StateMachine.NET.UnitTest
             var mockNextState = Substitute.For<State>();
             var mockStateMonitor = Substitute.For<IStateMonitor>();
 
-            var c = new Context();
+            var c = new Context(Context.ThreadType.Managed);
             c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 

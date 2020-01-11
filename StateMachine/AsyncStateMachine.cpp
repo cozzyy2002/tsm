@@ -16,6 +16,15 @@ namespace tsm {
 	return context->isAsync() ? new AsyncStateMachine() : new StateMachine();
 }
 
+class DefaultAsyncDispatcher : public IAsyncDispatcher
+{
+public:
+	virtual HANDLE dispatch(Method method, LPVOID param) override
+	{
+		return CreateThread(nullptr, 0, method, param, 0, nullptr);
+	}
+};
+
 HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEvent * event)
 {
 	// Ensure to release object on error.
@@ -39,9 +48,9 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 	// param will be deleted in worker thread.
 	auto param = new SetupParam(context, this, event);
 
-	auto& dispatcher = asyncData->asyncDispatcher;
-	dispatcher.reset(context->_createAsyncDispatcher());
-	HR_ASSERT(dispatcher, E_POINTER);
+	auto dispatcher = context->_createAsyncDispatcher();
+	if(!dispatcher) { dispatcher = new DefaultAsyncDispatcher(); }
+	asyncData->asyncDispatcher.reset(dispatcher);
 	asyncData->hWorkerThread.Attach(dispatcher->dispatch(workerThreadProc, param));
 	if(!asyncData->hWorkerThread) {
 		delete param;

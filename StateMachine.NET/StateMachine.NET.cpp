@@ -60,8 +60,25 @@ void StateMonitorCaller::onWorkerThreadExitCallback(tsm::IContext* context, HRES
 }
 
 //-------------- Managed Context class. --------------------//
-void Context::construct(bool isAsync)
+void Context::construct(ThreadType threadType)
 {
+	bool isAsync;
+	switch(threadType) {
+	case ThreadType::None:
+	default:
+		isAsync = false;
+		m_useNativeThread = false;
+		break;
+	case ThreadType::Native:
+		isAsync = true;
+		m_useNativeThread = false;
+		break;
+	case ThreadType::Managed:
+		isAsync = true;
+		m_useNativeThread = true;
+		break;
+	}
+
 	m_nativeContext = new native::Context(this, isAsync);
 }
 

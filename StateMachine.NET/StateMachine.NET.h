@@ -83,13 +83,22 @@ protected:
 
 public ref class Context
 {
-	void construct(bool isAsync);
+public:
+	// Worker thread type on which StateMachine runs.
+	enum class ThreadType
+	{
+					// Description			Thread creation				StateMachine class
+		None,		// No worker thread.	None						tsm::StateMachine
+		Native,		// Use native thread.	CreateThread() Win32 API	tsm::AsyncStateMachine
+		Managed,	// Use managed thiread	System::Threading::Thread	tsm::AsyncStateMachine
+	};
+
+private:
+	void construct(ThreadType threadType);
 
 public:
-	using NativeType = native::Context;
-
-	Context() { construct(true); }
-	Context(bool isAsync) { construct(isAsync); }
+	Context() { construct(ThreadType::None); }
+	Context(ThreadType threadType) { construct(threadType); }
 	virtual ~Context();
 	!Context();
 
@@ -114,10 +123,14 @@ public:
 #pragma endregion
 
 internal:
+	using NativeType = native::Context;
+
 	NativeType* get() { return m_nativeContext; }
+	property bool useNativeThread { bool get() { return m_useNativeThread; } }
 
 protected:
 	NativeType* m_nativeContext;
+	bool m_useNativeThread;
 	tsm_NET::IStateMonitor^ m_stateMonitor;
 	StateMonitorCaller^ m_stateMonitorCaller;
 };
@@ -125,8 +138,6 @@ protected:
 public ref class State
 {
 public:
-	using NativeType = native::State;
-
 	State() : State(nullptr) {}
 	State(State^ masterState);
 
@@ -150,6 +161,8 @@ public:
 #pragma endregion
 
 internal:
+	using NativeType = native::State;
+
 	NativeType* get() { return m_nativeState; }
 
 protected:
@@ -159,8 +172,6 @@ protected:
 public ref class Event
 {
 public:
-	using NativeType = native::Event;
-
 	Event();
 
 #pragma region Methods to be implemented by sub class.
@@ -178,6 +189,8 @@ public:
 #pragma endregion
 
 internal:
+	using NativeType = native::Event;
+
 	NativeType* get() { return m_nativeEvent; }
 
 protected:

@@ -8,8 +8,8 @@ namespace StateMachine.NET.UnitTest.Generic
 {
     public class Context : Context<Event, State>
     {
-        public Context() : base(true) { }
-        public Context(bool isAsync) : base(isAsync) { }
+        public Context() { }
+        public Context(ThreadType threadType) : base(threadType) { }
     }
 
     public class Event : Event<Context>
@@ -34,7 +34,7 @@ namespace StateMachine.NET.UnitTest.Generic
             var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
 
             // Create synchronous Context object.
-            var c = new Context(false);
+            var c = new Context();
             c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 
@@ -97,7 +97,7 @@ namespace StateMachine.NET.UnitTest.Generic
             var mockNextState = Substitute.For<State>();
             var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
 
-            var c = new Context();
+            var c = new Context(Context.ThreadType.Managed);
             c.StateMonitor = mockStateMonitor;
             Assert.That(c.CurrentState, Is.EqualTo(null), "Context has no initial state when created.");
 

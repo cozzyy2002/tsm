@@ -106,7 +106,7 @@ void ManagedDispatcher::threadMethod()
 
 tsm::IAsyncDispatcher* Context::_createAsyncDispatcher()
 {
-	return isAsync() ? new AsyncDispatcher() : nullptr;
+	return m_managedContext->useNativeThread ? new AsyncDispatcher() : nullptr;
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)

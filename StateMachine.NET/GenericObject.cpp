@@ -71,7 +71,7 @@ namespace Generic
 		S _nextState;
 		auto hr = handleEvent((C)context, (E)event, _nextState);
 		if(_nextState) {
-			nextState = (S)_nextState;
+			nextState = _nextState;
 		}
 		return (tsm_NET::HResult)hr;
 	}

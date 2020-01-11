@@ -35,12 +35,14 @@ namespace StateMachine.NET.TestConsole
             }
 
             var hr = context.shutdown();
-            Console.WriteLine($"Context.shutdown() returns {hr}");
+            Console.WriteLine($"Context.shutdown() returns {hr}.\nKey in [Enter] to exit.");
+            Console.ReadLine();
         }
     }
 
     class Context : tsm_NET.Generic.Context<Event, State>
     {
+        public Context() : base(ThreadType.Native) { }
     }
 
     class State : tsm_NET.Generic.State<Context, Event, State>
