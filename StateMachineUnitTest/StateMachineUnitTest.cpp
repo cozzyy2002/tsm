@@ -83,7 +83,10 @@ TYPED_TEST(StateMachineSetupUnitTest, 2)
 	if(mockContext.isAsync()) {
 		// AsyncContext::waitRady() should return the error code from State::entry().
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
-		ASSERT_EQ(hr, mockContext.waitReady());
+		ASSERT_EQ(S_FALSE, mockContext.waitReady());
+		HRESULT hrExitCode;
+		ASSERT_EQ(S_OK, mockContext.getAsyncExitCode(&hrExitCode));
+		ASSERT_EQ(hr, hrExitCode);
 	} else {
 		// Context::setup() should return the error code from State::entry().
 		ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));

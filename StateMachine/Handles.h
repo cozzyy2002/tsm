@@ -40,7 +40,7 @@ struct ContextHandle
 		// For AsyncStateMachine
 		CHandle hEventAvailable;					// Event handle set when IEvent is queued.
 		CHandle hEventShutdown;						// Event handle set to shutdown the state machine.
-		CHandle hWorkerThread;						// Handle of worker thread.
+		HANDLE hWorkerThread;						// Handle of worker thread. This handle should be closed by IAsyncDispatcher.
 
 		// For WindowProcStateMachine
 		HWND hWnd;		// Window handle to which state machine message is sent.

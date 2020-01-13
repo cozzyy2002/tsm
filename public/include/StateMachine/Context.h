@@ -13,6 +13,7 @@ public:
 	virtual ~Context() {}
 
 	virtual bool isAsync() const { return false; }
+	virtual HRESULT getAsyncExitCode(HRESULT* pht) { return E_NOTIMPL; }
 	virtual IAsyncDispatcher* _createAsyncDispatcher() override { return nullptr; }
 
 	HRESULT setup(S* initialState, E* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }
@@ -41,6 +42,8 @@ protected:
 	CComPtr<IState> m_currentState;
 };
 
+extern HRESULT getAsyncExitCode(IContext* context, HRESULT* pht);
+
 template<class E = IEvent, class S = IState>
 class AsyncContext : public Context<E, S>
 {
@@ -48,6 +51,7 @@ public:
 	virtual ~AsyncContext() {}
 
 	virtual bool isAsync() const { return true; }
+	virtual HRESULT getAsyncExitCode(HRESULT* phr) override { return tsm::getAsyncExitCode(this, phr); }
 };
 
 }

@@ -54,9 +54,15 @@ public:
 	 *
 	 * method: Method to be dispatched.
 	 * lpParam: Pointer to parameter to be passed to `method`.
-	 * Returns event handle that is set when the method terminates.
+	 * Returns synchronization object handle that is set when the method terminates.
+	 * IAsyncDispatcher implementation shooul close this handle on it's destructor.
 	 */
 	virtual HANDLE dispatch(Method method, LPVOID lpParam) = 0;
+
+	/**
+	 * Returns exit code of dispatched method.
+	 */
+	virtual HRESULT getExitCode(HRESULT* phr) = 0;
 };
 
 class IContext : public HandleOwner<IContext, ContextHandle>
@@ -65,6 +71,7 @@ public:
 	virtual ~IContext() {}
 
 	virtual bool isAsync() const = 0;
+	virtual HRESULT getAsyncExitCode(HRESULT* pht) = 0;
 	virtual IAsyncDispatcher* _createAsyncDispatcher() = 0;
 
 	virtual IStateMachine* _getStateMachine() = 0;

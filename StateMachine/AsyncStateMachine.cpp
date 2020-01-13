@@ -1,5 +1,6 @@
 #include "StateMachine/stdafx.h"
 
+#include <StateMachine/Context.h>
 #include <StateMachine/State.h>
 #include <StateMachine/Assert.h>
 #include "StateMachine.h"
@@ -7,6 +8,13 @@
 #include "Handles.h"
 
 namespace tsm {
+
+HRESULT tsm::getAsyncExitCode(IContext*context, HRESULT* phr)
+{
+	auto asyncData = context->_getHandle(false)->asyncData;
+	HR_ASSERT(asyncData->asyncDispatcher, E_POINTER);
+	return asyncData->asyncDispatcher->getExitCode(phr);
+}
 
 /**
  * Returns StateMachine object for Context and AsyncStateMachine object for AsyncContext respectively.
@@ -21,8 +29,22 @@ class DefaultAsyncDispatcher : public IAsyncDispatcher
 public:
 	virtual HANDLE dispatch(Method method, LPVOID param) override
 	{
-		return CreateThread(nullptr, 0, method, param, 0, nullptr);
+		m_hWorkerThread.Attach(CreateThread(nullptr, 0, method, param, 0, nullptr));
+		return m_hWorkerThread;
 	}
+
+	virtual HRESULT getExitCode(HRESULT* phr) override
+	{
+		DWORD exitCode;
+		HRESULT hr = WIN32_EXPECT(GetExitCodeThread(m_hWorkerThread, &exitCode));
+		if(SUCCEEDED(hr)) {
+			*phr = exitCode;
+		}
+		return hr;
+	}
+
+protected:
+	CHandle m_hWorkerThread;
 };
 
 HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEvent * event)
@@ -45,13 +67,14 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 	// entry() of initial state will be called in the thread.
 	asyncData->hEventReady.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 	asyncData->hEventShutdown.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
-	// param will be deleted in worker thread.
-	auto param = new SetupParam(context, this, event);
 
 	auto dispatcher = context->_createAsyncDispatcher();
 	if(!dispatcher) { dispatcher = new DefaultAsyncDispatcher(); }
 	asyncData->asyncDispatcher.reset(dispatcher);
-	asyncData->hWorkerThread.Attach(dispatcher->dispatch(workerThreadProc, param));
+
+	// param will be deleted in worker thread.
+	auto param = new SetupParam(context, this, event);
+	asyncData->hWorkerThread = dispatcher->dispatch(workerThreadProc, param);
 	if(!asyncData->hWorkerThread) {
 		delete param;
 		return HRESULT_FROM_WIN32(GetLastError());
@@ -119,30 +142,16 @@ HRESULT AsyncStateMachine::waitReady(IContext * context, DWORD timeout)
 
 	auto hr = S_OK;
 	auto asyncData = context->_getHandle()->asyncData;
-	HANDLE hEvents[] = { asyncData->hWorkerThread, asyncData->hEventReady, asyncData->hEventShutdown };
+	HANDLE hEvents[] = { asyncData->hEventReady, asyncData->hWorkerThread, asyncData->hEventShutdown };
 	static const DWORD eventsCount = ARRAYSIZE(hEvents);
 	DWORD wait = WaitForMultipleObjects(eventsCount, hEvents, FALSE, timeout);
 	HR_ASSERT_OK(checkWaitResult(wait, eventsCount));
 	switch(wait) {
-	case WAIT_OBJECT_0:
-		// Worker thread has been terminated.
-		{
-			DWORD exitCode;
-			hr = WIN32_EXPECT(GetExitCodeThread(asyncData->hWorkerThread, &exitCode));
-			if(SUCCEEDED(hr)) {
-				// return exit code of worker thread.
-				hr = HRESULT_FROM_WIN32(exitCode);
-				// (hr == S_OK) means that worker thread has terminated(Not ready).
-				if(hr == S_OK) hr = S_FALSE;
-			}
-		}
-		break;
-	case WAIT_OBJECT_0 + 1:
-		// Completed to setup.
+	case WAIT_OBJECT_0: // Completed to setup.
 		hr = S_OK;
 		break;
-	case WAIT_OBJECT_0 + 2:
-		// shutdown() has been called.
+	case WAIT_OBJECT_0 + 1: // Worker thread has been terminated.
+	case WAIT_OBJECT_0 + 2: // shutdown() has been called.
 		hr = S_FALSE;
 		break;
 	default:
@@ -185,9 +194,9 @@ HRESULT AsyncStateMachine::doWorkerThread(SetupParam* param)
 		{
 			stateMonitor->onStateChanged(context, param->event, nullptr, context->_getCurrentState());
 		});
-		// Notify that setup completed.
-		WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 	}
+	// Notify that setup completed.
+	WIN32_ASSERT(SetEvent(asyncData->hEventReady));
 
 	HANDLE hEvents[] = { asyncData->hEventAvailable, asyncData->hEventShutdown };
 	static const DWORD eventsCount = ARRAYSIZE(hEvents);
