@@ -362,8 +362,11 @@ public:
 
 TEST_F(StateMachineNotImplTest, 0)
 {
+	HRESULT hrExitCode;
+	EXPECT_EQ(E_NOTIMPL, mockContext.getAsyncExitCode(&hrExitCode));
+
 	MockEvent<MockContext> mockEvent;
-	ASSERT_EQ(E_NOTIMPL, mockContext.triggerEvent(&mockEvent));
+	EXPECT_EQ(E_NOTIMPL, mockContext.triggerEvent(&mockEvent));
 
 	EXPECT_TRUE(mockEvent.deleted());
 }
