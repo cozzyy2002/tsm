@@ -12,7 +12,6 @@ namespace tsm {
 HRESULT tsm::getAsyncExitCode(IContext*context, HRESULT* phr)
 {
 	auto asyncData = context->_getHandle(false)->asyncData;
-	HR_ASSERT(asyncData->asyncDispatcher, E_POINTER);
 	return asyncData->asyncDispatcher->getExitCode(phr);
 }
 
@@ -27,10 +26,19 @@ HRESULT tsm::getAsyncExitCode(IContext*context, HRESULT* phr)
 class DefaultAsyncDispatcher : public IAsyncDispatcher
 {
 public:
-	virtual HANDLE dispatch(Method method, LPVOID param) override
+	virtual HRESULT dispatch(Method method, LPVOID param, LPHANDLE phWorkerThread) override
 	{
-		m_hWorkerThread.Attach(CreateThread(nullptr, 0, method, param, 0, nullptr));
-		return m_hWorkerThread;
+		HR_ASSERT(phWorkerThread, E_POINTER);
+
+		HRESULT hr = S_OK;
+		auto h = CreateThread(nullptr, 0, method, param, 0, nullptr);
+		if(h) {
+			m_hWorkerThread.Attach(h);
+			*phWorkerThread = h;
+		} else {
+			hr = HRESULT_FROM_WIN32(GetLastError());
+		}
+		return hr;
 	}
 
 	virtual HRESULT getExitCode(HRESULT* phr) override
@@ -74,10 +82,10 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 
 	// param will be deleted in worker thread.
 	auto param = new SetupParam(context, this, event);
-	asyncData->hWorkerThread = dispatcher->dispatch(workerThreadProc, param);
-	if(!asyncData->hWorkerThread) {
+	auto hr = HR_EXPECT_OK(dispatcher->dispatch(workerThreadProc, param, &asyncData->hWorkerThread));
+	if(FAILED(hr)) {
 		delete param;
-		return HRESULT_FROM_WIN32(GetLastError());
+		return hr;
 	}
 
 	return S_OK;

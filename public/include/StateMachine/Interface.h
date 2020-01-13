@@ -54,10 +54,10 @@ public:
 	 *
 	 * method: Method to be dispatched.
 	 * lpParam: Pointer to parameter to be passed to `method`.
-	 * Returns synchronization object handle that is set when the method terminates.
+	 * Creates synchronization object handle that is set when the method terminates.
 	 * IAsyncDispatcher implementation shooul close this handle on it's destructor.
 	 */
-	virtual HANDLE dispatch(Method method, LPVOID lpParam) = 0;
+	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread) = 0;
 
 	/**
 	 * Returns exit code of dispatched method.
