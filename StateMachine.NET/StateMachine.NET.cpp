@@ -84,6 +84,19 @@ bool Context::isAsync()
 	return m_nativeContext->isAsync();
 }
 
+HResult AsyncContext::getAsyncExitCode(HResult% hrExitCode)
+{
+	HRESULT _hrExitCode;
+	auto hr = tsm_NET::getAsyncExitCode(m_nativeContext, &_hrExitCode);
+	if(SUCCEEDED(hr)) { hrExitCode = (HResult)_hrExitCode; }
+	return (HResult)hr;
+}
+
+HRESULT tsm_NET::getAsyncExitCode(native::Context* context, HRESULT* phr)
+{
+	return context->getAsyncExitCode(phr);
+}
+
 HResult Context::setup(State^ initialState, Event^ event)
 {
 	return (HResult)m_nativeContext->setup(getNative(initialState), getNative(event));

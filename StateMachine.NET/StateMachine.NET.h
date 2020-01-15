@@ -1,6 +1,7 @@
 #pragma once
 
 using namespace System;
+using namespace Runtime::InteropServices;
 
 namespace native
 {
@@ -94,6 +95,7 @@ public:
 	!Context();
 
 	bool isAsync();
+	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return (HResult)E_NOTIMPL; }
 	HResult setup(State^ initialState, Event^ event);
 	HResult setup(State^ initialState) { return setup(initialState, nullptr); }
 	HResult shutdown(TimeSpan timeout);
@@ -131,9 +133,12 @@ public ref class AsyncContext : public Context
 public:
 	AsyncContext() : Context(true, false) {}
 	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
+	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) override;
 
 protected:
 };
+
+extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
 
 public ref class State
 {

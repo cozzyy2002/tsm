@@ -38,6 +38,7 @@ public:
 
 	Context(ManagedType^ context, bool isAsync = true);
 	virtual bool isAsync() const override { return m_isAsync; }
+	virtual HRESULT getAsyncExitCode(HRESULT* pht) override;
 	virtual tsm::IAsyncDispatcher* _createAsyncDispatcher() override;
 
 	HRESULT setup(tsm::IState* initialState, tsm::IEvent* event = nullptr) { return _getStateMachine()->setup(this, initialState, event); }

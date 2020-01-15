@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "NativeObjects.h"
+#include <StateMachine/Context.h>
 
 using namespace native;
 using namespace tsm_NET::common;
@@ -76,26 +77,61 @@ protected:
 class AsyncDispatcher : public tsm::IAsyncDispatcher
 {
 public:
-	virtual HANDLE dispatch(Method method, LPVOID lpParam) override {
-		this->method = method;
-		this->lpParam = lpParam;
-		gcnew ManagedDispatcher(this);
+	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread) override {
+		if(!method || !phWorkerThread) { return E_POINTER; }
 
-		exitThreadEvent.Attach(CreateEvent(nullptr, TRUE, FALSE, nullptr));
-		return exitThreadEvent;
+		HRESULT hr = S_OK;
+		auto h = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+		if(h) {
+			// Create event object which notifies that the worker thread terminates.
+			exitThreadEvent.Attach(h);
+			*phWorkerThread = h;
+
+			// Dispatch threadMethod on managed thread.
+			this->method = method;
+			this->lpParam = lpParam;
+			gcnew ManagedDispatcher(this);
+		} else {
+			hr = HRESULT_FROM_WIN32(GetLastError());
+		}
+		return hr;
 	}
 
 	/**
 	 * Method called in the managed thread and call IAsyncDispatcher::Method.
 	 */
 	void threadMethod() {
-		method(lpParam);
+		exitCode = method(lpParam);
 		SetEvent(exitThreadEvent);
+	}
+
+	virtual HRESULT getExitCode(HRESULT* phr) override {
+		HRESULT hr = S_OK;
+		auto w = WaitForSingleObject(exitThreadEvent, 0);
+		switch(w) {
+		case WAIT_OBJECT_0:
+			// Worker thread has been terminated.
+			*phr = exitCode;
+			break;
+		case WAIT_TIMEOUT:
+			// Worker thread is still running.
+			hr = E_ILLEGAL_METHOD_CALL;
+			break;
+		case WAIT_FAILED:
+			hr = HRESULT_FROM_WIN32(GetLastError());
+			break;
+		default:
+			hr = E_UNEXPECTED;
+			break;
+		}
+
+		return hr;
 	}
 
 protected:
 	Method method;
 	LPVOID lpParam;
+	DWORD exitCode;
 	CHandle exitThreadEvent;
 };
 
@@ -114,6 +150,11 @@ Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 	, m_managedContext(context)
 	, m_stateMonitor(nullptr)
 {
+}
+
+HRESULT Context::getAsyncExitCode(HRESULT* pht)
+{
+	return tsm::getAsyncExitCode(this, pht);
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState)

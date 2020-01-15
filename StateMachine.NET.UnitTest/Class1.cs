@@ -52,6 +52,10 @@ namespace StateMachine.NET.UnitTest.Generic
             // Current state should be mockNextState.
             Assume.That(c.CurrentState, Is.EqualTo(mockNextState));
 
+            // Not implemented.
+            HResult hrExitCode;
+            Assume.That(c.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.NotImpl));
+
             // Shutdown
             mockNextState.IsExitCalledOnShutdown = true;
             Assume.That(c.shutdown(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
@@ -136,10 +140,18 @@ namespace StateMachine.NET.UnitTest.Generic
             // Current state should be mockNextState.
             Assume.That(c.CurrentState, Is.EqualTo(mockNextState));
 
+            // Exit code of worker thread is not retrieved yet.
+            HResult hrExitCode;
+            Assume.That(c.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.IllegalMethodCall));
+
             // Shutdown
             mockNextState.IsExitCalledOnShutdown = true;
             Assume.That(c.shutdown(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
             Thread.Sleep(100);
+
+            // Check exit code of worker thread.
+            Assume.That(c.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.Ok));
+            Assume.That(hrExitCode, Is.EqualTo(HResult.Ok));
 
             // Check calls to methods of State.
             Received.InOrder(() =>

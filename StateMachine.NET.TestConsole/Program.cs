@@ -35,7 +35,9 @@ namespace StateMachine.NET.TestConsole
             }
 
             var hr = context.shutdown();
-            Console.WriteLine($"Context.shutdown() returns {hr}.\nKey in [Enter] to exit.");
+            HResult hrExitCode;
+            context.getAsyncExitCode(out hrExitCode);
+            Console.WriteLine($"Context.shutdown() returns {hr}, Worker thread returns {hrExitCode}.\nKey in [Enter] to exit.");
             Console.ReadLine();
         }
     }
