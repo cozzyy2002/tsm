@@ -50,8 +50,6 @@ public:
 	Context() : tsm_NET::Context(false, false), m_stateMonitor(nullptr) {}
 	virtual ~Context() {}
 
-	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return (HResult)E_NOTIMPL; }
-
 	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
 	HResult setup(S initialState) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState); }
 	HResult shutdown(TimeSpan timeout) { return (HResult)tsm_NET::Context::shutdown(timeout); }
@@ -83,7 +81,7 @@ public:
 	AsyncContext() : Context(true, false) {}
 	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
 
-	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) override {
+	HResult getAsyncExitCode([Out] HResult% hrExitCode) {
 		HRESULT _hrExitCode;
 		auto hr = tsm_NET::getAsyncExitCode(m_nativeContext, &_hrExitCode);
 		if(SUCCEEDED(hr)) { hrExitCode = (HResult)_hrExitCode; }
