@@ -193,8 +193,9 @@ bool State::_isExitCalledOnShutdown() const
 	return m_managedState->IsExitCalledOnShutdown;
 }
 
-Event::Event(ManagedType^ event)
+Event::Event(ManagedType^ event, int priority /*= 0*/)
 	: m_managedEvent(event)
+	, m_priority(priority)
 	, m_timerClient(nullptr)
 {
 }
@@ -212,4 +213,11 @@ HRESULT Event::_preHandle(tsm::IContext* context)
 HRESULT Event::_postHandle(tsm::IContext* context, HRESULT hr)
 {
 	return (HRESULT)m_managedEvent->postHandle(getManaged((native::Context*)context), (tsm_NET::HResult)hr);
+}
+
+void Event::setTimer(tsm::TimerClient* timerClient, DWORD delayTime, DWORD intervalTime /*= 0*/)
+{
+	m_timerClient = timerClient;
+	m_delayTime = delayTime;
+	m_intervalTime = intervalTime;
 }

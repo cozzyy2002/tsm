@@ -109,13 +109,15 @@ class Event : public tsm::IEvent
 public:
 	using ManagedType = tsm_NET::Event;
 
-	Event(ManagedType^ event);
+	Event(ManagedType^ event, int priority = 0);
 	virtual ~Event();
 
 #pragma region Implementation of IState that call methods of managed class.
 	virtual HRESULT _preHandle(tsm::IContext* Icontext) override;
 	virtual HRESULT _postHandle(tsm::IContext* Icontext, HRESULT hr) override;
 #pragma endregion
+
+	void setTimer(tsm::TimerClient* timerClient, DWORD delayTime, DWORD intervalTime = 0);
 
 	virtual int _getPriority() const override { return m_priority; }
 	virtual DWORD _getDelayTime() const override { return m_delayTime; }

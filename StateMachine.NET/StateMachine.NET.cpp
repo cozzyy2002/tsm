@@ -141,7 +141,7 @@ void Context::StateMonitor::set(IStateMonitor^ value)
 }
 
 //-------------- Managed State class. --------------------//
-State::State(State^ masterState)
+void State::construct(State^ masterState)
 {
 	m_nativeState = new native::State(this, masterState);
 
@@ -180,10 +180,34 @@ void State::MemoryWeight::set(int value)
 }
 
 //-------------- Managed Event class. --------------------//
-Event::Event()
+void Event::construct(int priority)
 {
-	m_nativeEvent = new native::Event(this);
-	//m_nativeEvent->AddRef();
+	m_nativeEvent = new native::Event(this, priority);
+}
+
+void Event::setTimer(Context^ context, int delayTime, int intervalTime)
+{
+	setTimer(context->get(), delayTime, intervalTime);
+}
+
+void Event::setTimer(State^ state, int delayTime, int intervalTime)
+{
+	setTimer(state->get(), delayTime, intervalTime);
+}
+
+void Event::setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime)
+{
+	m_nativeEvent->setTimer(timerClient, delayTime, intervalTime);
+}
+
+int Event::DelayTime::get()
+{
+	return m_nativeEvent->_getDelayTime();
+}
+
+int Event::InterValTime::get()
+{
+	return m_nativeEvent->_getIntervalTime();
 }
 
 long Event::SequenceNumber::get()

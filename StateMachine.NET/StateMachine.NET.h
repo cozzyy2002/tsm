@@ -139,9 +139,11 @@ extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
 
 public ref class State
 {
+	void construct(State^ masterState);
+
 public:
-	State() : State(nullptr) {}
-	State(State^ masterState);
+	State() { construct(nullptr); }
+	State(State^ masterState) { construct(masterState); }
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
@@ -173,17 +175,21 @@ protected:
 
 public ref class Event
 {
+	void construct(int priority);
+
 public:
-	Event();
+	Event() { construct(0); }
+	Event(int priority) { construct(priority); }
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
 	virtual HResult postHandle(Context^ context, HResult hr) { return hr; }
 #pragma endregion
 
-	//
-	// TODO: Implement setTimer() method.
-	//
+	void setTimer(Context^ context, int delayTime, int intervalTime);
+	void setTimer(State^ state, int delayTime, int intervalTime);
+	property int DelayTime { int get(); }
+	property int InterValTime { int get(); }
 
 #pragma region .NET properties
 	property long SequenceNumber { long get(); }
@@ -197,6 +203,8 @@ internal:
 
 protected:
 	NativeType* m_nativeEvent;
+
+	void setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime);
 };
 
 namespace common
