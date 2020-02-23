@@ -25,7 +25,6 @@ ContextHandle::ContextHandle(IContext* context)
 }
 
 TimerHandle::TimerHandle(TimerClient*)
-	: hTimerQueue(NULL)
 {
 }
 

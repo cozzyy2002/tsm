@@ -21,13 +21,13 @@ class DefaultAsyncDispatcher : public IAsyncDispatcher
 public:
 	virtual HRESULT dispatch(Method method, LPVOID param, LPHANDLE phWorkerThread) override
 	{
-		HR_ASSERT(phWorkerThread, E_POINTER);
+		if(!method) { return E_POINTER; }
 
 		HRESULT hr = S_OK;
 		auto h = CreateThread(nullptr, 0, method, param, 0, nullptr);
 		if(h) {
 			m_hWorkerThread.Attach(h);
-			*phWorkerThread = h;
+			if(phWorkerThread) { *phWorkerThread = h; }
 		} else {
 			hr = HRESULT_FROM_WIN32(GetLastError());
 		}

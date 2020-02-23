@@ -7,14 +7,35 @@
 
 namespace tsm {
 
-static VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired);
+static DWORD WINAPI timerCallback(LPVOID lpParam);
+
+// Cancel timer.
+HRESULT TimerHandle::Timer::cancel(DWORD timeout /*= 100*/)
+{
+	WIN32_ASSERT(SetEvent(canceledEvent));
+	auto wait = WaitForSingleObject(terminatedEvent, timeout);
+	auto hr = S_OK;
+	switch(wait) {
+	case WAIT_OBJECT_0:
+		// Timer is successfully canceled.
+		break;
+	case WAIT_TIMEOUT:
+		// User method called by timer might be executing.
+		hr = E_ABORT;
+		break;
+	case WAIT_FAILED:
+		hr = HRESULT_FROM_WIN32(GetLastError());
+		break;
+	default:
+		hr = E_UNEXPECTED;
+		break;
+	}
+	return hr;
+}
 
 HRESULT TimerClient::cancelEventTimer(IEvent* event)
 {
 	auto th = _getHandle();
-
-	// Check if any timer has started by _triggerDelayedEvent() method.
-	HR_ASSERT(th->hTimerQueue, E_ILLEGAL_METHOD_CALL);
 
 	// Preserve Timer object until callback will complete or will be canceled.
 	CComPtr<TimerHandle::Timer> timer;
@@ -24,38 +45,34 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 
 		auto it = th->timers.find(event);
 		if(it != th->timers.end()) {
-			timer = it->second;
-			// Remove timer.
+			// Cancel and remove timer.
+			HR_ASSERT_OK(it->second->cancel());
 			th->timers.erase(it);
 		} else {
 			// Timer specified might have expired already.
 			hr = S_FALSE;
 		}
 	}
-	if(timer.p) {
-		// Delete timer and wait for currently running timer callback function.
-		WIN32_ASSERT(DeleteTimerQueueTimer(th->hTimerQueue, timer->hTimer, INVALID_HANDLE_VALUE));
-	}
 	return hr;
 }
 
 HRESULT TimerClient::cancelAllEventTimers()
 {
+	auto hr = S_OK;
 	auto th = _getHandle();
 
-	// In case TimerHandle::hTimerQueue is cleared in another thread.
-	auto hTimerQueue = th->hTimerQueue;
-	if(hTimerQueue) {
-		// Cancel and delete all pending timers and delete timer queue.
-		WIN32_EXPECT(DeleteTimerQueueEx(hTimerQueue, INVALID_HANDLE_VALUE));
-		{
-			lock_t _lock(th->lock);
-			th->hTimerQueue = NULL;
-			th->timers.clear();
-		}
-	}
+	lock_t _lock(th->lock);
+	if(th->timers.empty()) { return S_FALSE; }
 
-	return S_OK;
+	// Cancel and delete all pending timers.
+	for(auto& pair : th->timers) {
+		auto _hr = HR_EXPECT_OK(pair.second->cancel());
+		// Even if canceling a timer fails, continue canceling all other timers.
+		if(FAILED(_hr)) { hr = _hr; }
+	}
+	th->timers.clear();
+
+	return hr;
 }
 
 std::vector<CComPtr<IEvent>> TimerClient::getPendingEvents()
@@ -87,22 +104,17 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 
 	lock_t _lock(th->lock);
 
-	if(!th->hTimerQueue) {
-		// Create timer queue for first time.
-		WIN32_ASSERT(th->hTimerQueue = CreateTimerQueue());
-	}
-
 	// Create timer object.
 	CComPtr<TimerHandle::Timer> timer(new TimerHandle::Timer());
 	timer->timerType = timerType;
 	timer->context = context;
 	timer->event = event;
+	timer->canceledEvent.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 
-	// Create timer-queue timer and pass timer object as parameter for timer callback function.
-	ULONG flags = 0;
-	flags |= ((timer->timerType == TimerType::HandleEvent) ? WT_EXECUTELONGFUNCTION : 0);
-	flags |= ((event->_getIntervalTime() == 0) ? WT_EXECUTEONLYONCE : 0);
-	WIN32_ASSERT(CreateTimerQueueTimer(&timer->hTimer, th->hTimerQueue, timerCallback, timer.p, event->_getDelayTime(), event->_getIntervalTime(), flags));
+	// Create IAsyncDispatcher and dispatch timer thread with timer object as it's parameter.
+	auto dispatcher = context->_createAsyncDispatcher();
+	HR_ASSERT(dispatcher, E_UNEXPECTED);
+	HR_ASSERT_OK(dispatcher->dispatch(timerCallback, timer.p, &timer->terminatedEvent));
 
 	// m_timers owns Timer object in unique_ptr<Timer>.
 	th->timers.insert(std::make_pair(event, timer));
@@ -115,13 +127,25 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	return S_OK;
 }
 
-/*static*/ VOID CALLBACK timerCallback(_In_ PVOID   lpParameter, _In_ BOOLEAN TimerOrWaitFired)
+/*static*/ DWORD WINAPI timerCallback(LPVOID lpParam)
 {
-	CComPtr<TimerHandle::Timer> timer = (TimerHandle::Timer*)lpParameter;
+	CComPtr<TimerHandle::Timer> timer = (TimerHandle::Timer*)lpParam;
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
 	auto th = timerClient->_getHandle();
-	th->timerCallback(timerClient, timer, event);
+
+	auto wait = WaitForSingleObject(timer->canceledEvent, event->_getDelayTime());
+	while(wait == WAIT_TIMEOUT) {
+		th->timerCallback(timerClient, timer, event);
+
+		auto interval = event->_getIntervalTime();
+		if(interval) {
+			wait = WaitForSingleObject(timer->canceledEvent, interval);
+		} else {
+			break;
+		}
+	}
+	return 0;
 }
 
 HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event)

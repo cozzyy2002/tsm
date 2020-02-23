@@ -57,7 +57,7 @@ public:
 	 * Creates synchronization object handle that is set when the method terminates.
 	 * IAsyncDispatcher implementation shooul close this handle on it's destructor.
 	 */
-	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread) = 0;
+	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread = nullptr) = 0;
 
 	/**
 	 * Returns exit code of dispatched method.

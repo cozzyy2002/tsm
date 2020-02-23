@@ -78,22 +78,24 @@ class AsyncDispatcher : public tsm::IAsyncDispatcher
 {
 public:
 	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread) override {
-		if(!method || !phWorkerThread) { return E_POINTER; }
+		if(!method) { return E_POINTER; }
 
 		HRESULT hr = S_OK;
-		auto h = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-		if(h) {
-			// Create event object which notifies that the worker thread terminates.
-			exitThreadEvent.Attach(h);
-			*phWorkerThread = h;
-
-			// Dispatch threadMethod on managed thread.
-			this->method = method;
-			this->lpParam = lpParam;
-			gcnew ManagedDispatcher(this);
-		} else {
-			hr = HRESULT_FROM_WIN32(GetLastError());
+		if(phWorkerThread) {
+			auto h = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+			if(h) {
+				// Create event object which notifies that the worker thread terminates.
+				exitThreadEvent.Attach(h);
+				*phWorkerThread = h;
+			} else {
+				hr = HRESULT_FROM_WIN32(GetLastError());
+			}
 		}
+
+		// Dispatch threadMethod on managed thread.
+		this->method = method;
+		this->lpParam = lpParam;
+		gcnew ManagedDispatcher(this);
 		return hr;
 	}
 
@@ -102,11 +104,13 @@ public:
 	 */
 	void threadMethod() {
 		exitCode = method(lpParam);
-		SetEvent(exitThreadEvent);
+		if(exitThreadEvent) { SetEvent(exitThreadEvent); }
 	}
 
 	virtual HRESULT getExitCode(HRESULT* phr) override {
 		HRESULT hr = S_OK;
+		if(!exitThreadEvent) { return E_ILLEGAL_METHOD_CALL; }
+
 		auto w = WaitForSingleObject(exitThreadEvent, 0);
 		switch(w) {
 		case WAIT_OBJECT_0:
