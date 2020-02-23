@@ -142,7 +142,7 @@ void ManagedDispatcher::threadMethod()
 
 tsm::IAsyncDispatcher* Context::_createAsyncDispatcher()
 {
-	return m_managedContext->useNativeThread ? new AsyncDispatcher() : nullptr;
+	return m_managedContext->useNativeThread ? new AsyncDispatcher() : tsm::Context_createAsyncDispatcher();
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
@@ -154,7 +154,7 @@ Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 
 HRESULT Context::getAsyncExitCode(HRESULT* pht)
 {
-	return tsm::getAsyncExitCode(this, pht);
+	return tsm::Context_getAsyncExitCode(this, pht);
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState)
