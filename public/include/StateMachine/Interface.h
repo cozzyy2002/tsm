@@ -25,6 +25,10 @@ public:
 		return m_handle.get();
 	}
 
+	virtual bool _isHandleCreated() const {
+		return (m_handle != nullptr);
+	}
+
 protected:
 	// Returns sub class instance.
 	// Override if constructor of handle class depends on the instance.

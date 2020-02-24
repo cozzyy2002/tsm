@@ -35,6 +35,8 @@ HRESULT TimerHandle::Timer::cancel(DWORD timeout /*= 100*/)
 
 HRESULT TimerClient::cancelEventTimer(IEvent* event)
 {
+	if(!_isHandleCreated()) { return S_FALSE; }
+
 	auto th = _getHandle();
 
 	// Preserve Timer object until callback will complete or will be canceled.
@@ -58,6 +60,8 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 
 HRESULT TimerClient::cancelAllEventTimers()
 {
+	if(!_isHandleCreated()) { return S_FALSE; }
+
 	auto hr = S_OK;
 	auto th = _getHandle();
 
@@ -77,20 +81,21 @@ HRESULT TimerClient::cancelAllEventTimers()
 
 std::vector<CComPtr<IEvent>> TimerClient::getPendingEvents()
 {
-	auto th = _getHandle();
-	lock_t _lock(th->lock);
-
 	std::vector<CComPtr<IEvent>> events;
-	for(auto& pair : th->timers) {
-		events.push_back(pair.first);
+
+	if(_isHandleCreated()) {
+		auto th = _getHandle();
+		lock_t _lock(th->lock);
+
+		for(auto& pair : th->timers) {
+			events.push_back(pair.first);
+		}
 	}
 	return events;
 }
 
 HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEvent* event)
 {
-	auto th = _getHandle();
-
 	// Ensure to release object on error.
 	CComPtr<IEvent> _event(event);
 
@@ -101,8 +106,6 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	auto eh = event->_getHandle();
 	HR_ASSERT(!eh->isTimerCreated, E_ILLEGAL_METHOD_CALL);
 	eh->isTimerCreated = true;
-
-	lock_t _lock(th->lock);
 
 	// Create timer object.
 	CComPtr<TimerHandle::Timer> timer(new TimerHandle::Timer());
@@ -116,8 +119,12 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	HR_ASSERT(dispatcher, E_UNEXPECTED);
 	HR_ASSERT_OK(dispatcher->dispatch(timerCallback, timer.p, &timer->terminatedEvent));
 
-	// m_timers owns Timer object in unique_ptr<Timer>.
-	th->timers.insert(std::make_pair(event, timer));
+	{
+		// Add Event and Timer pair to TimerHandle::timers.
+		auto th = _getHandle();
+		lock_t _lock(th->lock);
+		th->timers.insert(std::make_pair(event, timer));
+	}
 
 	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
 	{
@@ -127,6 +134,7 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	return S_OK;
 }
 
+// Wait delay time and interval time, then call TimerHandle::timerCallback() method.
 /*static*/ DWORD WINAPI timerCallback(LPVOID lpParam)
 {
 	CComPtr<TimerHandle::Timer> timer = (TimerHandle::Timer*)lpParam;
@@ -134,12 +142,14 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	auto timerClient = event->_getTimerClient();
 	auto th = timerClient->_getHandle();
 
+	// Wait delay time.
 	auto wait = WaitForSingleObject(timer->canceledEvent, event->_getDelayTime());
 	while(wait == WAIT_TIMEOUT) {
 		th->timerCallback(timerClient, timer, event);
 
 		auto interval = event->_getIntervalTime();
 		if(interval) {
+			// Wait interval time.
 			wait = WaitForSingleObject(timer->canceledEvent, interval);
 		} else {
 			break;
