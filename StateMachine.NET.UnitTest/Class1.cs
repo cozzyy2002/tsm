@@ -110,7 +110,7 @@ namespace StateMachine.NET.UnitTest.Generic
         [Test]
         public void BasicTest()
         {
-        var mockEvent = Substitute.For<Event>();
+            var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
             var mockNextState = Substitute.For<State>();
             var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
@@ -130,6 +130,11 @@ namespace StateMachine.NET.UnitTest.Generic
                 });
 
             Assert.That(c.setup(mockInitialState), Is.EqualTo(HResult.Ok));
+
+            mockEvent.setTimer(c, 10, 0);
+            Assume.That(mockEvent.DelayTime, Is.EqualTo(10));
+            Assume.That(mockEvent.InterValTime, Is.EqualTo(0));
+
             Assert.That(c.triggerEvent(mockEvent), Is.EqualTo(HResult.Ok));
             Thread.Sleep(100);
 

@@ -143,16 +143,22 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	auto th = timerClient->_getHandle();
 
 	// Wait delay time.
-	auto wait = WaitForSingleObject(timer->canceledEvent, event->_getDelayTime());
-	while(wait == WAIT_TIMEOUT) {
-		th->timerCallback(timerClient, timer, event);
-
-		auto interval = event->_getIntervalTime();
-		if(interval) {
-			// Wait interval time.
-			wait = WaitForSingleObject(timer->canceledEvent, interval);
+	DWORD wait = WAIT_TIMEOUT;
+	auto delay = event->_getDelayTime();
+	if(delay) {
+		wait = WaitForSingleObject(timer->canceledEvent, delay);
+		if(wait == WAIT_TIMEOUT) {
+			th->timerCallback(timerClient, timer, event);
 		} else {
-			break;
+			return 0;
+		}
+	}
+
+	// Wait interval time until timer will be canceled.
+	auto interval = event->_getIntervalTime();
+	if(interval) {
+		while(WaitForSingleObject(timer->canceledEvent, interval) == WAIT_TIMEOUT) {
+			th->timerCallback(timerClient, timer, event);
 		}
 	}
 	return 0;
