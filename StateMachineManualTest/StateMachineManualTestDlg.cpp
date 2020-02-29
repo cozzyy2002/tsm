@@ -111,6 +111,7 @@ ON_COMMAND(ID_EDIT_CLEAR, &CStateMachineManualTestDlg::OnEditClear)
 //ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &CStateMachineManualTestDlg::OnUpdateEditCopy)
 ON_WM_INITMENU()
 ON_COMMAND(ID_HELP_ABOUT, &CStateMachineManualTestDlg::OnHelpAbout)
+ON_BN_CLICKED(IDC_BUTTON_HANDLE_EVENT, &CStateMachineManualTestDlg::OnBnClickedButtonHandleEvent)
 END_MESSAGE_MAP()
 
 
@@ -250,6 +251,13 @@ void CStateMachineManualTestDlg::OnClickedButtonTriggerEvent()
 	HR_EXPECT_OK(context.triggerEvent(e));
 }
 
+void CStateMachineManualTestDlg::OnBnClickedButtonHandleEvent()
+{
+	UpdateData();
+	auto e = m_eventProperties.createEvent();
+	HR_EXPECT_OK(context.handleEvent(e));
+}
+
 
 afx_msg LRESULT CStateMachineManualTestDlg::OnStateChanged(WPARAM wParam, LPARAM lParam)
 {
@@ -381,3 +389,4 @@ void CStateMachineManualTestDlg::OnHelpAbout()
 	CAboutDlg dlgAbout;
 	dlgAbout.DoModal();
 }
+
