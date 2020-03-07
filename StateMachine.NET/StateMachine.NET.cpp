@@ -59,6 +59,17 @@ void StateMonitorCaller::onWorkerThreadExitCallback(tsm::IContext* context, HRES
 	m_stateMonitor->onWorkerThreadExit(getManaged((native::Context*)context), (HResult)exitCode);
 }
 
+//-------------- Managed TimerClient class. --------------------//
+IList<Event^>^ TimerClient::getPendingEvents()
+{
+	auto ret = gcnew List<Event^>();
+	auto timerClient = getTimerClient();
+	for(auto e : timerClient->getPendingEvents()) {
+		ret->Add(getManaged((native::Event*)e.p));
+	}
+	return ret;
+}
+
 //-------------- Managed Context class. --------------------//
 void Context::construct(bool isAsync, bool useNativeThread)
 {
@@ -140,6 +151,11 @@ void Context::StateMonitor::set(IStateMonitor^ value)
 	}
 }
 
+tsm::TimerClient* Context::getTimerClient()
+{
+	return get()->_getTimerClient();
+}
+
 //-------------- Managed State class. --------------------//
 void State::construct(State^ masterState)
 {
@@ -179,20 +195,45 @@ void State::MemoryWeight::set(int value)
 	tsm::IState::setMemoryWeight(value);
 }
 
+tsm::TimerClient* State::getTimerClient()
+{
+	return get()->_getTimerClient();
+}
+
 //-------------- Managed Event class. --------------------//
 void Event::construct(int priority)
 {
 	m_nativeEvent = new native::Event(this, priority);
 }
 
-void Event::setTimer(Context^ context, int delayTime, int intervalTime)
+void Event::setDelayTimer(Context^ context, TimeSpan delayTime)
 {
-	setTimer(context->get(), delayTime, intervalTime);
+	setTimer(context->get(), (int)delayTime.TotalMilliseconds, 0);
 }
 
-void Event::setTimer(State^ state, int delayTime, int intervalTime)
+void Event::setIntervalTimer(Context^ context, TimeSpan intervalTime)
 {
-	setTimer(state->get(), delayTime, intervalTime);
+	setTimer(context->get(), 0, (int)intervalTime.TotalMilliseconds);
+}
+
+void Event::setTimer(Context^ context, TimeSpan delayTime, TimeSpan intervalTime)
+{
+	setTimer(context->get(), (int)delayTime.TotalMilliseconds, (int)intervalTime.TotalMilliseconds);
+}
+
+void Event::setDelayTimer(State^ state, TimeSpan delayTime)
+{
+	setTimer(state->get(), (int)delayTime.TotalMilliseconds, 0);
+}
+
+void Event::setIntervalTimer(State^ state, TimeSpan intervalTime)
+{
+	setTimer(state->get(), 0, (int)intervalTime.TotalMilliseconds);
+}
+
+void Event::setTimer(State^ state, TimeSpan delayTime, TimeSpan intervalTime)
+{
+	setTimer(state->get(), (int)delayTime.TotalMilliseconds, (int)intervalTime.TotalMilliseconds);
 }
 
 void Event::setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime)
@@ -200,14 +241,14 @@ void Event::setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalT
 	m_nativeEvent->setTimer(timerClient, delayTime, intervalTime);
 }
 
-int Event::DelayTime::get()
+TimeSpan Event::DelayTime::get()
 {
-	return m_nativeEvent->_getDelayTime();
+	return TimeSpan::FromMilliseconds(m_nativeEvent->_getDelayTime());
 }
 
-int Event::InterValTime::get()
+TimeSpan Event::InterValTime::get()
 {
-	return m_nativeEvent->_getIntervalTime();
+	return TimeSpan::FromMilliseconds(m_nativeEvent->_getIntervalTime());
 }
 
 long Event::SequenceNumber::get()

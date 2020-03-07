@@ -1,6 +1,7 @@
 #pragma once
 
 using namespace System;
+using namespace System::Collections::Generic;
 using namespace Runtime::InteropServices;
 
 namespace native
@@ -82,7 +83,16 @@ protected:
 	IStateMonitor^ m_stateMonitor;
 };
 
-public ref class Context
+public ref class TimerClient abstract
+{
+public:
+	IList<Event^>^ getPendingEvents();
+
+internal:
+	virtual tsm::TimerClient* getTimerClient() = 0;
+};
+
+public ref class Context : public TimerClient
 {
 	void construct(bool isAsync, bool useNativeThread);
 
@@ -125,6 +135,9 @@ protected:
 	bool m_useNativeThread;
 	StateMonitorCaller^ m_stateMonitorCaller;
 	tsm_NET::IStateMonitor^ m_stateMonitor;
+
+internal:
+	virtual tsm::TimerClient* getTimerClient() override;
 };
 
 public ref class AsyncContext : public Context
@@ -137,7 +150,7 @@ public:
 
 extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
 
-public ref class State
+public ref class State : public TimerClient
 {
 	void construct(State^ masterState);
 
@@ -171,6 +184,9 @@ internal:
 
 protected:
 	NativeType* m_nativeState;
+
+internal:
+	virtual tsm::TimerClient* getTimerClient() override;
 };
 
 public ref class Event
@@ -186,10 +202,14 @@ public:
 	virtual HResult postHandle(Context^ context, HResult hr) { return hr; }
 #pragma endregion
 
-	void setTimer(Context^ context, int delayTime, int intervalTime);
-	void setTimer(State^ state, int delayTime, int intervalTime);
-	property int DelayTime { int get(); }
-	property int InterValTime { int get(); }
+	void setDelayTimer(Context^ context, TimeSpan delayTime);
+	void setIntervalTimer(Context^ context, TimeSpan intervalTime);
+	void setTimer(Context^ context, TimeSpan delayTime, TimeSpan intervalTime);
+	void setDelayTimer(State^ state, TimeSpan delayTime);
+	void setIntervalTimer(State^ state, TimeSpan intervalTime);
+	void setTimer(State^ state, TimeSpan delayTime, TimeSpan intervalTime);
+	property TimeSpan DelayTime { TimeSpan get(); }
+	property TimeSpan InterValTime { TimeSpan get(); }
 
 #pragma region .NET properties
 	property long SequenceNumber { long get(); }
