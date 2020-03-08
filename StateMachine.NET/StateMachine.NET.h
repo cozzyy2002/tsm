@@ -86,7 +86,7 @@ protected:
 public ref class TimerClient abstract
 {
 public:
-	IList<Event^>^ getPendingEvents();
+	property IList<Event^>^ PendingEvents { IList<Event^>^ get(); }
 
 internal:
 	virtual tsm::TimerClient* getTimerClient() = 0;

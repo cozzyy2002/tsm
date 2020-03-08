@@ -217,18 +217,21 @@ namespace StateMachine.NET.UnitTest.Generic
             mockStateMonitor
                 .When(x=> x.onEventHandling(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>()))
                 .Do(x => { Console.WriteLine($"{Now} onEventHandling()"); });
+            mockStateMonitor
+                .When(x => x.onTimerStarted(Arg.Any<Context>(), Arg.Any<Event>()))
+                .Do(x => { Console.WriteLine($"{Now} onTimerStarted({x[1]})"); });
 
-            var count = 0;
+            var count = 4;
             mockInitialState
                 .handleEvent(Arg.Is(context), Arg.Is(mockEvent), ref Arg.Is(State.Null))
                 .Returns(x =>
                 {
-                    count++;
+                    count--;
                     var e = x[1] as Event;
                     Console.WriteLine($"{Now} handleEvent: count={count}");
 
-                    if(3 < count) {
-                        Console.WriteLine("Changing state to next state.");
+                    if(count == 0) {
+                        Console.WriteLine("  Changing state to next state.");
                         x[2] = mockNextState;
                     }
                     return HResult.Ok;
@@ -242,9 +245,16 @@ namespace StateMachine.NET.UnitTest.Generic
             Console.WriteLine($"{Now} Triggering event: Timer: Delay={mockEvent.DelayTime:fff}, Intervale={mockEvent.InterValTime:fff}");
             Assert.That(context.triggerEvent(mockEvent), Is.EqualTo(HResult.Ok));
 
+            var pendingEvents = mockInitialState.PendingEvents;
+            Console.WriteLine($"{Now} Pending events count={pendingEvents.Count}");
+            Assert.That(pendingEvents.Count, Is.EqualTo(1));
+            Assume.That(pendingEvents[0], Is.EqualTo(mockEvent));
+            Assume.That(context.PendingEvents.Count, Is.EqualTo(0));
+
             Thread.Sleep(2000);
             Console.WriteLine($"{Now} End.");
             Assert.That(context.CurrentState, Is.EqualTo(mockNextState));
+            Assume.That(count, Is.EqualTo(0));
 
             Assert.That(context.shutdown(), Is.EqualTo(HResult.Ok));
 
