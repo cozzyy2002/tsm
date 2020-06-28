@@ -114,17 +114,17 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	timer->event = event;
 	timer->canceledEvent.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 
-	// Create IAsyncDispatcher and dispatch timer thread with timer object as it's parameter.
-	auto dispatcher = context->_createAsyncDispatcher();
-	HR_ASSERT(dispatcher, E_UNEXPECTED);
-	HR_ASSERT_OK(dispatcher->dispatch(timerCallback, timer.p, &timer->terminatedEvent));
-
 	{
 		// Add Event and Timer pair to TimerHandle::timers.
 		auto th = _getHandle();
 		lock_t _lock(th->lock);
 		th->timers.insert(std::make_pair(event, timer));
 	}
+
+	// Create IAsyncDispatcher and dispatch timer thread with timer object as it's parameter.
+	auto dispatcher = context->_createAsyncDispatcher();
+	HR_ASSERT(dispatcher, E_UNEXPECTED);
+	HR_ASSERT_OK(dispatcher->dispatch(timerCallback, timer.p, &timer->terminatedEvent));
 
 	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
 	{
