@@ -63,12 +63,16 @@ public:
 	{
 		auto threadStart = gcnew Threading::ThreadStart(this, &ManagedDispatcher::threadMethod);
 		auto thread = gcnew Threading::Thread(threadStart);
+		threadID++;
+		thread->Name = threadID.ToString();
+		Console::WriteLine(String::Format("ManagedDispatcher: Created thread. Name={0}", thread->Name));
 		thread->Start();
 	}
 
 protected:
 	void threadMethod();
 	AsyncDispatcher* asyncDispatcher;
+	static int threadID = 0;
 };
 
 /**
@@ -201,6 +205,8 @@ Event::Event(ManagedType^ event, int priority /*= 0*/)
 	: m_managedEvent(event)
 	, m_priority(priority)
 	, m_timerClient(nullptr)
+	, m_delayTime(0)
+	, m_intervalTime(0)
 {
 }
 

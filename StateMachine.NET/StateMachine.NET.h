@@ -104,6 +104,8 @@ public:
 	virtual ~Context();
 	!Context();
 
+	static property unsigned int CurrentTherad { unsigned int get() { return GetCurrentThreadId(); }}
+
 	bool isAsync();
 	HResult setup(State^ initialState, Event^ event);
 	HResult setup(State^ initialState) { return setup(initialState, nullptr); }
