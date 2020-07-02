@@ -36,6 +36,11 @@ public:
 	virtual DWORD _getIntervalTime() const override { return m_intervalTime; }
 	virtual TimerClient* _getTimerClient() const override { return m_timerClient; }
 
+	// Set delay time to one-shot timer.
+	void setDelayTimer(TimerClient* timerClient, DWORD delayTime) { setTimer(timerClient, delayTime, 0); }
+	// Set interval time to interval timer.
+	void setIntervaleTimer(TimerClient* timerClient, DWORD intervalTime) { setTimer(timerClient, 0, intervalTime); }
+	// Set delay time and interval time.
 	void setTimer(TimerClient* timerClient, DWORD delayTime, DWORD intervalTime = 0) {
 		m_delayTime = delayTime;
 		m_intervalTime = intervalTime;

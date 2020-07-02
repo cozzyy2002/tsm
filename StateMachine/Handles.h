@@ -68,13 +68,15 @@ struct TimerHandle
 		TimerClient::TimerType timerType;
 		IContext* context;
 		CComPtr<IEvent> event;
-		HANDLE hTimer;				// Handle of timer-queue timer.
+		std::unique_ptr<IAsyncDispatcher> diapatcher;
+		CHandle canceledEvent;
+		HANDLE terminatedEvent;
+
+		HRESULT cancel(DWORD timeout = 100);
 	};
 
 	std::map<IEvent*, CComPtr<Timer>> timers;
 
-	// Note: Closing handle of timer queue is not necessary.
-	HANDLE hTimerQueue;
 	lock_object_t lock;
 
 	HRESULT timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event);

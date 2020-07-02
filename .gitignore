@@ -23,4 +23,6 @@
 /test.json.txt
 /StateMachineConsole.NET
 /StateMachineUnitTest.NET
-/TestResult.xml
+**/TestResult.xml
+*.lnk
+/setenv.bat

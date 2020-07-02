@@ -9,18 +9,11 @@
 
 namespace tsm {
 
-HRESULT tsm::getAsyncExitCode(IContext*context, HRESULT* phr)
+HRESULT Context_getAsyncExitCode(IContext* context, HRESULT* phr)
 {
-	auto asyncData = context->_getHandle(false)->asyncData;
-	return asyncData->asyncDispatcher->getExitCode(phr);
-}
-
-/**
- * Returns StateMachine object for Context and AsyncStateMachine object for AsyncContext respectively.
- */
-/*static*/ IStateMachine* IStateMachine::create(IContext* context)
-{
-	return context->isAsync() ? new AsyncStateMachine() : new StateMachine();
+	HR_ASSERT(context->isAsync(), E_ILLEGAL_METHOD_CALL);
+	auto dispatcher = context->_getHandle(false)->asyncData->asyncDispatcher.get();
+	return dispatcher ? dispatcher->getExitCode(phr) : E_ILLEGAL_METHOD_CALL;
 }
 
 class DefaultAsyncDispatcher : public IAsyncDispatcher
@@ -28,13 +21,13 @@ class DefaultAsyncDispatcher : public IAsyncDispatcher
 public:
 	virtual HRESULT dispatch(Method method, LPVOID param, LPHANDLE phWorkerThread) override
 	{
-		HR_ASSERT(phWorkerThread, E_POINTER);
+		if(!method) { return E_POINTER; }
 
 		HRESULT hr = S_OK;
 		auto h = CreateThread(nullptr, 0, method, param, 0, nullptr);
 		if(h) {
 			m_hWorkerThread.Attach(h);
-			*phWorkerThread = h;
+			if(phWorkerThread) { *phWorkerThread = h; }
 		} else {
 			hr = HRESULT_FROM_WIN32(GetLastError());
 		}
@@ -54,6 +47,19 @@ public:
 protected:
 	CHandle m_hWorkerThread;
 };
+
+IAsyncDispatcher* Context_createAsyncDispatcher()
+{
+	return new DefaultAsyncDispatcher();
+}
+
+/**
+ * Returns StateMachine object for Context and AsyncStateMachine object for AsyncContext respectively.
+ */
+/*static*/ IStateMachine* IStateMachine::create(IContext* context)
+{
+	return context->isAsync() ? new AsyncStateMachine() : new StateMachine();
+}
 
 HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEvent * event)
 {
@@ -77,6 +83,7 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 	asyncData->hEventShutdown.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 
 	auto dispatcher = context->_createAsyncDispatcher();
+	HR_ASSERT(dispatcher, E_NOTIMPL);
 	if(!dispatcher) { dispatcher = new DefaultAsyncDispatcher(); }
 	asyncData->asyncDispatcher.reset(dispatcher);
 

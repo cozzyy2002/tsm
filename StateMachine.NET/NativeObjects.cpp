@@ -63,12 +63,16 @@ public:
 	{
 		auto threadStart = gcnew Threading::ThreadStart(this, &ManagedDispatcher::threadMethod);
 		auto thread = gcnew Threading::Thread(threadStart);
+		threadID++;
+		thread->Name = threadID.ToString();
+		Console::WriteLine(String::Format("ManagedDispatcher: Created thread. Name={0}", thread->Name));
 		thread->Start();
 	}
 
 protected:
 	void threadMethod();
 	AsyncDispatcher* asyncDispatcher;
+	static int threadID = 0;
 };
 
 /**
@@ -78,22 +82,24 @@ class AsyncDispatcher : public tsm::IAsyncDispatcher
 {
 public:
 	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread) override {
-		if(!method || !phWorkerThread) { return E_POINTER; }
+		if(!method) { return E_POINTER; }
 
 		HRESULT hr = S_OK;
-		auto h = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-		if(h) {
-			// Create event object which notifies that the worker thread terminates.
-			exitThreadEvent.Attach(h);
-			*phWorkerThread = h;
-
-			// Dispatch threadMethod on managed thread.
-			this->method = method;
-			this->lpParam = lpParam;
-			gcnew ManagedDispatcher(this);
-		} else {
-			hr = HRESULT_FROM_WIN32(GetLastError());
+		if(phWorkerThread) {
+			auto h = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+			if(h) {
+				// Create event object which notifies that the worker thread terminates.
+				exitThreadEvent.Attach(h);
+				*phWorkerThread = h;
+			} else {
+				hr = HRESULT_FROM_WIN32(GetLastError());
+			}
 		}
+
+		// Dispatch threadMethod on managed thread.
+		this->method = method;
+		this->lpParam = lpParam;
+		gcnew ManagedDispatcher(this);
 		return hr;
 	}
 
@@ -102,11 +108,13 @@ public:
 	 */
 	void threadMethod() {
 		exitCode = method(lpParam);
-		SetEvent(exitThreadEvent);
+		if(exitThreadEvent) { SetEvent(exitThreadEvent); }
 	}
 
 	virtual HRESULT getExitCode(HRESULT* phr) override {
 		HRESULT hr = S_OK;
+		if(!exitThreadEvent) { return E_ILLEGAL_METHOD_CALL; }
+
 		auto w = WaitForSingleObject(exitThreadEvent, 0);
 		switch(w) {
 		case WAIT_OBJECT_0:
@@ -142,7 +150,7 @@ void ManagedDispatcher::threadMethod()
 
 tsm::IAsyncDispatcher* Context::_createAsyncDispatcher()
 {
-	return m_managedContext->useNativeThread ? new AsyncDispatcher() : nullptr;
+	return m_managedContext->useNativeThread ? new AsyncDispatcher() : tsm::Context_createAsyncDispatcher();
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
@@ -154,7 +162,7 @@ Context::Context(ManagedType^ context, bool isAsync /*= true*/)
 
 HRESULT Context::getAsyncExitCode(HRESULT* pht)
 {
-	return tsm::getAsyncExitCode(this, pht);
+	return tsm::Context_getAsyncExitCode(this, pht);
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState)
@@ -193,9 +201,12 @@ bool State::_isExitCalledOnShutdown() const
 	return m_managedState->IsExitCalledOnShutdown;
 }
 
-Event::Event(ManagedType^ event)
+Event::Event(ManagedType^ event, int priority /*= 0*/)
 	: m_managedEvent(event)
+	, m_priority(priority)
 	, m_timerClient(nullptr)
+	, m_delayTime(0)
+	, m_intervalTime(0)
 {
 }
 
@@ -212,4 +223,11 @@ HRESULT Event::_preHandle(tsm::IContext* context)
 HRESULT Event::_postHandle(tsm::IContext* context, HRESULT hr)
 {
 	return (HRESULT)m_managedEvent->postHandle(getManaged((native::Context*)context), (tsm_NET::HResult)hr);
+}
+
+void Event::setTimer(tsm::TimerClient* timerClient, DWORD delayTime, DWORD intervalTime /*= 0*/)
+{
+	m_timerClient = timerClient;
+	m_delayTime = delayTime;
+	m_intervalTime = intervalTime;
 }

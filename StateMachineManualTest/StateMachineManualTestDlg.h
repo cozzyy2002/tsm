@@ -81,4 +81,5 @@ public:
 //	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
 	afx_msg void OnInitMenu(CMenu* pMenu);
 	afx_msg void OnHelpAbout();
+	afx_msg void OnBnClickedButtonHandleEvent();
 };

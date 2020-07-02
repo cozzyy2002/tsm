@@ -1,6 +1,7 @@
 #pragma once
 
 using namespace System;
+using namespace System::Collections::Generic;
 using namespace Runtime::InteropServices;
 
 namespace native
@@ -82,7 +83,16 @@ protected:
 	IStateMonitor^ m_stateMonitor;
 };
 
-public ref class Context
+public ref class TimerClient abstract
+{
+public:
+	property IList<Event^>^ PendingEvents { IList<Event^>^ get(); }
+
+internal:
+	virtual tsm::TimerClient* getTimerClient() = 0;
+};
+
+public ref class Context : public TimerClient
 {
 	void construct(bool isAsync, bool useNativeThread);
 
@@ -93,6 +103,8 @@ public:
 	Context() { construct(false, false); }
 	virtual ~Context();
 	!Context();
+
+	static property unsigned int CurrentTherad { unsigned int get() { return GetCurrentThreadId(); }}
 
 	bool isAsync();
 	HResult setup(State^ initialState, Event^ event);
@@ -125,6 +137,9 @@ protected:
 	bool m_useNativeThread;
 	StateMonitorCaller^ m_stateMonitorCaller;
 	tsm_NET::IStateMonitor^ m_stateMonitor;
+
+internal:
+	virtual tsm::TimerClient* getTimerClient() override;
 };
 
 public ref class AsyncContext : public Context
@@ -137,11 +152,13 @@ public:
 
 extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
 
-public ref class State
+public ref class State : public TimerClient
 {
+	void construct(State^ masterState);
+
 public:
-	State() : State(nullptr) {}
-	State(State^ masterState);
+	State() { construct(nullptr); }
+	State(State^ masterState) { construct(masterState); }
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
@@ -169,21 +186,32 @@ internal:
 
 protected:
 	NativeType* m_nativeState;
+
+internal:
+	virtual tsm::TimerClient* getTimerClient() override;
 };
 
 public ref class Event
 {
+	void construct(int priority);
+
 public:
-	Event();
+	Event() { construct(0); }
+	Event(int priority) { construct(priority); }
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
 	virtual HResult postHandle(Context^ context, HResult hr) { return hr; }
 #pragma endregion
 
-	//
-	// TODO: Implement setTimer() method.
-	//
+	void setDelayTimer(Context^ context, TimeSpan delayTime);
+	void setIntervalTimer(Context^ context, TimeSpan intervalTime);
+	void setTimer(Context^ context, TimeSpan delayTime, TimeSpan intervalTime);
+	void setDelayTimer(State^ state, TimeSpan delayTime);
+	void setIntervalTimer(State^ state, TimeSpan intervalTime);
+	void setTimer(State^ state, TimeSpan delayTime, TimeSpan intervalTime);
+	property TimeSpan DelayTime { TimeSpan get(); }
+	property TimeSpan InterValTime { TimeSpan get(); }
 
 #pragma region .NET properties
 	property long SequenceNumber { long get(); }
@@ -197,6 +225,8 @@ internal:
 
 protected:
 	NativeType* m_nativeEvent;
+
+	void setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime);
 };
 
 namespace common
