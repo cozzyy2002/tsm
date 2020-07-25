@@ -65,7 +65,6 @@ public:
 		auto thread = gcnew Threading::Thread(threadStart);
 		threadID++;
 		thread->Name = threadID.ToString();
-		Console::WriteLine(String::Format("ManagedDispatcher: Created thread. Name={0}", thread->Name));
 		thread->Start();
 	}
 
@@ -113,6 +112,7 @@ public:
 
 	virtual HRESULT getExitCode(HRESULT* phr) override {
 		HRESULT hr = S_OK;
+		if(!phr) { return E_POINTER; }
 		if(!exitThreadEvent) { return E_ILLEGAL_METHOD_CALL; }
 
 		auto w = WaitForSingleObject(exitThreadEvent, 0);
