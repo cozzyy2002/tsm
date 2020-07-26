@@ -11,6 +11,7 @@ namespace StateMachine.NET.UnitTest.Generic
     {
         protected Context context;
 
+        [SetUp]
         public void SetUp()
         {
             context = new Context();
@@ -19,6 +20,7 @@ namespace StateMachine.NET.UnitTest.Generic
             Assert.That(context.IsAsync, Is.True);
         }
 
+        [TearDown]
         public void TearDown()
         {
             Assert.That(context.CurrentState, Is.EqualTo(State.Null));
@@ -28,18 +30,6 @@ namespace StateMachine.NET.UnitTest.Generic
     [TestFixture]
     class StateMachineSetupUnitTest : StateMachineUnitTest
     {
-        [SetUp]
-        public new void SetUp()
-        {
-            base.SetUp();
-        }
-
-        [TearDown]
-        public new void TearDown()
-        {
-            base.TearDown();
-        }
-
         // StateMachine.setup(Event = null)
         [Test]
         public void SetupUnitTest_0()
@@ -137,8 +127,6 @@ namespace StateMachine.NET.UnitTest.Generic
         [SetUp]
         public new void SetUp()
         {
-            base.SetUp();
-
             mockState0 = Substitute.For<State>();
             mockState1 = Substitute.For<State>();
             mockEvent = Substitute.For<Event>();
@@ -152,8 +140,6 @@ namespace StateMachine.NET.UnitTest.Generic
         public new void TearDown()
         {
             Assert.That(context.shutdown(), Is.EqualTo(HResult.Ok));
-
-            base.TearDown();
         }
 
         // No state transition occurs.
