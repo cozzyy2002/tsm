@@ -107,19 +107,20 @@ namespace StateMachine.NET.UnitTest
                 .entry(context, null, null)
                 .Returns(hr);
 
+            HResult hrExitCode;
             if (context.IsAsync)
             {
                 // AsyncContext::waitRady() should return the error code from State::entry().
                 Assert.That(context.setup(mockState), Is.EqualTo(HResult.Ok));
                 Assume.That(context.waitReady(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.False));
-                HResult hrExitCode;
-                //Assert.That(context.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.Ok));
-                //Assert.That(hrExitCode, Is.EqualTo(hr));
+                Assert.That(context.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.Ok));
+                Assert.That(hrExitCode, Is.EqualTo(hr));
             }
             else
             {
                 // Context::setup() should return the error code from State::entry().
                 Assert.That(context.setup(mockState), Is.EqualTo(hr));
+                Assert.That(context.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.NotImpl));
             }
 
             Assert.That(context.CurrentState, Is.EqualTo(mockState));

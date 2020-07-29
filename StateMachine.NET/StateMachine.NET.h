@@ -115,6 +115,7 @@ public:
 	HResult handleEvent(Event^ event);
 	HResult waitReady(TimeSpan timeout);
 	State^ getCurrentState();
+	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 
 #pragma region .NET properties
 	property IStateMonitor^ StateMonitor {
@@ -147,7 +148,7 @@ public ref class AsyncContext : public Context
 public:
 	AsyncContext() : Context(true, false) {}
 	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
-	HResult getAsyncExitCode([Out] HResult% hrExitCode);
+	HResult getAsyncExitCode([Out] HResult% hrExitCode) override;
 };
 
 extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);

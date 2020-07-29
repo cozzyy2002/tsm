@@ -58,6 +58,7 @@ public:
 	HResult handleEvent(E event) { return (HResult)tsm_NET::Context::handleEvent((tsm_NET::Event^)event); }
 	HResult waitReady(TimeSpan timeout) { return (HResult)tsm_NET::Context::waitReady(timeout); }
 	S getCurrentState() { return (S)tsm_NET::Context::getCurrentState(); }
+	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 
 	property S CurrentState { S get() { return getCurrentState(); } }
 
@@ -81,7 +82,7 @@ public:
 	AsyncContext() : Context(true, false) {}
 	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
 
-	HResult getAsyncExitCode([Out] HResult% hrExitCode) {
+	HResult getAsyncExitCode([Out] HResult% hrExitCode) override {
 		HRESULT _hrExitCode;
 		auto hr = tsm_NET::getAsyncExitCode(m_nativeContext, &_hrExitCode);
 		if(SUCCEEDED(hr)) { hrExitCode = (HResult)_hrExitCode; }
