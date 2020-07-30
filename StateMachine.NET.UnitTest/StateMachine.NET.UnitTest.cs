@@ -266,7 +266,7 @@ namespace StateMachine.NET.UnitTest
             mockEvent.postHandle(context, hr)
                 .Returns(hr);
 
-            Assume.That(context.handleEvent(mockEvent), Is.EqualTo(hr));
+            Assert.That(context.handleEvent(mockEvent), Is.EqualTo(hr));
 
             Received.InOrder(() => {
                 mockEvent.Received().preHandle(context);
@@ -276,6 +276,64 @@ namespace StateMachine.NET.UnitTest
             mockState0.DidNotReceiveWithAnyArgs().exit(default, default, default);
 
             Assert.That(context.CurrentState, Is.EqualTo(mockState0));
+        }
+
+        // State::exit() returns error.
+        [Test]
+        public void ExitError()
+        {
+            var hr = HResult.Abort;
+
+            mockState0.handleEvent(context, mockEvent, ref Arg.Any<TState>())
+                .Returns(x => {
+                    x[2] = mockState1;
+                    return HResult.Ok;
+                });
+            mockState0.exit(context, mockEvent, mockState1)
+                .Returns(hr);
+            mockEvent.postHandle(context, hr)
+                .Returns(hr);
+
+            Assert.That(context.handleEvent(mockEvent), Is.EqualTo(hr));
+
+            Received.InOrder(() => {
+                mockEvent.Received().preHandle(context);
+                mockState0.Received().handleEvent(context, mockEvent, ref Arg.Any<TState>());
+                mockState0.Received().exit(context, mockEvent, mockState1);
+                mockEvent.Received().postHandle(context, hr);
+            });
+            mockState1.DidNotReceiveWithAnyArgs().entry(default, default, default);
+
+            Assert.That(context.CurrentState, Is.EqualTo(mockState0));
+        }
+
+        // State::entry() returns error.
+        [Test]
+        public void EntryError()
+        {
+            var hr = HResult.Abort;
+
+            mockState0.handleEvent(context, mockEvent, ref Arg.Any<TState>())
+                .Returns(x => {
+                    x[2] = mockState1;
+                    return HResult.Ok;
+                });
+            mockState1.entry(context, mockEvent, mockState0)
+                .Returns(hr);
+            mockEvent.postHandle(context, hr)
+                .Returns(hr);
+
+            Assert.That(context.handleEvent(mockEvent), Is.EqualTo(hr));
+
+            Received.InOrder(() => {
+                mockEvent.Received().preHandle(context);
+                mockState0.Received().handleEvent(context, mockEvent, ref Arg.Any<TState>());
+                mockState0.Received().exit(context, mockEvent, mockState1);
+                mockState1.Received().entry(context, mockEvent, mockState0);
+                mockEvent.Received().postHandle(context, hr);
+            });
+
+            Assert.That(context.CurrentState, Is.EqualTo(mockState1));
         }
     }
 }
