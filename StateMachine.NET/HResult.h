@@ -14,5 +14,6 @@ public enum class HResult : HRESULT
 
 	NotImpl = E_NOTIMPL,
 	IllegalMethodCall = E_ILLEGAL_METHOD_CALL,
+	Abort = E_ABORT,
 	UnExpected = E_UNEXPECTED,
 };

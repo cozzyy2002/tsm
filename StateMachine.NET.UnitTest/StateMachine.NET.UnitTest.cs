@@ -216,5 +216,66 @@ namespace StateMachine.NET.UnitTest
 
             Assert.That(context.CurrentState, Is.EqualTo(mockState0));
         }
+
+        // Event::preHandle() returns value except for HResult.Ok(State::handleEvent() is not called).
+        [Test]
+        public void PreHandleReturnValue([Values(HResult.False, HResult.Abort, HResult.UnExpected)] HResult hr)
+        {
+            mockEvent.preHandle(context).Returns(hr);
+
+            Assert.That(context.handleEvent(mockEvent), Is.EqualTo(hr));
+
+            mockEvent.DidNotReceiveWithAnyArgs().postHandle(default, default);
+            mockState0.DidNotReceiveWithAnyArgs().handleEvent(default, default, ref Arg.Any<TState>());
+            mockState0.DidNotReceiveWithAnyArgs().exit(default, default, default);
+
+            Assert.That(context.CurrentState, Is.EqualTo(mockState0));
+        }
+
+        // State transition occurs.
+        [Test]
+        public void StateTransition()
+        {
+            mockState0.handleEvent(context, mockEvent, ref Arg.Any<TState>())
+                .Returns(x => {
+                    x[2] = mockState1;
+                    return HResult.Ok;
+                });
+
+            Assert.That(context.handleEvent(mockEvent), Is.EqualTo(HResult.Ok));
+
+            Received.InOrder(() => {
+                mockEvent.Received().preHandle(context);
+                mockState0.Received().handleEvent(context, mockEvent, ref Arg.Any<TState>());
+                mockState0.Received().exit(context, mockEvent, mockState1);
+                mockState1.Received().entry(context, mockEvent, mockState0);
+                mockEvent.Received().postHandle(context, HResult.Ok);
+            });
+
+            Assert.That(context.CurrentState, Is.EqualTo(mockState1));
+        }
+
+        // State::handleEvent() returns error.
+        [Test]
+        public void HandleEventError()
+        {
+            var hr = HResult.Abort;
+
+            mockState0.handleEvent(context, mockEvent, ref Arg.Any<TState>())
+                .Returns(hr);
+            mockEvent.postHandle(context, hr)
+                .Returns(hr);
+
+            Assume.That(context.handleEvent(mockEvent), Is.EqualTo(hr));
+
+            Received.InOrder(() => {
+                mockEvent.Received().preHandle(context);
+                mockState0.Received().handleEvent(context, mockEvent, ref Arg.Any<TState>());
+                mockEvent.Received().postHandle(context, hr);
+            });
+            mockState0.DidNotReceiveWithAnyArgs().exit(default, default, default);
+
+            Assert.That(context.CurrentState, Is.EqualTo(mockState0));
+        }
     }
 }
