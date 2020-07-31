@@ -8,13 +8,13 @@ namespace Testee
     };
 
     public class Event : tsm_NET.Event
-   {
-        public static Event Null { get { return null; } }
+    {
     }
 
     public class State : tsm_NET.State
-   {
-        public static State Null { get { return null; } }
+    {
+        public State() { }
+        public State(State masterState) : base(masterState) { }
     }
 
     public class AsyncContext : tsm_NET.AsyncContext
@@ -22,8 +22,15 @@ namespace Testee
         public AsyncContext() : base(true) { }
     }
 
-    public class AsyncEvent : Event { };
-    public class AsyncState : State { };
+    public class AsyncEvent : Event
+    {
+    };
+
+    public class AsyncState : tsm_NET.State
+    {
+        public AsyncState() { }
+        public AsyncState(AsyncState masterState) : base(masterState) { }
+    };
 
 namespace Generic
 {
@@ -33,12 +40,12 @@ namespace Generic
 
     public class Event : tsm_NET.Generic.Event<Context>
     {
-        public static Event Null { get { return null; } }
     };
 
     public class State : tsm_NET.Generic.State<Context, Event, State>
     {
-        public static State Null { get { return null; } }
+            public State() { }
+            public State(State masterState) : base(masterState) { }
     };
 
     public class AsyncContext : tsm_NET.Generic.AsyncContext<AsyncEvent, AsyncState>
@@ -48,12 +55,12 @@ namespace Generic
 
     public class AsyncEvent : tsm_NET.Generic.Event<AsyncContext>
     {
-        public static AsyncEvent Null { get { return null; } }
     };
 
     public class AsyncState : tsm_NET.Generic.State<AsyncContext, AsyncEvent, AsyncState>
     {
-        public static AsyncState Null { get { return null; } }
+            public AsyncState() { }
+            public AsyncState(AsyncState masterState) : base(masterState) { }
     };
 }
 }

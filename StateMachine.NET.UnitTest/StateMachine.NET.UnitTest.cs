@@ -22,8 +22,8 @@ namespace StateMachine.NET.UnitTest
     [TestFixture(typeof(Testee.Generic.Context), typeof(Testee.Generic.Event), typeof(Testee.Generic.State))]
     [TestFixture(typeof(Testee.Generic.AsyncContext), typeof(Testee.Generic.AsyncEvent), typeof(Testee.Generic.AsyncState))]
 #else
-    [TestFixture(typeof(Testee.AsyncContext), typeof(Testee.AsyncEvent), typeof(Testee.AsyncState))]
     [TestFixture(typeof(Testee.Context), typeof(Testee.Event), typeof(Testee.State))]
+    [TestFixture(typeof(Testee.AsyncContext), typeof(Testee.AsyncEvent), typeof(Testee.AsyncState))]
 #endif
     class StateMachineUnitTest<TContext, TEvent, TState>
 #if GENERIC_TEST
@@ -334,6 +334,49 @@ namespace StateMachine.NET.UnitTest
             });
 
             Assert.That(context.CurrentState, Is.EqualTo(mockState1));
+        }
+
+        // State chain: State0 -> State1
+        // State1 returns State0 as next state.
+        [Test]
+        public void SubState_0()
+        {
+            var mockEvent0 = Substitute.For<TEvent>();
+            var mockEvent1 = Substitute.For<TEvent>();
+
+            mockState1 = Substitute.For<TState>(mockState0);
+            Assert.That(mockState1.IsSubState, Is.True);
+            Assert.That(mockState1.MasterState, Is.EqualTo(mockState0));
+
+            mockState0.handleEvent(context, mockEvent0, ref Arg.Any<TState>())
+                .Returns(x => {
+                    x[2] = mockState1;
+                    return HResult.Ok;
+                });
+            mockState1.handleEvent(context, mockEvent1, ref Arg.Any<TState>())
+                .Returns(x => {
+                    x[2] = mockState0;
+                    return HResult.Ok;
+                });
+
+            Assert.That(context.handleEvent(mockEvent0), Is.EqualTo(HResult.Ok));    // State0 -> State1
+            Assert.That(context.handleEvent(mockEvent1), Is.EqualTo(HResult.Ok));    // State1 -> State0(Sub state goes back to master state)
+
+            Received.InOrder(() => {
+                // State0 -> State1
+                mockEvent0.Received().preHandle(context);
+                mockState0.Received().handleEvent(context, mockEvent0, ref Arg.Any<TState>());
+                mockState1.Received().entry(context, mockEvent0, mockState0);
+                mockEvent0.Received().postHandle(context, HResult.Ok);
+
+                // State1 -> State0(Sub state goes back to master state)
+                mockEvent1.Received().preHandle(context);
+                mockState1.Received().handleEvent(context, mockEvent1, ref Arg.Any<TState>());
+                mockState1.Received().exit(context, mockEvent1, mockState0);
+                mockEvent1.Received().postHandle(context, HResult.Ok);
+            });
+
+            Assert.That(context.CurrentState, Is.EqualTo(mockState0));
         }
     }
 }
