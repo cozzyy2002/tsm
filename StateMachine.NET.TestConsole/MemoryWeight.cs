@@ -85,16 +85,6 @@ namespace StateMachine.NET.TestConsole
                 return HResult.Ok;
             }
 
-            public override HResult exit(Context context, Event @event, State nextState)
-            {
-                if (MasterState.generation == @event.NextGeneration)
-                {
-                    Console.WriteLine($"{Now} Force a garbage collection.");
-                    GC.Collect();
-                }
-                return HResult.Ok;
-            }
-
             public override string ToString()
             {
                 return string.Format("State({0}): generation={1}", SequenceNumber, generation);
