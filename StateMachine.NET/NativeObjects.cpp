@@ -201,18 +201,25 @@ bool State::_isExitCalledOnShutdown() const
 	return m_managedState->IsExitCalledOnShutdown;
 }
 
+/*static*/ bool Event::m_defaultAutoDispose = true;
+
 Event::Event(ManagedType^ event, int priority /*= 0*/)
 	: m_managedEvent(event)
 	, m_priority(priority)
 	, m_timerClient(nullptr)
 	, m_delayTime(0)
 	, m_intervalTime(0)
+	, m_autoDispose(m_defaultAutoDispose)
 {
 }
 
 Event::~Event()
 {
-	delete m_managedEvent;
+	if(m_autoDispose) {
+		// When reference count of this object, Managed object is also deleted.
+		// In the case of m_autoDispose == false, See Managed Event constructor and finalizer.
+		delete m_managedEvent;
+	}
 }
 
 HRESULT Event::_preHandle(tsm::IContext* context)

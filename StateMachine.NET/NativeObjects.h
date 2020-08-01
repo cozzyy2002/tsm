@@ -126,6 +126,9 @@ public:
 
 	ManagedType^ get() { return m_managedEvent; }
 
+	static bool m_defaultAutoDispose;
+	const bool m_autoDispose;
+
 protected:
 	gcroot<ManagedType^> m_managedEvent;
 

@@ -199,6 +199,8 @@ public ref class Event
 public:
 	Event() { construct(0); }
 	Event(int priority) { construct(priority); }
+	~Event();
+	!Event();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
@@ -213,6 +215,20 @@ public:
 	void setTimer(State^ state, TimeSpan delayTime, TimeSpan intervalTime);
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }
+
+	/**
+	 * AutoDispose : Determine the way to dispose this object.
+	 * If this value is true(default)
+	 *	* Event object is disposed when Context::handleEvent(Event) is completed.
+	 * else
+	 *	* StateMachine never disposes Event object.
+	 *	* The object should be disposed by user.
+	 *  * Then user can use one Event object to call Context::handleEvent(Event) more than once.
+	 *
+	 * This value is copied from DefaultAutoDispose static property when Event object is created.
+	 */
+	property bool AutoDispose { bool get(); }
+	property bool DefaultAutoDispose { static bool get(); static void set(bool value); }
 
 #pragma region .NET properties
 	property long SequenceNumber { long get(); }

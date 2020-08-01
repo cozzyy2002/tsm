@@ -339,10 +339,13 @@ namespace StateMachine.NET.UnitTest
         // State chain: State0 -> State1
         // State1 returns State0 as next state.
         [Test]
-        public void SubState_0()
+        public void SubState_0([Values] bool eventAutoDispose)
         {
+            tsm_NET.Event.DefaultAutoDispose = eventAutoDispose;
             var mockEvent0 = Substitute.For<TEvent>();
-            var mockEvent1 = Substitute.For<TEvent>();
+            var mockEvent1 = eventAutoDispose
+                ? Substitute.For<TEvent>()      // Event objects are created for each handleEvent() method call. AutoDispose can be performed.
+                : mockEvent0;                   // Single Event object is used for 2 handleEvent() method calls. AutoDispose should be disabled.
 
             mockState1 = Substitute.For<TState>(mockState0);
             Assert.That(mockState1.IsSubState, Is.True);

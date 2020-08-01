@@ -204,6 +204,25 @@ tsm::TimerClient* State::getTimerClient()
 void Event::construct(int priority)
 {
 	m_nativeEvent = new native::Event(this, priority);
+
+	if(!m_nativeEvent->m_autoDispose) {
+		// Prevent native object from deleting automatically.
+		m_nativeEvent->AddRef();
+	}
+}
+
+Event::~Event()
+{
+	this->!Event();
+}
+
+Event::!Event()
+{
+	if(m_nativeEvent && (!m_nativeEvent->m_autoDispose)) {
+		// Delete native object.
+		m_nativeEvent->Release();
+	}
+	m_nativeEvent = nullptr;
 }
 
 void Event::setDelayTimer(Context^ context, TimeSpan delayTime)
@@ -264,4 +283,19 @@ int Event::MemoryWeight::get()
 void Event::MemoryWeight::set(int value)
 {
 	tsm::IEvent::setMemoryWeight(value);
+}
+
+bool Event::AutoDispose::get()
+{
+	return m_nativeEvent ? m_nativeEvent->m_autoDispose : false;
+}
+
+/*static*/ bool Event::DefaultAutoDispose::get()
+{
+	return NativeType::m_defaultAutoDispose;
+}
+
+/*static*/ void Event::DefaultAutoDispose::set(bool value)
+{
+	NativeType::m_defaultAutoDispose = value;
 }
