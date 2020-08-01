@@ -160,6 +160,8 @@ public ref class State : public TimerClient
 public:
 	State() { construct(nullptr); }
 	State(State^ masterState) { construct(masterState); }
+	~State();
+	!State();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
@@ -178,6 +180,25 @@ public:
 
 	property long SequenceNumber { long get(); }
 	static property int MemoryWeight { int get(); void set(int value); }
+
+	/**
+	 * AutoDispose : Determine the way to dispose this object.
+	 * If this value is true(default)
+	 *	* State object is disposed after State::exit() is called.
+	 * else
+	 *	* StateMachine never disposes State object.
+	 *	* The object should be disposed by user.
+	 *
+	 * This value is copied from DefaultAutoDispose static property when State object is created.
+	 */
+	property bool AutoDispose { bool get(); }
+
+	/**
+	 * DefaultDispose
+	 *
+	 * Set this property before create State object to affect to the object.
+	 */
+	property bool DefaultAutoDispose { static bool get(); static void set(bool value); }
 #pragma endregion
 
 internal:
@@ -228,6 +249,12 @@ public:
 	 * This value is copied from DefaultAutoDispose static property when Event object is created.
 	 */
 	property bool AutoDispose { bool get(); }
+
+	/**
+	 * DefaultDispose
+	 *
+	 * Set this property before create Event object to affect to the object.
+	 */
 	property bool DefaultAutoDispose { static bool get(); static void set(bool value); }
 
 #pragma region .NET properties

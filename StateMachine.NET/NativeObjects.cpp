@@ -165,15 +165,22 @@ HRESULT Context::getAsyncExitCode(HRESULT* pht)
 	return tsm::Context_getAsyncExitCode(this, pht);
 }
 
+/*static*/ bool State::m_defaultAutoDispose = true;
+
 State::State(ManagedType^ state, ManagedType^ masterState)
 	: m_managedState(state)
 	, m_masterState(getNative(masterState))
+	, m_autoDispose(m_defaultAutoDispose)
 {
 }
 
 State::~State()
 {
-	delete m_managedState;
+	if(m_autoDispose) {
+		// When reference count of this object, Managed object is also deleted.
+		// In the case of m_autoDispose == false, See Managed State constructor and finalizer.
+		delete m_managedState;
+	}
 }
 
 HRESULT State::_handleEvent(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)

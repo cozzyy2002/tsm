@@ -169,6 +169,20 @@ State^ State::getMasterState()
 	return getManaged(m_nativeState->getMasterState());
 }
 
+State::~State()
+{
+	this->!State();
+}
+
+State::!State()
+{
+	if(m_nativeState && (!m_nativeState->m_autoDispose)) {
+		// Delete native object.
+		m_nativeState->Release();
+	}
+	m_nativeState = nullptr;
+}
+
 //State^ State::getSubState()
 //{
 //	auto subState = m_nativeState->getSubState();
@@ -198,6 +212,21 @@ void State::MemoryWeight::set(int value)
 tsm::TimerClient* State::getTimerClient()
 {
 	return get()->_getTimerClient();
+}
+
+bool State::AutoDispose::get()
+{
+	return m_nativeState ? m_nativeState->m_autoDispose : NativeType::m_defaultAutoDispose;
+}
+
+/*static*/ bool State::DefaultAutoDispose::get()
+{
+	return NativeType::m_defaultAutoDispose;
+}
+
+/*static*/ void State::DefaultAutoDispose::set(bool value)
+{
+	NativeType::m_defaultAutoDispose = value;
 }
 
 //-------------- Managed Event class. --------------------//
@@ -287,7 +316,7 @@ void Event::MemoryWeight::set(int value)
 
 bool Event::AutoDispose::get()
 {
-	return m_nativeEvent ? m_nativeEvent->m_autoDispose : false;
+	return m_nativeEvent ? m_nativeEvent->m_autoDispose : NativeType::m_defaultAutoDispose;
 }
 
 /*static*/ bool Event::DefaultAutoDispose::get()

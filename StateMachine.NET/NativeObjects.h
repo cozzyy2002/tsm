@@ -99,6 +99,9 @@ public:
 
 	ManagedType^ get() { return m_managedState; }
 
+	static bool m_defaultAutoDispose;
+	const bool m_autoDispose;
+
 protected:
 	gcroot<ManagedType^> m_managedState;
 	CComPtr<State> m_masterState;
