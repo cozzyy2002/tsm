@@ -161,6 +161,11 @@ void State::construct(State^ masterState)
 {
 	m_nativeState = new native::State(this, masterState);
 
+	if(!m_nativeState->m_autoDispose) {
+		// Prevent native object from deleting automatically.
+		m_nativeState->AddRef();
+	}
+
 	IsExitCalledOnShutdown = false;
 }
 

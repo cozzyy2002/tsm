@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.AccessControl;
 using tsm_NET.Generic;
 
 namespace StateMachine.NET.TestConsole
 {
     class MemoryWeight : Common, IJob
     {
+        static bool StateAutoDispose = false;
+
         void IJob.Start(IList<string> args)
         {
             State.MemoryWeight = 100;
@@ -18,10 +21,13 @@ namespace StateMachine.NET.TestConsole
                 }
             }
 
+            State.DefaultAutoDispose = StateAutoDispose;
+
             Console.WriteLine($"Allocate {State.MemoryWeight} MByte for each State object.");
 
             var context = new Context();
-            context.setup(new State());
+            var initialState = new State();
+            context.setup(initialState);
             context.StateMonitor = new StateMonitor();
 
             while (true)
@@ -42,6 +48,8 @@ namespace StateMachine.NET.TestConsole
             }
 
             var hr = context.shutdown();
+            if (!StateAutoDispose) { initialState.Dispose(); }
+
             HResult hrExitCode;
             context.getAsyncExitCode(out hrExitCode);
             Console.WriteLine($"{Now} Context.shutdown() returns {hr}, Worker thread returns {hrExitCode}.\nKey in [Enter] to exit.");
@@ -56,7 +64,15 @@ namespace StateMachine.NET.TestConsole
         {
             public State(State masterState = null) : base(masterState)
             {
-                generation = (masterState != null) ? masterState.generation + 1 : 0;
+                if (masterState != null)
+                {
+                    generation = masterState.generation + 1;
+                    masterState.HasSubState = true;
+                }
+                else
+                {
+                    generation = 0;
+                }
             }
 
             public override HResult entry(Context context, Event @event, State previousState)
@@ -90,7 +106,8 @@ namespace StateMachine.NET.TestConsole
                 return string.Format("State({0}): generation={1}", SequenceNumber, generation);
             }
 
-            int generation;
+            public readonly int generation;
+            public bool HasSubState = false;
         }
 
         class Event : Event<Context>
@@ -112,8 +129,42 @@ namespace StateMachine.NET.TestConsole
         {
             public override void onIdle(Context<Event, State> context)
             {
-                base.onIdle(context);
-                Console.Write($"{Now} {0} > ", GC.GetTotalMemory(true));
+                Console.Write($"{Now} onIdle(): Total memory={GC.GetTotalMemory(true)} > ");
+            }
+
+            public override void onStateChanged(Context<Event, State> context, Event @event, State previous, State next)
+            {
+                DisposeSubStates(next.generation, previous);
+            }
+
+            public override void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
+            {
+                DisposeSubStates(-1, context.CurrentState);
+            }
+        }
+
+        // Dispose State object(s) until State.generation is greater than specified generation.
+        static void DisposeSubStates(int genaration, State state)
+        {
+            if(!StateAutoDispose && (state != null) && !state.HasSubState)
+            {
+                // At this point:
+                //   State object should be disposed explicitly.
+                //   The state is the end of MasterState/SubState chain.
+                while(genaration < state.generation)
+                {
+                    var _state = state.MasterState;
+                    state.Dispose();
+                    if (_state != null)
+                    {
+                        state = _state;
+                        state.HasSubState = false;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
             }
         }
     }
