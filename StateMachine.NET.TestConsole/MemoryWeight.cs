@@ -72,11 +72,19 @@ namespace StateMachine.NET.TestConsole
                 {
                     generation = 0;
                 }
+
+                IsExitCalledOnShutdown = true;
             }
 
             public override HResult entry(Context context, Event @event, State previousState)
             {
-                Console.WriteLine(string.Format($"{Now} {0}: {1}", @event, this));
+                Console.WriteLine($"{Now} {this}.entry({@event}, {previousState})");
+                return HResult.Ok;
+            }
+
+            public override HResult exit(Context context, Event @event, State nextState)
+            {
+                Console.WriteLine($"{Now} {this}.exit({@event}, {nextState})");
                 return HResult.Ok;
             }
 
@@ -102,7 +110,7 @@ namespace StateMachine.NET.TestConsole
 
             public override string ToString()
             {
-                return string.Format("State({0}): generation={1}, AutoDispose={2}", SequenceNumber, generation, AutoDispose);
+                return $"State(generation={generation})";
             }
 
             public readonly int generation;
@@ -118,7 +126,7 @@ namespace StateMachine.NET.TestConsole
 
             public override string ToString()
             {
-                return string.Format("Event({0}): NextGeneration={1}", SequenceNumber, NextGeneration);
+                return $"Event(NextGeneration={NextGeneration})";
             }
 
             public readonly int NextGeneration;
