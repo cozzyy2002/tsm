@@ -155,11 +155,13 @@ extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
 
 public ref class State : public TimerClient
 {
-	void construct(State^ masterState);
+	void construct(State^ masterState, bool autoDispose);
 
 public:
-	State() { construct(nullptr); }
-	State(State^ masterState) { construct(masterState); }
+	State() { construct(nullptr, true); }
+	State(bool autoDispose) { construct(nullptr, autoDispose); }
+	State(State^ masterState) { construct(masterState, true); }
+	State(State^ masterState, bool autoDispose) { construct(masterState, autoDispose); }
 	~State();
 	!State();
 
@@ -189,16 +191,9 @@ public:
 	 *	* StateMachine never disposes State object.
 	 *	* The object should be disposed by user.
 	 *
-	 * This value is copied from DefaultAutoDispose static property when State object is created.
+	 * This value is specified by autoDispose argument of constructor.
 	 */
 	property bool AutoDispose { bool get(); }
-
-	/**
-	 * DefaultDispose
-	 *
-	 * Set this property before create State object to affect to the object.
-	 */
-	property bool DefaultAutoDispose { static bool get(); static void set(bool value); }
 #pragma endregion
 
 internal:
@@ -215,11 +210,13 @@ internal:
 
 public ref class Event
 {
-	void construct(int priority);
+	void construct(int priority, bool autoDispose);
 
 public:
-	Event() { construct(0); }
-	Event(int priority) { construct(priority); }
+	Event() { construct(0, true); }
+	Event(bool autoDispose) { construct(0, autoDispose); }
+	Event(int priority) { construct(priority, true); }
+	Event(int priority, bool autoDispose) { construct(priority, autoDispose); }
 	~Event();
 	!Event();
 
@@ -237,6 +234,10 @@ public:
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }
 
+#pragma region .NET properties
+	property long SequenceNumber { long get(); }
+	static property int MemoryWeight { int get(); void set(int value); }
+
 	/**
 	 * AutoDispose : Determine the way to dispose this object.
 	 * If this value is true(default)
@@ -246,20 +247,9 @@ public:
 	 *	* The object should be disposed by user.
 	 *  * Then user can use one Event object to call Context::handleEvent(Event) more than once.
 	 *
-	 * This value is copied from DefaultAutoDispose static property when Event object is created.
+	 * This value is specified by autoDispose argument of constructor.
 	 */
 	property bool AutoDispose { bool get(); }
-
-	/**
-	 * DefaultDispose
-	 *
-	 * Set this property before create Event object to affect to the object.
-	 */
-	property bool DefaultAutoDispose { static bool get(); static void set(bool value); }
-
-#pragma region .NET properties
-	property long SequenceNumber { long get(); }
-	static property int MemoryWeight { int get(); void set(int value); }
 #pragma endregion
 
 internal:

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 using System.Security.AccessControl;
 using tsm_NET.Generic;
 
@@ -7,10 +8,10 @@ namespace StateMachine.NET.TestConsole
 {
     class MemoryWeight : Common, IJob
     {
-        static bool StateAutoDispose = false;
-
         void IJob.Start(IList<string> args)
         {
+            const bool StateAutoDispose = false;
+
             State.MemoryWeight = 100;
             if (0 < args.Count)
             {
@@ -21,12 +22,10 @@ namespace StateMachine.NET.TestConsole
                 }
             }
 
-            State.DefaultAutoDispose = StateAutoDispose;
-
             Console.WriteLine($"Allocate {State.MemoryWeight} MByte for each State object.");
 
             var context = new Context();
-            var initialState = new State();
+            var initialState = new State(null, StateAutoDispose);
             context.setup(initialState);
             context.StateMonitor = new StateMonitor();
 
@@ -62,7 +61,7 @@ namespace StateMachine.NET.TestConsole
 
         class State : State<Context, Event, State>
         {
-            public State(State masterState = null) : base(masterState)
+            public State(State masterState, bool autoDispose) : base(masterState, autoDispose)
             {
                 if (masterState != null)
                 {
@@ -87,7 +86,7 @@ namespace StateMachine.NET.TestConsole
                 {
                     // Go to next State with current State as master state.
                     // This path continues until generation equals to Event.NextGeneration.
-                    nextState = new State(this);
+                    nextState = new State(this, AutoDispose);
                     context.triggerEvent(new Event(@event.NextGeneration));
                 }
                 else if (@event.NextGeneration < generation)
@@ -103,7 +102,7 @@ namespace StateMachine.NET.TestConsole
 
             public override string ToString()
             {
-                return string.Format("State({0}): generation={1}", SequenceNumber, generation);
+                return string.Format("State({0}): generation={1}, AutoDispose={2}", SequenceNumber, generation, AutoDispose);
             }
 
             public readonly int generation;
@@ -144,9 +143,10 @@ namespace StateMachine.NET.TestConsole
         }
 
         // Dispose State object(s) until State.generation is greater than specified generation.
+        // If State.AutoDispose == true, this mehtod does nothing.
         static void DisposeSubStates(int genaration, State state)
         {
-            if(!StateAutoDispose && (state != null) && !state.HasSubState)
+            if((state != null) && !state.AutoDispose && !state.HasSubState)
             {
                 // At this point:
                 //   State object should be disposed explicitly.

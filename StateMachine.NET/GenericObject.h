@@ -98,7 +98,9 @@ public ref class State : public tsm_NET::State
 {
 public:
 	State() : tsm_NET::State(nullptr) {}
+	State(bool autoDispose) : tsm_NET::State(autoDispose) {}
 	State(S masterState) : tsm_NET::State((tsm_NET::State^)masterState) {}
+	State(S masterState, bool autoDispose) : tsm_NET::State(masterState, autoDispose) {}
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(C context, E event, S% nextState) { return HResult::Ok; }
@@ -122,6 +124,10 @@ generic<typename C>
 public ref class Event : public tsm_NET::Event
 {
 public:
+	Event() : tsm_NET::Event() {}
+	Event(bool autoDispose) : tsm_NET::Event(autoDispose) {}
+	Event(int priority) : tsm_NET::Event(priority) {}
+	Event(int priority, bool autoDispose) : tsm_NET::Event(priority, autoDispose) {}
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(C context) { return HResult::Ok; }

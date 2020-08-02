@@ -157,9 +157,9 @@ tsm::TimerClient* Context::getTimerClient()
 }
 
 //-------------- Managed State class. --------------------//
-void State::construct(State^ masterState)
+void State::construct(State^ masterState, bool autoDispose)
 {
-	m_nativeState = new native::State(this, masterState);
+	m_nativeState = new native::State(this, masterState, autoDispose);
 
 	if(!m_nativeState->m_autoDispose) {
 		// Prevent native object from deleting automatically.
@@ -221,23 +221,23 @@ tsm::TimerClient* State::getTimerClient()
 
 bool State::AutoDispose::get()
 {
-	return m_nativeState ? m_nativeState->m_autoDispose : NativeType::m_defaultAutoDispose;
+	return m_nativeState->m_autoDispose;
 }
 
-/*static*/ bool State::DefaultAutoDispose::get()
-{
-	return NativeType::m_defaultAutoDispose;
-}
-
-/*static*/ void State::DefaultAutoDispose::set(bool value)
-{
-	NativeType::m_defaultAutoDispose = value;
-}
+///*static*/ bool State::DefaultAutoDispose::get()
+//{
+//	return NativeType::m_defaultAutoDispose;
+//}
+//
+///*static*/ void State::DefaultAutoDispose::set(bool value)
+//{
+//	NativeType::m_defaultAutoDispose = value;
+//}
 
 //-------------- Managed Event class. --------------------//
-void Event::construct(int priority)
+void Event::construct(int priority, bool autoDispose)
 {
-	m_nativeEvent = new native::Event(this, priority);
+	m_nativeEvent = new native::Event(this, priority, autoDispose);
 
 	if(!m_nativeEvent->m_autoDispose) {
 		// Prevent native object from deleting automatically.
@@ -321,15 +321,15 @@ void Event::MemoryWeight::set(int value)
 
 bool Event::AutoDispose::get()
 {
-	return m_nativeEvent ? m_nativeEvent->m_autoDispose : NativeType::m_defaultAutoDispose;
+	return m_nativeEvent->m_autoDispose;
 }
 
-/*static*/ bool Event::DefaultAutoDispose::get()
-{
-	return NativeType::m_defaultAutoDispose;
-}
-
-/*static*/ void Event::DefaultAutoDispose::set(bool value)
-{
-	NativeType::m_defaultAutoDispose = value;
-}
+///*static*/ bool Event::DefaultAutoDispose::get()
+//{
+//	return NativeType::m_defaultAutoDispose;
+//}
+//
+///*static*/ void Event::DefaultAutoDispose::set(bool value)
+//{
+//	NativeType::m_defaultAutoDispose = value;
+//}

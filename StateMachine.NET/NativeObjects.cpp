@@ -165,12 +165,10 @@ HRESULT Context::getAsyncExitCode(HRESULT* pht)
 	return tsm::Context_getAsyncExitCode(this, pht);
 }
 
-/*static*/ bool State::m_defaultAutoDispose = true;
-
-State::State(ManagedType^ state, ManagedType^ masterState)
+State::State(ManagedType^ state, ManagedType^ masterState, bool autoDispose)
 	: m_managedState(state)
 	, m_masterState(getNative(masterState))
-	, m_autoDispose(m_defaultAutoDispose)
+	, m_autoDispose(autoDispose)
 {
 }
 
@@ -208,15 +206,13 @@ bool State::_isExitCalledOnShutdown() const
 	return m_managedState->IsExitCalledOnShutdown;
 }
 
-/*static*/ bool Event::m_defaultAutoDispose = true;
-
-Event::Event(ManagedType^ event, int priority /*= 0*/)
+Event::Event(ManagedType^ event, int priority, bool autoDispose)
 	: m_managedEvent(event)
 	, m_priority(priority)
 	, m_timerClient(nullptr)
 	, m_delayTime(0)
 	, m_intervalTime(0)
-	, m_autoDispose(m_defaultAutoDispose)
+	, m_autoDispose(autoDispose)
 {
 }
 
