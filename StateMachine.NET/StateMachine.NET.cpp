@@ -224,16 +224,6 @@ bool State::AutoDispose::get()
 	return m_nativeState->m_autoDispose;
 }
 
-///*static*/ bool State::DefaultAutoDispose::get()
-//{
-//	return NativeType::m_defaultAutoDispose;
-//}
-//
-///*static*/ void State::DefaultAutoDispose::set(bool value)
-//{
-//	NativeType::m_defaultAutoDispose = value;
-//}
-
 //-------------- Managed Event class. --------------------//
 void Event::construct(int priority, bool autoDispose)
 {
@@ -323,13 +313,3 @@ bool Event::AutoDispose::get()
 {
 	return m_nativeEvent->m_autoDispose;
 }
-
-///*static*/ bool Event::DefaultAutoDispose::get()
-//{
-//	return NativeType::m_defaultAutoDispose;
-//}
-//
-///*static*/ void Event::DefaultAutoDispose::set(bool value)
-//{
-//	NativeType::m_defaultAutoDispose = value;
-//}
