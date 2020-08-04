@@ -157,9 +157,14 @@ tsm::TimerClient* Context::getTimerClient()
 }
 
 //-------------- Managed State class. --------------------//
-void State::construct(State^ masterState)
+void State::construct(State^ masterState, bool autoDispose)
 {
-	m_nativeState = new native::State(this, masterState);
+	m_nativeState = new native::State(this, masterState, autoDispose);
+
+	if(!m_nativeState->m_autoDispose) {
+		// Prevent native object from deleting automatically.
+		m_nativeState->AddRef();
+	}
 
 	IsExitCalledOnShutdown = false;
 }
@@ -167,6 +172,20 @@ void State::construct(State^ masterState)
 State^ State::getMasterState()
 {
 	return getManaged(m_nativeState->getMasterState());
+}
+
+State::~State()
+{
+	this->!State();
+}
+
+State::!State()
+{
+	if(m_nativeState && (!m_nativeState->m_autoDispose)) {
+		// Delete native object.
+		m_nativeState->Release();
+	}
+	m_nativeState = nullptr;
 }
 
 //State^ State::getSubState()
@@ -200,10 +219,34 @@ tsm::TimerClient* State::getTimerClient()
 	return get()->_getTimerClient();
 }
 
-//-------------- Managed Event class. --------------------//
-void Event::construct(int priority)
+bool State::AutoDispose::get()
 {
-	m_nativeEvent = new native::Event(this, priority);
+	return m_nativeState->m_autoDispose;
+}
+
+//-------------- Managed Event class. --------------------//
+void Event::construct(int priority, bool autoDispose)
+{
+	m_nativeEvent = new native::Event(this, priority, autoDispose);
+
+	if(!m_nativeEvent->m_autoDispose) {
+		// Prevent native object from deleting automatically.
+		m_nativeEvent->AddRef();
+	}
+}
+
+Event::~Event()
+{
+	this->!Event();
+}
+
+Event::!Event()
+{
+	if(m_nativeEvent && (!m_nativeEvent->m_autoDispose)) {
+		// Delete native object.
+		m_nativeEvent->Release();
+	}
+	m_nativeEvent = nullptr;
 }
 
 void Event::setDelayTimer(Context^ context, TimeSpan delayTime)
@@ -264,4 +307,9 @@ int Event::MemoryWeight::get()
 void Event::MemoryWeight::set(int value)
 {
 	tsm::IEvent::setMemoryWeight(value);
+}
+
+bool Event::AutoDispose::get()
+{
+	return m_nativeEvent->m_autoDispose;
 }

@@ -146,7 +146,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 		if(SUCCEEDED(hr)) {
 			CComPtr<IState> previousState(currentState);
 			context->_setCurrentState(nextState);
-			HR_ASSERT_OK(callEntry(nextState, context, event, previousState));
+			hr = HR_EXPECT_OK(callEntry(nextState, context, event, previousState));
 			context->_getHandle()->callStateMonitor(context, [&](IContext* context, IStateMonitor* stateMonitor)
 			{
 				stateMonitor->onStateChanged(context, _event, previousState, nextState);

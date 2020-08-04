@@ -115,6 +115,7 @@ public:
 	HResult handleEvent(Event^ event);
 	HResult waitReady(TimeSpan timeout);
 	State^ getCurrentState();
+	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 
 #pragma region .NET properties
 	property IStateMonitor^ StateMonitor {
@@ -147,18 +148,22 @@ public ref class AsyncContext : public Context
 public:
 	AsyncContext() : Context(true, false) {}
 	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
-	HResult getAsyncExitCode([Out] HResult% hrExitCode);
+	HResult getAsyncExitCode([Out] HResult% hrExitCode) override;
 };
 
 extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
 
 public ref class State : public TimerClient
 {
-	void construct(State^ masterState);
+	void construct(State^ masterState, bool autoDispose);
 
 public:
-	State() { construct(nullptr); }
-	State(State^ masterState) { construct(masterState); }
+	State() { construct(nullptr, true); }
+	State(bool autoDispose) { construct(nullptr, autoDispose); }
+	State(State^ masterState) { construct(masterState, true); }
+	State(State^ masterState, bool autoDispose) { construct(masterState, autoDispose); }
+	~State();
+	!State();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
@@ -177,6 +182,18 @@ public:
 
 	property long SequenceNumber { long get(); }
 	static property int MemoryWeight { int get(); void set(int value); }
+
+	/**
+	 * AutoDispose : Determine the way to dispose this object.
+	 * If this value is true(default)
+	 *	* State object is disposed after State::exit() is called.
+	 * else
+	 *	* StateMachine never disposes State object.
+	 *	* The object should be disposed by user.
+	 *
+	 * This value is specified by autoDispose argument of constructor.
+	 */
+	property bool AutoDispose { bool get(); }
 #pragma endregion
 
 internal:
@@ -193,11 +210,15 @@ internal:
 
 public ref class Event
 {
-	void construct(int priority);
+	void construct(int priority, bool autoDispose);
 
 public:
-	Event() { construct(0); }
-	Event(int priority) { construct(priority); }
+	Event() { construct(0, true); }
+	Event(bool autoDispose) { construct(0, autoDispose); }
+	Event(int priority) { construct(priority, true); }
+	Event(int priority, bool autoDispose) { construct(priority, autoDispose); }
+	~Event();
+	!Event();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
@@ -216,6 +237,19 @@ public:
 #pragma region .NET properties
 	property long SequenceNumber { long get(); }
 	static property int MemoryWeight { int get(); void set(int value); }
+
+	/**
+	 * AutoDispose : Determine the way to dispose this object.
+	 * If this value is true(default)
+	 *	* Event object is disposed when Context::handleEvent(Event) is completed.
+	 * else
+	 *	* StateMachine never disposes Event object.
+	 *	* The object should be disposed by user.
+	 *  * Then user can use one Event object to call Context::handleEvent(Event) more than once.
+	 *
+	 * This value is specified by autoDispose argument of constructor.
+	 */
+	property bool AutoDispose { bool get(); }
 #pragma endregion
 
 internal:

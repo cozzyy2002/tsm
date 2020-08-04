@@ -79,7 +79,7 @@ class State : public tsm::IState, public tsm::TimerClient
 public:
 	using ManagedType = tsm_NET::State;
 
-	State(ManagedType^ state, ManagedType^ masterState);
+	State(ManagedType^ state, ManagedType^ masterState, bool autoDispose);
 	virtual ~State();
 
 #pragma region Implementation of IState that call methods of managed class.
@@ -99,6 +99,8 @@ public:
 
 	ManagedType^ get() { return m_managedState; }
 
+	const bool m_autoDispose;
+
 protected:
 	gcroot<ManagedType^> m_managedState;
 	CComPtr<State> m_masterState;
@@ -109,7 +111,7 @@ class Event : public tsm::IEvent
 public:
 	using ManagedType = tsm_NET::Event;
 
-	Event(ManagedType^ event, int priority = 0);
+	Event(ManagedType^ event, int priority, bool autoDispose);
 	virtual ~Event();
 
 #pragma region Implementation of IState that call methods of managed class.
@@ -125,6 +127,8 @@ public:
 	virtual tsm::TimerClient* _getTimerClient() const override { return m_timerClient; }
 
 	ManagedType^ get() { return m_managedEvent; }
+
+	const bool m_autoDispose;
 
 protected:
 	gcroot<ManagedType^> m_managedEvent;

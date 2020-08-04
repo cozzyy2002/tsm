@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+using System.Security.AccessControl;
 using tsm_NET.Generic;
 
 namespace StateMachine.NET.TestConsole
@@ -8,6 +10,8 @@ namespace StateMachine.NET.TestConsole
     {
         void IJob.Start(IList<string> args)
         {
+            const bool StateAutoDispose = false;
+
             State.MemoryWeight = 100;
             if (0 < args.Count)
             {
@@ -21,7 +25,8 @@ namespace StateMachine.NET.TestConsole
             Console.WriteLine($"Allocate {State.MemoryWeight} MByte for each State object.");
 
             var context = new Context();
-            context.setup(new State());
+            var initialState = new State(null, StateAutoDispose);
+            context.setup(initialState);
             context.StateMonitor = new StateMonitor();
 
             while (true)
@@ -42,6 +47,8 @@ namespace StateMachine.NET.TestConsole
             }
 
             var hr = context.shutdown();
+            if (!StateAutoDispose) { initialState.Dispose(); }
+
             HResult hrExitCode;
             context.getAsyncExitCode(out hrExitCode);
             Console.WriteLine($"{Now} Context.shutdown() returns {hr}, Worker thread returns {hrExitCode}.\nKey in [Enter] to exit.");
@@ -54,14 +61,30 @@ namespace StateMachine.NET.TestConsole
 
         class State : State<Context, Event, State>
         {
-            public State(State masterState = null) : base(masterState)
+            public State(State masterState, bool autoDispose) : base(masterState, autoDispose)
             {
-                generation = (masterState != null) ? masterState.generation + 1 : 0;
+                if (masterState != null)
+                {
+                    generation = masterState.generation + 1;
+                    masterState.HasSubState = true;
+                }
+                else
+                {
+                    generation = 0;
+                }
+
+                IsExitCalledOnShutdown = true;
             }
 
             public override HResult entry(Context context, Event @event, State previousState)
             {
-                Console.WriteLine(string.Format($"{Now} {0}: {1}", @event, this));
+                Console.WriteLine($"{Now} {this}.entry({@event}, {previousState})");
+                return HResult.Ok;
+            }
+
+            public override HResult exit(Context context, Event @event, State nextState)
+            {
+                Console.WriteLine($"{Now} {this}.exit({@event}, {nextState})");
                 return HResult.Ok;
             }
 
@@ -71,7 +94,7 @@ namespace StateMachine.NET.TestConsole
                 {
                     // Go to next State with current State as master state.
                     // This path continues until generation equals to Event.NextGeneration.
-                    nextState = new State(this);
+                    nextState = new State(this, AutoDispose);
                     context.triggerEvent(new Event(@event.NextGeneration));
                 }
                 else if (@event.NextGeneration < generation)
@@ -85,22 +108,13 @@ namespace StateMachine.NET.TestConsole
                 return HResult.Ok;
             }
 
-            public override HResult exit(Context context, Event @event, State nextState)
-            {
-                if (MasterState.generation == @event.NextGeneration)
-                {
-                    Console.WriteLine($"{Now} Force a garbage collection.");
-                    GC.Collect();
-                }
-                return HResult.Ok;
-            }
-
             public override string ToString()
             {
-                return string.Format("State({0}): generation={1}", SequenceNumber, generation);
+                return $"State(generation={generation})";
             }
 
-            int generation;
+            public readonly int generation;
+            public bool HasSubState = false;
         }
 
         class Event : Event<Context>
@@ -112,7 +126,7 @@ namespace StateMachine.NET.TestConsole
 
             public override string ToString()
             {
-                return string.Format("Event({0}): NextGeneration={1}", SequenceNumber, NextGeneration);
+                return $"Event(NextGeneration={NextGeneration})";
             }
 
             public readonly int NextGeneration;
@@ -122,8 +136,43 @@ namespace StateMachine.NET.TestConsole
         {
             public override void onIdle(Context<Event, State> context)
             {
-                base.onIdle(context);
-                Console.Write($"{Now} {0} > ", GC.GetTotalMemory(true));
+                Console.Write($"{Now} onIdle(): Total memory={GC.GetTotalMemory(true)} > ");
+            }
+
+            public override void onStateChanged(Context<Event, State> context, Event @event, State previous, State next)
+            {
+                DisposeSubStates(next.generation, previous);
+            }
+
+            public override void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
+            {
+                DisposeSubStates(-1, context.CurrentState);
+            }
+        }
+
+        // Dispose State object(s) until State.generation is greater than specified generation.
+        // If State.AutoDispose == true, this mehtod does nothing.
+        static void DisposeSubStates(int genaration, State state)
+        {
+            if((state != null) && !state.AutoDispose && !state.HasSubState)
+            {
+                // At this point:
+                //   State object should be disposed explicitly.
+                //   The state is the end of MasterState/SubState chain.
+                while(genaration < state.generation)
+                {
+                    var _state = state.MasterState;
+                    state.Dispose();
+                    if (_state != null)
+                    {
+                        state = _state;
+                        state.HasSubState = false;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
             }
         }
     }

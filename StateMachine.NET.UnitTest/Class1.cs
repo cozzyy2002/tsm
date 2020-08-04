@@ -38,7 +38,7 @@ namespace StateMachine.NET.UnitTest.Generic
 
             // mockInitialState handles mockEvent and changes state to nextState.
             mockInitialState
-                .handleEvent(Arg.Is(c), Arg.Is(mockEvent), ref Arg.Is(State.Null))
+                .handleEvent(c, mockEvent, ref Arg.Is(State.Null))
                 .Returns(x =>
                 {
                     Console.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
@@ -60,15 +60,15 @@ namespace StateMachine.NET.UnitTest.Generic
             Received.InOrder(() =>
             {
                 mockInitialState.Received()
-                    .entry(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null));
+                    .entry(c, null, null);
                 mockInitialState.Received()
-                    .handleEvent(Arg.Is(c), Arg.Is(mockEvent), ref Arg.Is(State.Null));
+                    .handleEvent(c, mockEvent, ref Arg.Is(State.Null));
                 mockInitialState.Received()
-                    .exit(Arg.Is(c), Arg.Is(mockEvent), mockNextState);
+                    .exit(c, mockEvent, mockNextState);
                 mockNextState.Received()
-                    .entry(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                    .entry(c, mockEvent, mockInitialState);
                 mockNextState.Received()
-                    .exit(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null));
+                    .exit(c, null, null);
             });
             mockNextState.DidNotReceive().handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
 
@@ -76,11 +76,11 @@ namespace StateMachine.NET.UnitTest.Generic
             Received.InOrder(() =>
             {
                 mockStateMonitor.Received()
-                    .onStateChanged(Arg.Is(c), Arg.Is(Event.Null), Arg.Is(State.Null), Arg.Is(mockInitialState));
+                    .onStateChanged(c, null, null, mockInitialState);
                 mockStateMonitor.Received()
-                    .onEventHandling(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                    .onEventHandling(c, mockEvent, mockInitialState);
                 mockStateMonitor.Received()
-                    .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
+                    .onStateChanged(c, mockEvent, mockInitialState, mockNextState);
             });
             mockStateMonitor.DidNotReceive().onEventTriggered(Arg.Any<Context>(), Arg.Any<Event>());
             mockStateMonitor.DidNotReceive().onIdle(Arg.Any<Context>());
@@ -141,7 +141,7 @@ namespace StateMachine.NET.UnitTest.Generic
 
             // mockInitialState handles mockEvent and changes state to nextState.
             mockInitialState
-                .handleEvent(Arg.Is(context), Arg.Is(mockEvent), ref Arg.Is(State.Null))
+                .handleEvent(context, mockEvent, ref Arg.Is(State.Null))
                 .Returns(x =>
                 {
                     Console.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
@@ -174,15 +174,15 @@ namespace StateMachine.NET.UnitTest.Generic
             Received.InOrder(() =>
             {
                 mockInitialState.Received()
-                    .entry(Arg.Is(context), Arg.Is(Event.Null), Arg.Is(State.Null));
+                    .entry(context, null, null);
                 mockInitialState.Received()
-                    .handleEvent(Arg.Is(context), Arg.Is(mockEvent), ref Arg.Is(State.Null));
+                    .handleEvent(context, mockEvent, ref Arg.Is(State.Null));
                 mockInitialState.Received()
-                    .exit(Arg.Is(context), Arg.Is(mockEvent), mockNextState);
+                    .exit(context, mockEvent, mockNextState);
                 mockNextState.Received()
-                    .entry(Arg.Is(context), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                    .entry(context, mockEvent, mockInitialState);
                 mockNextState.Received()
-                    .exit(Arg.Is(context), Arg.Is(Event.Null), Arg.Is(State.Null));
+                    .exit(context, null, null);
             });
             mockNextState.DidNotReceive().handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
 
@@ -190,20 +190,20 @@ namespace StateMachine.NET.UnitTest.Generic
             Received.InOrder(() =>
             {
                 mockStateMonitor.Received()
-                    .onEventHandling(Arg.Is(context), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                    .onEventHandling(context, mockEvent, mockInitialState);
                 mockStateMonitor.Received()
-                    .onStateChanged(Arg.Is(context), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
+                    .onStateChanged(context, mockEvent, mockInitialState, mockNextState);
                 mockStateMonitor.Received()
-                    .onIdle(Arg.Is(context));
+                    .onIdle(context);
                 mockStateMonitor.Received()
-                    .onWorkerThreadExit(Arg.Is(context), HResult.Ok);
+                    .onWorkerThreadExit(context, HResult.Ok);
             });
             // onStateChanged() caused by Context.setup() might be called before or after onEventTriggerd().
             mockStateMonitor.Received()
-                .onStateChanged(Arg.Is(context), Arg.Is(Event.Null), Arg.Is(State.Null), Arg.Is(mockInitialState));
+                .onStateChanged(context, null, null, mockInitialState);
             // onEventTriggered() might be called before or after onEventHandling().
             mockStateMonitor.Received()
-                .onEventTriggered(Arg.Is(context), Arg.Is(mockEvent));
+                .onEventTriggered(context, mockEvent);
         }
 
         [Test]
@@ -223,7 +223,7 @@ namespace StateMachine.NET.UnitTest.Generic
 
             var count = 4;
             mockInitialState
-                .handleEvent(Arg.Is(context), Arg.Is(mockEvent), ref Arg.Is(State.Null))
+                .handleEvent(context, mockEvent, ref Arg.Is(State.Null))
                 .Returns(x =>
                 {
                     count--;
@@ -259,7 +259,7 @@ namespace StateMachine.NET.UnitTest.Generic
             Assert.That(context.shutdown(), Is.EqualTo(HResult.Ok));
 
             mockInitialState.Received()
-                .handleEvent(Arg.Is(context), Arg.Is(mockEvent), ref Arg.Is(State.Null));
+                .handleEvent(context, mockEvent, ref Arg.Is(State.Null));
         }
     }
 }

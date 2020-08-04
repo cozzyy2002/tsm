@@ -24,7 +24,7 @@ namespace StateMachine.NET.UnitTest
 
             // mockInitialState handles mockEvent and changes state to nextState.
             mockInitialState
-                .handleEvent(Arg.Is(c), Arg.Is(mockEvent), ref Arg.Is((State)null))
+                .handleEvent(c, mockEvent, ref Arg.Is((State)null))
                 .Returns(x =>
                 {
                     Console.WriteLine($"{mockInitialState.GetType()}.handleEvent({x[0]}) is called.");
@@ -56,15 +56,15 @@ namespace StateMachine.NET.UnitTest
             Received.InOrder(() =>
             {
                 mockInitialState.Received()
-                    .entry(Arg.Is(c), Arg.Is((Event)null), Arg.Is((State)null));
+                    .entry(c, null, null);
                 mockInitialState.Received()
-                    .handleEvent(Arg.Is(c), Arg.Is(mockEvent), ref Arg.Is((State)null));
+                    .handleEvent(c, mockEvent, ref Arg.Is((State)null));
                 mockInitialState.Received()
-                    .exit(Arg.Is(c), Arg.Is(mockEvent), mockNextState);
+                    .exit(c, mockEvent, mockNextState);
                 mockNextState.Received()
-                    .entry(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                    .entry(c, mockEvent, mockInitialState);
                 mockNextState.Received()
-                    .exit(Arg.Is(c), Arg.Is((Event)null), Arg.Is((State)null));
+                    .exit(c, null, null);
             });
             mockNextState.DidNotReceive().handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
 
@@ -72,20 +72,20 @@ namespace StateMachine.NET.UnitTest
             Received.InOrder(() =>
             {
                 mockStateMonitor.Received()
-                    .onEventHandling(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState));
+                    .onEventHandling(c, mockEvent, mockInitialState);
                 mockStateMonitor.Received()
-                    .onStateChanged(Arg.Is(c), Arg.Is(mockEvent), Arg.Is(mockInitialState), Arg.Is(mockNextState));
+                    .onStateChanged(c, mockEvent, mockInitialState, mockNextState);
                 mockStateMonitor.Received()
-                    .onIdle(Arg.Is(c));
+                    .onIdle(c);
                 mockStateMonitor.Received()
-                    .onWorkerThreadExit(Arg.Is(c), HResult.Ok);
+                    .onWorkerThreadExit(c, HResult.Ok);
             });
             // onStateChanged() caused by Context.setup() might be called before or after onEventTriggerd().
             mockStateMonitor.Received()
-                .onStateChanged(Arg.Is(c), Arg.Is((Event)null), Arg.Is((State)null), Arg.Is(mockInitialState));
+                .onStateChanged(c, null, null, mockInitialState);
             // onEventTriggered() might be called before or after onEventHandling().
             mockStateMonitor.Received()
-                .onEventTriggered(Arg.Is(c), Arg.Is(mockEvent));
+                .onEventTriggered(c, mockEvent);
         }
     }
 }

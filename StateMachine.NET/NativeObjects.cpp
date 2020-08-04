@@ -65,7 +65,6 @@ public:
 		auto thread = gcnew Threading::Thread(threadStart);
 		threadID++;
 		thread->Name = threadID.ToString();
-		Console::WriteLine(String::Format("ManagedDispatcher: Created thread. Name={0}", thread->Name));
 		thread->Start();
 	}
 
@@ -113,6 +112,7 @@ public:
 
 	virtual HRESULT getExitCode(HRESULT* phr) override {
 		HRESULT hr = S_OK;
+		if(!phr) { return E_POINTER; }
 		if(!exitThreadEvent) { return E_ILLEGAL_METHOD_CALL; }
 
 		auto w = WaitForSingleObject(exitThreadEvent, 0);
@@ -165,15 +165,20 @@ HRESULT Context::getAsyncExitCode(HRESULT* pht)
 	return tsm::Context_getAsyncExitCode(this, pht);
 }
 
-State::State(ManagedType^ state, ManagedType^ masterState)
+State::State(ManagedType^ state, ManagedType^ masterState, bool autoDispose)
 	: m_managedState(state)
 	, m_masterState(getNative(masterState))
+	, m_autoDispose(autoDispose)
 {
 }
 
 State::~State()
 {
-	delete m_managedState;
+	if(m_autoDispose) {
+		// When reference count of this object, Managed object is also deleted.
+		// In the case of m_autoDispose == false, See Managed State constructor and finalizer.
+		delete m_managedState;
+	}
 }
 
 HRESULT State::_handleEvent(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
@@ -201,18 +206,23 @@ bool State::_isExitCalledOnShutdown() const
 	return m_managedState->IsExitCalledOnShutdown;
 }
 
-Event::Event(ManagedType^ event, int priority /*= 0*/)
+Event::Event(ManagedType^ event, int priority, bool autoDispose)
 	: m_managedEvent(event)
 	, m_priority(priority)
 	, m_timerClient(nullptr)
 	, m_delayTime(0)
 	, m_intervalTime(0)
+	, m_autoDispose(autoDispose)
 {
 }
 
 Event::~Event()
 {
-	delete m_managedEvent;
+	if(m_autoDispose) {
+		// When reference count of this object, Managed object is also deleted.
+		// In the case of m_autoDispose == false, See Managed Event constructor and finalizer.
+		delete m_managedEvent;
+	}
 }
 
 HRESULT Event::_preHandle(tsm::IContext* context)

@@ -272,7 +272,8 @@ TYPED_TEST(StateMachineEventUnitTest, EntryError)
 	auto hr = E_ABORT;
 	EXPECT_CALL(mockEvent, preHandle(&mockContext))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockEvent, postHandle(_, _)).Times(0);
+	EXPECT_CALL(mockEvent, postHandle(&mockContext, hr))
+		.WillOnce(Return(hr));
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
 		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
 	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(S_OK));
