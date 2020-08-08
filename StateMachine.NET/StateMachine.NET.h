@@ -158,9 +158,9 @@ public ref class State : public TimerClient
 	void construct(State^ masterState, bool autoDispose);
 
 public:
-	State() { construct(nullptr, true); }
+	State() { construct(nullptr, DefaultAutoDispose); }
 	State(bool autoDispose) { construct(nullptr, autoDispose); }
-	State(State^ masterState) { construct(masterState, true); }
+	State(State^ masterState) { construct(masterState, masterState ? masterState->AutoDispose : DefaultAutoDispose); }
 	State(State^ masterState, bool autoDispose) { construct(masterState, autoDispose); }
 	~State();
 	!State();
@@ -194,6 +194,8 @@ public:
 	 * This value is specified by autoDispose argument of constructor.
 	 */
 	property bool AutoDispose { bool get(); }
+
+	static const bool DefaultAutoDispose = true;
 #pragma endregion
 
 internal:
@@ -213,9 +215,9 @@ public ref class Event
 	void construct(int priority, bool autoDispose);
 
 public:
-	Event() { construct(0, true); }
+	Event() { construct(0, DefaultAutoDispose); }
 	Event(bool autoDispose) { construct(0, autoDispose); }
-	Event(int priority) { construct(priority, true); }
+	Event(int priority) { construct(priority, DefaultAutoDispose); }
 	Event(int priority, bool autoDispose) { construct(priority, autoDispose); }
 	~Event();
 	!Event();
@@ -250,6 +252,8 @@ public:
 	 * This value is specified by autoDispose argument of constructor.
 	 */
 	property bool AutoDispose { bool get(); }
+
+	static const bool DefaultAutoDispose = true;
 #pragma endregion
 
 internal:

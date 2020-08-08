@@ -339,10 +339,10 @@ namespace StateMachine.NET.UnitTest
         [Test]
         public void SubState_0([Values] bool eventAutoDispose)
         {
-            var mockEvent0 = Substitute.For<TEvent>(0, eventAutoDispose);
+            var mockEvent0 = Substitute.For<TEvent>(eventAutoDispose);
             var mockEvent1 = eventAutoDispose
-                ? Substitute.For<TEvent>(0, eventAutoDispose)   // Event objects are created for each handleEvent() method call. AutoDispose can be performed.
-                : mockEvent0;                                   // Single Event object is used for 2 handleEvent() method calls. AutoDispose should be disabled.
+                ? Substitute.For<TEvent>(eventAutoDispose)   // Event objects are created for each handleEvent() method call. AutoDispose can be performed.
+                : mockEvent0;                                // Single Event object is used for 2 handleEvent() method calls. AutoDispose should be disabled.
 
             mockState1 = Substitute.For<TState>(mockState0);
             Assert.That(mockState1.IsSubState, Is.True);

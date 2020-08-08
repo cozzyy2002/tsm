@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
-using System.Security.AccessControl;
 using tsm_NET.Generic;
 
 namespace StateMachine.NET.TestConsole
@@ -25,7 +23,7 @@ namespace StateMachine.NET.TestConsole
             Console.WriteLine($"Allocate {State.MemoryWeight} MByte for each State object.");
 
             var context = new Context();
-            var initialState = new State(null, StateAutoDispose);
+            var initialState = new State(StateAutoDispose);
             context.setup(initialState);
             context.StateMonitor = new StateMonitor();
 
@@ -61,25 +59,33 @@ namespace StateMachine.NET.TestConsole
 
         class State : State<Context, Event, State>
         {
-            public State(State masterState, bool autoDispose) : base(masterState, autoDispose)
+            // Construct 1-st State object.
+            public State(bool autoDispose) : base(autoDispose)
             {
-                if (masterState != null)
-                {
-                    generation = masterState.generation + 1;
-                    masterState.HasSubState = true;
-                }
-                else
-                {
-                    generation = 0;
-                }
-
+                generation = 0;
                 IsExitCalledOnShutdown = true;
+            }
+
+            // Construct Sub State object that inherits properties of Master State.
+            public State(State masterState) : base(masterState)
+            {
+                generation = masterState.generation + 1;
+                IsExitCalledOnShutdown = masterState.IsExitCalledOnShutdown;
+                masterState.HasSubState = true;
             }
 
             public override HResult entry(Context context, Event @event, State previousState)
             {
                 Console.WriteLine($"{Now} {this}.entry({@event}, {previousState})");
-                return HResult.Ok;
+
+                var hr = HResult.Ok;
+                if ((@event != null) && (generation < @event.NextGeneration))
+                {
+                    // Trigger event to go to next state.
+                    // This path continues until generation equals to Event.NextGeneration.
+                    hr = context.triggerEvent(@event);
+                }
+                return hr;
             }
 
             public override HResult exit(Context context, Event @event, State nextState)
@@ -94,8 +100,7 @@ namespace StateMachine.NET.TestConsole
                 {
                     // Go to next State with current State as master state.
                     // This path continues until generation equals to Event.NextGeneration.
-                    nextState = new State(this, AutoDispose);
-                    context.triggerEvent(new Event(@event.NextGeneration));
+                    nextState = new State(this);
                 }
                 else if (@event.NextGeneration < generation)
                 {
