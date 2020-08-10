@@ -195,7 +195,7 @@ public:
 	 */
 	property bool AutoDispose { bool get(); }
 
-	static const bool DefaultAutoDispose = true;
+	static bool DefaultAutoDispose = true;
 #pragma endregion
 
 internal:
@@ -253,7 +253,7 @@ public:
 	 */
 	property bool AutoDispose { bool get(); }
 
-	static const bool DefaultAutoDispose = true;
+	static bool DefaultAutoDispose = true;
 #pragma endregion
 
 internal:

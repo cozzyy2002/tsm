@@ -8,22 +8,28 @@ namespace StateMachine.NET.TestConsole
     {
         void IJob.Start(IList<string> args)
         {
-            const bool StateAutoDispose = false;
-
             State.MemoryWeight = 100;
-            if (0 < args.Count)
+            foreach (var arg in args)
             {
                 int memoryWeight;
-                if (int.TryParse(args[0], out memoryWeight))
+                if (int.TryParse(arg, out memoryWeight))
                 {
+                    // Integer argument is set to State.MemoryWeight property.
                     State.MemoryWeight = memoryWeight;
+                }
+
+                bool stateAutoDispose;
+                if(bool.TryParse(arg, out stateAutoDispose))
+                {
+                    // Boolean argument is set to State.DefaultAutoDispose property.
+                    State.DefaultAutoDispose = stateAutoDispose;
                 }
             }
 
-            Console.WriteLine($"Allocate {State.MemoryWeight} MByte for each State object.");
+            Console.WriteLine($"Creating State object: MemoryWeight={State.MemoryWeight} MByte, AutoDispose={State.DefaultAutoDispose}.");
 
             var context = new Context();
-            var initialState = new State(StateAutoDispose);
+            var initialState = new State();
             context.setup(initialState);
             context.StateMonitor = new StateMonitor();
 
@@ -45,7 +51,7 @@ namespace StateMachine.NET.TestConsole
             }
 
             var hr = context.shutdown();
-            if (!StateAutoDispose) { initialState.Dispose(); }
+            if (!State.DefaultAutoDispose) { initialState.Dispose(); }
 
             HResult hrExitCode;
             context.getAsyncExitCode(out hrExitCode);
@@ -60,7 +66,7 @@ namespace StateMachine.NET.TestConsole
         class State : State<Context, Event, State>
         {
             // Construct 1-st State object.
-            public State(bool autoDispose) : base(autoDispose)
+            public State()
             {
                 generation = 0;
                 IsExitCalledOnShutdown = true;
@@ -159,7 +165,7 @@ namespace StateMachine.NET.TestConsole
         // If State.AutoDispose == true, this mehtod does nothing.
         static void DisposeSubStates(int genaration, State state)
         {
-            if((state != null) && !state.AutoDispose && !state.HasSubState)
+            if(!State.DefaultAutoDispose && (state != null) && !state.HasSubState)
             {
                 // At this point:
                 //   State object should be disposed explicitly.
