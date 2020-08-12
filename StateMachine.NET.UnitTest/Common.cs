@@ -13,6 +13,8 @@ namespace Testee
         public Event(bool autoDispose) : base(autoDispose) { }
         public Event(int priority) : base(priority) { }
         public Event(int priority, bool autoDispose) : base(priority, autoDispose) { }
+
+        public int Id = 0;
     }
 
     public class State : tsm_NET.State
@@ -56,7 +58,9 @@ namespace Generic
             public Event(bool autoDispose) : base(autoDispose) { }
             public Event(int priority) : base(priority) { }
             public Event(int priority, bool autoDispose) : base(priority, autoDispose) { }
-    };
+
+            public int Id = 0;
+        };
 
     public class State : tsm_NET.Generic.State<Context, Event, State>
     {
@@ -77,6 +81,8 @@ namespace Generic
         public AsyncEvent(bool autoDispose) : base(autoDispose) { }
         public AsyncEvent(int priority) : base(priority) { }
         public AsyncEvent(int priority, bool autoDispose) : base(priority, autoDispose) { }
+
+        public int Id = 0;
     };
 
     public class AsyncState : tsm_NET.Generic.State<AsyncContext, AsyncEvent, AsyncState>
