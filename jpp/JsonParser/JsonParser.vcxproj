@@ -22,7 +22,7 @@
     <ProjectGuid>{5D559714-38BA-49C2-89BA-FFF1B69626B4}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>JsonParser</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
