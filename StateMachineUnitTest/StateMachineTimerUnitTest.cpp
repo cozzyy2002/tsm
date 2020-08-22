@@ -127,6 +127,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 3)
 	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
 	events = getPendingEvents(mockState0);
 	EXPECT_EQ(0, events.size());
+	Sleep(10);
 	EXPECT_TRUE(e0.deleted());
 	Sleep(500);
 }
