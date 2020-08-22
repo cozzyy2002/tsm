@@ -235,6 +235,7 @@ public:
 	void setTimer(State^ state, TimeSpan delayTime, TimeSpan intervalTime);
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }
+	property int Priority { int get(); }
 
 #pragma region .NET properties
 	property long SequenceNumber { long get(); }

@@ -294,6 +294,11 @@ TimeSpan Event::InterValTime::get()
 	return TimeSpan::FromMilliseconds(m_nativeEvent->_getIntervalTime());
 }
 
+int Event::Priority::get()
+{
+	return m_nativeEvent->_getPriority();
+}
+
 long Event::SequenceNumber::get()
 {
 	return m_nativeEvent->getSequenceNumber();
