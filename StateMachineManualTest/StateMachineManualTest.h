@@ -12,6 +12,7 @@
 
 #include "MyContext.h"
 
+#include <log4cplus/initializer.h>
 
 // CStateMachineManualTestApp:
 // See StateMachineManualTest.cpp for the implementation of this class
@@ -33,6 +34,11 @@ public:
 
 	DECLARE_MESSAGE_MAP()
 //	virtual int ExitInstance();
+
+private:
+	// Initialize and ShutDown log4cplus.
+	// This member is never used.
+	log4cplus::Initializer _log4cplus_Initializer;
 };
 
 extern CStateMachineManualTestApp theApp;

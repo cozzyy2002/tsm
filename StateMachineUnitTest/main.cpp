@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Mocks.h"
+#include <log4cplus/initializer.h>
 #include <log4cplus/configurator.h>
 
 using namespace testing;
@@ -10,6 +11,10 @@ static TestEventListener* createTestEventListener(LPCSTR title);
 
 int _tmain(int argc, TCHAR *argv[])
 {
+	// Initialize and ShutDown log4cplus.
+	// This variable is never used.
+	log4cplus::Initializer _log4cplus_Initializer;
+
 	static auto logConfigFile = _T("log4cplus.properties");
 	if(PathFileExists(logConfigFile)) {
 		log4cplus::PropertyConfigurator::doConfigure(logConfigFile);
