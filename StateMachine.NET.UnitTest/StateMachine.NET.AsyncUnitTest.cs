@@ -65,41 +65,56 @@ namespace StateMachine.NET.AsyncUnitTest
         public static IEnumerable PriorityValueTestData
         {
             get {
-                yield return new TestCaseData(new int[] { 0, 0, 0, 0, 0 }, new int[] { 0, 1, 2, 3, 4 });    // Same priority.
-                yield return new TestCaseData(new int[] { 0, -2, 0, 0, 0 }, new int[] { 0, 2, 3, 4, 1 });   // First is lower.
-                yield return new TestCaseData(new int[] { 0, 0, 0, 0, 2 }, new int[] { 0, 4, 1, 2, 3 });    // Last is Higher.
-                yield return new TestCaseData(new int[] { 0, 0, -2, 0, 0 }, new int[] { 0, 1, 3, 4, 2 });   // Middle is lower.
-                yield return new TestCaseData(new int[] { 0, 0, 0, 2, 0 }, new int[] { 0, 3, 1, 2, 4 });    // Middle is higher.
-                yield return new TestCaseData(new int[] { 0, 4, 3, 2, 1 }, new int[] { 0, 1, 2, 3, 4 });    // Priority order.
-                yield return new TestCaseData(new int[] { 0, 1, 2, 3, 4 }, new int[] { 0, 4, 3, 2, 1 });	// Reverse priority order.
+                yield return new TestCaseData(new int[] { 0, 0, 0, 0 }, new int[] { 0, 1, 2, 3 });      // Same priority.
+                yield return new TestCaseData(new int[] { -2, 0, 0, 0 }, new int[] { 1, 2, 3, 0 });     // First is lower.
+                yield return new TestCaseData(new int[] { 0, 0, 0, 2 }, new int[] { 3, 0, 1, 2 });      // Last is Higher.
+                yield return new TestCaseData(new int[] { 0, -2, 0, 0 }, new int[] { 0, 2, 3, 1 });     // Middle is lower.
+                yield return new TestCaseData(new int[] { 0, 0, 2, 0 }, new int[] { 2, 0, 1, 3 });      // Middle is higher.
+                yield return new TestCaseData(new int[] { 4, 3, 2, 1 }, new int[] { 0, 1, 2, 3 });      // Priority order.
+                yield return new TestCaseData(new int[] { 1, 2, 3, 4 }, new int[] { 3, 2, 1, 0 });      // Reverse priority order.
             }
         }
 
-        // Specifick event priority.
+        // Various event priority.
         // State::HandleEvent() should be called by order of Event::Priority property.
         [TestCaseSource(typeof(StateMachineAsyncUnitTest), "PriorityValueTestData")]
         public void PriorityValueTest(int[] priorities, int[] sequences)
         {
             int EventCount = priorities.Length;
             int ActualEventCount = 0;
+            int[] ActualSequences = new int[EventCount];
+            EventWaitHandle AllEventsHandled = new EventWaitHandle(false, EventResetMode.ManualReset);
 
+            // Create and trigger events according to priorities array.
+            Event firstEvent = Substitute.For<Event>();
+            firstEvent.preHandle(context)
+                .Returns(x => {
+                    for (var i = 0; i < EventCount; i++)
+                    {
+                        var ev = new Event(priorities[i]);
+                        ev.Id = i;
+                        Assert.That(context.triggerEvent(ev), Is.EqualTo(HResult.Ok));
+                    }
+                    // This event does not have to be handled.
+                    return HResult.False;
+                });
+            Assert.That(context.triggerEvent(firstEvent), Is.EqualTo(HResult.Ok));
+
+            // Save ID of passed event to ActualSequences array.
             mockState.handleEvent(context, Arg.Any<Event>(), ref Arg.Any<State>())
                 .Returns(x => {
                     var ev = x[1] as Event;
-                    if (ev.Id == 0) { Thread.Sleep(100); }
-                    Assume.That(ev.Id, Is.EqualTo(sequences[ActualEventCount++]));
+                    ActualSequences[ActualEventCount++] = ev.Id;
+                    if (ActualEventCount == EventCount) { AllEventsHandled.Set(); }
                     return HResult.Ok;
                 });
 
-            for (var i = 0; i < EventCount; i++)
-            {
-                var ev = new Event(priorities[i]);
-                ev.Id = i;
-                Assert.That(context.triggerEvent(ev), Is.EqualTo(HResult.Ok));
-            }
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            // Wait for last event to be handled.
+            Assert.That(AllEventsHandled.WaitOne(TimeSpan.FromSeconds(1)), Is.True);
 
+            // Check count and sequence of handled events.
             Assert.That(ActualEventCount, Is.EqualTo(EventCount));
+            Assert.That(ActualSequences, Is.EqualTo(sequences));
         }
     }
 }

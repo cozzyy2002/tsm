@@ -152,4 +152,4 @@ TEST_P(StateMachineAsyncPriorityUnitTest, sequence)
 	EXPECT_EQ(eventCount, actualEventCount);
 }
 
-INSTANTIATE_TEST_CASE_P(priority, StateMachineAsyncPriorityUnitTest, ValuesIn(stateMachineAsyncPriorityUnitTestData));
+INSTANTIATE_TEST_SUITE_P(priority, StateMachineAsyncPriorityUnitTest, ValuesIn(stateMachineAsyncPriorityUnitTestData));

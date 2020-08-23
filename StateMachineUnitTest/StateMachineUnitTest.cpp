@@ -43,7 +43,7 @@ public:
 	}
 };
 
-TYPED_TEST_CASE(StateMachineSetupUnitTest, ContextTypes);
+TYPED_TEST_SUITE(StateMachineSetupUnitTest, ContextTypes);
 
 // StateMachine::setup(Event* = nullptr)
 TYPED_TEST(StateMachineSetupUnitTest, 0)
@@ -151,7 +151,7 @@ public:
 	}
 };
 
-TYPED_TEST_CASE(StateMachineEventUnitTest, ContextTypes);
+TYPED_TEST_SUITE(StateMachineEventUnitTest, ContextTypes);
 
 // No state transition occurs.
 // Event::preHandle() returns S_OK.
@@ -303,7 +303,7 @@ public:
 	}
 };
 
-TYPED_TEST_CASE(StateMachineSubStateUnitTest, ContextTypes);
+TYPED_TEST_SUITE(StateMachineSubStateUnitTest, ContextTypes);
 
 // State chain: State0 -> State1
 // State1 returns State0 as next state.

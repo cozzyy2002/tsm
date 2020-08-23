@@ -21,21 +21,21 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D01D9732-0337-46E6-A612-5A32B65FFAF7}</ProjectGuid>
     <RootNamespace>StateMachineManualTest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <Keyword>MFCProj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -96,7 +96,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc141\Win32\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc14\Win32\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
       <AdditionalDependencies>StateMachine.lib;log4cplusUD.lib</AdditionalDependencies>
     </Link>
     <Midl>
@@ -110,7 +110,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>xcopy /D /Y "$(LOG4CPLUS_ROOT)\msvc141\$(Platform)\bin.$(Configuration)_Unicode\*.dll" "$(OutDir)"</Command>
+      <Command>xcopy /D /Y "$(LOG4CPLUS_ROOT)\msvc14\$(Platform)\bin.$(Configuration)_Unicode\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -156,7 +156,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc141\Win32\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)public\lib\$(Configuration)\;$(LOG4CPLUS_ROOT)\msvc14\Win32\bin.$(Configuration)_Unicode</AdditionalLibraryDirectories>
       <AdditionalDependencies>StateMachine.lib;log4cplusU.lib</AdditionalDependencies>
     </Link>
     <Midl>
@@ -170,7 +170,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PostBuildEvent>
-      <Command>xcopy /D /Y "$(LOG4CPLUS_ROOT)\msvc141\$(Platform)\bin.$(Configuration)_Unicode\*.dll" "$(OutDir)"</Command>
+      <Command>xcopy /D /Y "$(LOG4CPLUS_ROOT)\msvc14\$(Platform)\bin.$(Configuration)_Unicode\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

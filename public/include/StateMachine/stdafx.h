@@ -18,4 +18,6 @@
 
 #include <typeinfo>
 #include <string>
+#include <memory>
+#include <functional>
 #include <atlbase.h>
