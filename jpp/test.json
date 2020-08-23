@@ -1,0 +1,10 @@
+// Single comment line.
+{
+	"a": "Ordial string",	    // Comment following a line.
+	"b": "String and /* comment */",
+	/*
+		Multi comment line.
+	 */
+	"c": "\"Escape\" characer",
+/* Comment followed by a line. */	"d": "Tab	character"
+}
