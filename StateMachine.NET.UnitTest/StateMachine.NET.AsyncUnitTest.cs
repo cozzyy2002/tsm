@@ -40,26 +40,43 @@ namespace StateMachine.NET.AsyncUnitTest
         [Test]
         public void DefaultPriorityTest()
         {
-            const int EventCount = 4;
-            int ActualEventCount = 0;
+            // Expected sequence: Order that each event is triggered.
+            var sequences = new int[] { 0, 1, 2, 3 };
+            var EventCount = sequences.Length;
+            var ActualEventCount = 0;
+            var ActualSequences = new int[EventCount];
+            var AllEventsHandled = new EventWaitHandle(false, EventResetMode.ManualReset);
 
+            // Creatje and trigger events that has same priority.
+            var firstEvent = Substitute.For<Event>();
+            firstEvent.preHandle(context)
+                .Returns(x => {
+                    foreach(var id in sequences)
+                    {
+                        var ev = new Event();
+                        ev.Id = id;
+                        Assert.That(context.triggerEvent(ev), Is.EqualTo(HResult.Ok));
+                    }
+                    // This event does not have to be handled.
+                    return HResult.False;
+                });
+            Assert.That(context.triggerEvent(firstEvent), Is.EqualTo(HResult.Ok));
+
+            // Save ID of passed event to ActualSequences array.
             mockState.handleEvent(context, Arg.Any<Event>(), ref Arg.Any<State>())
                 .Returns(x => {
                     var ev = x[1] as Event;
-                    if(ev.Id == 0) { Thread.Sleep(100); }
-                    Assert.That(ev.Id, Is.EqualTo(ActualEventCount++));
+                    ActualSequences[ActualEventCount++] = ev.Id;
+                    if(ActualEventCount == EventCount) { AllEventsHandled.Set(); }
                     return HResult.Ok;
                 });
 
-            for(var i = 0; i < EventCount; i++)
-            {
-                var ev = new Event();
-                ev.Id = i;
-                Assert.That(context.triggerEvent(ev), Is.EqualTo(HResult.Ok));
-            }
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            // Wait for last event to be handled.
+            Assert.That(AllEventsHandled.WaitOne(TimeSpan.FromSeconds(1)), Is.True);
 
+            // Check count and sequence of handled events.
             Assert.That(ActualEventCount, Is.EqualTo(EventCount));
+            Assert.That(ActualSequences, Is.EqualTo(sequences));
         }
 
         public static IEnumerable PriorityValueTestData
