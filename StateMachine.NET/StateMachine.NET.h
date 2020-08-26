@@ -227,12 +227,9 @@ public:
 	virtual HResult postHandle(Context^ context, HResult hr) { return hr; }
 #pragma endregion
 
-	void setDelayTimer(Context^ context, TimeSpan delayTime);
-	void setIntervalTimer(Context^ context, TimeSpan intervalTime);
-	void setTimer(Context^ context, TimeSpan delayTime, TimeSpan intervalTime);
-	void setDelayTimer(State^ state, TimeSpan delayTime);
-	void setIntervalTimer(State^ state, TimeSpan intervalTime);
-	void setTimer(State^ state, TimeSpan delayTime, TimeSpan intervalTime);
+	void setDelayTimer(TimerClient^ client, TimeSpan delayTime);
+	void setIntervalTimer(TimerClient^ client, TimeSpan intervalTime);
+	void setTimer(TimerClient^ client, TimeSpan delayTime, TimeSpan intervalTime);
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }
 	property int Priority { int get(); }

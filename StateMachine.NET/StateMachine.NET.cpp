@@ -249,34 +249,19 @@ Event::!Event()
 	m_nativeEvent = nullptr;
 }
 
-void Event::setDelayTimer(Context^ context, TimeSpan delayTime)
+void Event::setDelayTimer(TimerClient^ client, TimeSpan delayTime)
 {
-	setTimer(context->get(), (int)delayTime.TotalMilliseconds, 0);
+	setTimer(client->getTimerClient(), (int)delayTime.TotalMilliseconds, 0);
 }
 
-void Event::setIntervalTimer(Context^ context, TimeSpan intervalTime)
+void Event::setIntervalTimer(TimerClient^ client, TimeSpan intervalTime)
 {
-	setTimer(context->get(), 0, (int)intervalTime.TotalMilliseconds);
+	setTimer(client->getTimerClient(), 0, (int)intervalTime.TotalMilliseconds);
 }
 
-void Event::setTimer(Context^ context, TimeSpan delayTime, TimeSpan intervalTime)
+void Event::setTimer(TimerClient^ client, TimeSpan delayTime, TimeSpan intervalTime)
 {
-	setTimer(context->get(), (int)delayTime.TotalMilliseconds, (int)intervalTime.TotalMilliseconds);
-}
-
-void Event::setDelayTimer(State^ state, TimeSpan delayTime)
-{
-	setTimer(state->get(), (int)delayTime.TotalMilliseconds, 0);
-}
-
-void Event::setIntervalTimer(State^ state, TimeSpan intervalTime)
-{
-	setTimer(state->get(), 0, (int)intervalTime.TotalMilliseconds);
-}
-
-void Event::setTimer(State^ state, TimeSpan delayTime, TimeSpan intervalTime)
-{
-	setTimer(state->get(), (int)delayTime.TotalMilliseconds, (int)intervalTime.TotalMilliseconds);
+	setTimer(client->getTimerClient(), (int)delayTime.TotalMilliseconds, (int)intervalTime.TotalMilliseconds);
 }
 
 void Event::setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime)
