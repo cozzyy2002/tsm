@@ -66,6 +66,7 @@
     <Compile Include="Common.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StateMachine.NET.AsyncUnitTest.cs" />
+    <Compile Include="StateMachine.NET.TimerUnitTest.cs" />
     <Compile Include="StateMachine.NET.UnitTest.cs" />
   </ItemGroup>
   <ItemGroup>
