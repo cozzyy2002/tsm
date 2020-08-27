@@ -54,7 +54,7 @@ namespace StateMachine.NET.TimerUnitTest
         }
 
         [SetUp]
-        public void SetUpTimerClient()
+        public new void SetUp()
         {
             // Set timerClient according to argument of TestFixture attribute.
             timerClient = isTimerClientContext ? (tsm_NET.TimerClient)context : mockState0;
@@ -63,23 +63,80 @@ namespace StateMachine.NET.TimerUnitTest
         bool isTimerClientContext;
         tsm_NET.TimerClient timerClient;
 
-        // One-Shot timer
+        // One-shot timer
         [Test]
         public void OneShotTimer()
         {
-            Console.WriteLine($"One-Shot timer test using {timerClient}");
+            Console.WriteLine($"One-shot timer test using {timerClient}");
 
             e0.setDelayTimer(timerClient, TimeSpan.FromMilliseconds(100));
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
-            var ev = timerClient.PendingEvents;
-            Assert.That(ev.Count, Is.EqualTo(1));
-            Assert.That(ev.Contains(e0), Is.True);
-            Thread.Sleep(100);
-            ev = timerClient.PendingEvents;
-            Assert.That(ev.Count, Is.EqualTo(0));
 
+            // Timer should be working.
+            var events = timerClient.PendingEvents;
+            Assert.That(events.Count, Is.EqualTo(1));
+            Assert.That(events.Contains(e0), Is.True);
+            Thread.Sleep(100);
+
+            // Timer should be stopped.
+            events = timerClient.PendingEvents;
+            Assert.That(events.Count, Is.EqualTo(0));
+
+            // Timer event should have been handled once.
             mockState0.Received()
+                .handleEvent(context, e0, ref Arg.Any<State>());
+        }
+
+        // Cancel one-shot timer
+        [Test]
+        public void CancelOneShotTimer()
+        {
+            Console.WriteLine($"Cancel one-Shot timer test using {timerClient}");
+
+            e0.setDelayTimer(timerClient, TimeSpan.FromMilliseconds(100));
+            Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
+            Thread.Sleep(50);
+
+            // Timer should be working.
+            var events = timerClient.PendingEvents;
+            Assert.That(events.Count, Is.EqualTo(1));
+            Assert.That(events.Contains(e0), Is.True);
+            Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
+
+            // Timer should be canceled.
+            events = timerClient.PendingEvents;
+            Assert.That(events.Count, Is.EqualTo(0));
+            Thread.Sleep(100);
+
+            // Timer event should have been handled once.
+            mockState0.DidNotReceive()
+                .handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
+        }
+
+        // Interval timer(Including cancel)
+        [Test]
+        public void IntervalTimer()
+        {
+            Console.WriteLine($"Interval timer test using {timerClient}");
+
+            e0.setTimer(timerClient, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(200));
+            Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
+            Thread.Sleep(50);
+
+            // Timer should be working.
+            var events = timerClient.PendingEvents;
+            Assert.That(events.Count, Is.EqualTo(1));
+            Assert.That(events.Contains(e0), Is.True);
+            Thread.Sleep(500);
+            Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
+
+            // Timer should be stopped.
+            events = timerClient.PendingEvents;
+            Assert.That(events.Count, Is.EqualTo(0));
+
+            // Timer event should have been handled 3 times(Delay x 1 + Interval x 2).
+            mockState0.Received(3)
                 .handleEvent(context, e0, ref Arg.Any<State>());
         }
     }

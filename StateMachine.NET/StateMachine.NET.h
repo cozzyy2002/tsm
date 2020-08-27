@@ -230,6 +230,7 @@ public:
 	void setDelayTimer(TimerClient^ client, TimeSpan delayTime);
 	void setIntervalTimer(TimerClient^ client, TimeSpan intervalTime);
 	void setTimer(TimerClient^ client, TimeSpan delayTime, TimeSpan intervalTime);
+	HResult cancelTimer();
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }
 	property int Priority { int get(); }

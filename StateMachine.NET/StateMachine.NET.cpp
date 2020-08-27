@@ -269,6 +269,12 @@ void Event::setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalT
 	m_nativeEvent->setTimer(timerClient, delayTime, intervalTime);
 }
 
+HResult Event::cancelTimer()
+{
+	auto client = m_nativeEvent->_getTimerClient();
+	return client ? (HResult)client->cancelEventTimer(m_nativeEvent) : HResult::IllegalMethodCall;
+}
+
 TimeSpan Event::DelayTime::get()
 {
 	return TimeSpan::FromMilliseconds(m_nativeEvent->_getDelayTime());
