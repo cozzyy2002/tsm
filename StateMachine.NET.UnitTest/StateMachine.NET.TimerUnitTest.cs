@@ -36,12 +36,45 @@ namespace StateMachine.NET.TimerUnitTest
         public void TearDown()
         {
             Assert.That(context.shutdown(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
-            mockState0.Received().exit(context, null, null);
         }
 
         protected Context context;
         protected Event e0, e1;
         protected State mockState0, mockState1;
+
+        // Cancel event timer of state on State::exit()
+        [Test]
+        public void CancelStateTimer()
+        {
+            Assert.That(context.shutdown(), Is.EqualTo(HResult.Ok));
+        }
+
+        // Cancel event timer of state on State::exit()
+        [Test]
+        public void CancelStateTimerByStateChange()
+        {
+            mockState0.handleEvent(context, e0, ref Arg.Any<State>())
+                .Returns(x => {
+                    x[2] = mockState1;
+                    return HResult.Ok;
+            });
+
+            // Start interval timer to be canceled.
+            e1.setTimer(mockState0, TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(100));
+            Assert.That(context.triggerEvent(e1), Is.EqualTo(HResult.Ok));
+
+            // Wait for e1 to be handled twice.
+            // Then trigger e0 to change state mockState0 to mockState1.
+            Thread.Sleep(200);
+            Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
+
+            Thread.Sleep(100);
+            mockState0.Received(2)
+                .handleEvent(context, e1, ref Arg.Any<State>());
+            mockState0.Received()
+                .exit(context, e0, mockState1);
+            Assert.That(context.CurrentState, Is.EqualTo(mockState1));
+        }
     }
 
     [TestFixture(true)]     // Use Context as TimerClient
@@ -62,6 +95,16 @@ namespace StateMachine.NET.TimerUnitTest
 
         bool isTimerClientContext;
         tsm_NET.TimerClient timerClient;
+
+        [Test]
+        public void CancelTimerReturnValueTest()
+        {
+            // Timer is not set.
+            Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.IllegalMethodCall));
+            e0.setDelayTimer(timerClient, TimeSpan.Zero);
+            // Timer is not started.
+            Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.False));
+        }
 
         // One-shot timer
         [Test]
@@ -138,6 +181,39 @@ namespace StateMachine.NET.TimerUnitTest
             // Timer event should have been handled 3 times(Delay x 1 + Interval x 2).
             mockState0.Received(3)
                 .handleEvent(context, e0, ref Arg.Any<State>());
+        }
+
+        [Test]
+        public void CancelbyShutdown()
+        {
+            e0.setDelayTimer(timerClient, TimeSpan.FromMilliseconds(100));
+            Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
+            Thread.Sleep(50);
+
+            // Timer should be working.
+            var events = timerClient.PendingEvents;
+            Assert.That(events.Count, Is.EqualTo(1));
+            Assert.That(events.Contains(e0), Is.True);
+
+            Assert.That(context.shutdown(), Is.EqualTo(HResult.Ok));
+            Thread.Sleep(100);
+
+            if (timerClient == context)
+            {
+                // Timer should be stopped.
+                events = timerClient.PendingEvents;
+                Assert.That(events.Count, Is.EqualTo(0));
+            }
+            else
+            {
+                // NOTE:
+                // `timerClient.PendingEvents` can not be called when timerClient is State object
+                // because State object is disposed by Context.Shutdown().
+            }
+
+            // Timer event should have been handled once.
+            mockState0.DidNotReceive()
+                .handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
         }
     }
 }
