@@ -69,10 +69,13 @@ namespace StateMachine.NET.TimerUnitTest
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
 
             Thread.Sleep(100);
-            mockState0.Received(2)
-                .handleEvent(context, e1, ref Arg.Any<State>());
-            mockState0.Received()
-                .exit(context, e0, mockState1);
+            Received.InOrder(() => {
+                mockState0.handleEvent(context, e1, ref Arg.Any<State>());
+                mockState0.handleEvent(context, e1, ref Arg.Any<State>());
+                mockState0.exit(context, e0, mockState1);
+                mockState1.entry(context, e0, mockState0);
+            });
+
             Assert.That(context.CurrentState, Is.EqualTo(mockState1));
         }
     }
@@ -214,6 +217,37 @@ namespace StateMachine.NET.TimerUnitTest
             // Timer event should have been handled once.
             mockState0.DidNotReceive()
                 .handleEvent(Arg.Any<Context>(), Arg.Any<Event>(), ref Arg.Any<State>());
+        }
+
+        [Test]
+        public void TimerAccuracyTest()
+        {
+            var expectedTimes = new int[] { 50, 100, 100, 100, 100 };
+            var times = new List<DateTime>();
+            mockState0.handleEvent(context, e0, ref Arg.Any<State>())
+                .Returns(x => {
+                    times.Add(DateTime.Now);
+                    return HResult.Ok;
+                });
+
+            var startTime = DateTime.Now;
+            e0.setTimer(timerClient, TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(100));
+            Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
+            Thread.Sleep(500);
+            Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
+
+            Assert.That(times.Count, Is.EqualTo(expectedTimes.Length));
+            Console.WriteLine($"Start time={startTime:ss.fff}");
+
+            // Check that the Event has been triggered by
+            // 50 mSec delay and 100 mSec interval with an accuracy less than 16 mSec.
+            for(var i = 0; i < expectedTimes.Length; i++)
+            {
+                var time = startTime + TimeSpan.FromMilliseconds(expectedTimes[i]);
+                Console.WriteLine($"  {times[i]:ss.fff} {time:ss.fff} {expectedTimes[i]}");
+                Assert.That(times[i], Is.EqualTo(time).Within(TimeSpan.FromMilliseconds(16)));
+                startTime = times[i];
+            }
         }
     }
 }
