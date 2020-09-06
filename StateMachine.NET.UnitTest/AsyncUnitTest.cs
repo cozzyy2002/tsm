@@ -4,7 +4,7 @@ using System;
 using System.Collections;
 using System.Threading;
 
-namespace StateMachine.NET.AsyncUnitTest
+namespace NET.AsyncUnitTest
 {
     using Context = Testee.Generic.AsyncContext;
     using Event = Testee.Generic.AsyncEvent;
@@ -12,7 +12,7 @@ namespace StateMachine.NET.AsyncUnitTest
     using HResult = tsm_NET.Generic.HResult;
 
     [TestFixture]
-    class StateMachineAsyncUnitTest
+    class AsyncUnitTest
     {
         [SetUp]
         public void SetUp()
@@ -94,7 +94,7 @@ namespace StateMachine.NET.AsyncUnitTest
 
         // Various event priority.
         // State::HandleEvent() should be called by order of Event::Priority property.
-        [TestCaseSource(typeof(StateMachineAsyncUnitTest), "PriorityValueTestData")]
+        [TestCaseSource(typeof(AsyncUnitTest), "PriorityValueTestData")]
         public void PriorityValueTest(int[] priorities, int[] sequences)
         {
             int EventCount = priorities.Length;

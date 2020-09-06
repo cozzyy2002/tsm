@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace StateMachine.NET.TimerUnitTest
+namespace NET.TimerUnitTest
 {
     using Context = Testee.Generic.AsyncContext;
     using Event = Testee.Generic.AsyncEvent;
@@ -16,7 +16,7 @@ namespace StateMachine.NET.TimerUnitTest
     using HResult = tsm_NET.Generic.HResult;
 
     [TestFixture]
-    class StateMachineTimerUnitTest
+    class TimerUnitTest
     {
         [SetUp]
         public void SetUp()
@@ -82,9 +82,9 @@ namespace StateMachine.NET.TimerUnitTest
 
     [TestFixture(true)]     // Use Context as TimerClient
     [TestFixture(false)]    // Use State as TimerClient
-    class StateMachineTimerClientUnitTest : StateMachineTimerUnitTest
+    class TimerClientUnitTest : TimerUnitTest
     {
-        public StateMachineTimerClientUnitTest(bool isTimerClientContext)
+        public TimerClientUnitTest(bool isTimerClientContext)
         {
             this.isTimerClientContext = isTimerClientContext;
         }
@@ -244,7 +244,7 @@ namespace StateMachine.NET.TimerUnitTest
             for(var i = 0; i < expectedTimes.Length; i++)
             {
                 var time = startTime + TimeSpan.FromMilliseconds(expectedTimes[i]);
-                Console.WriteLine($"  {times[i]:ss.fff} {time:ss.fff} {expectedTimes[i]}");
+                Console.WriteLine($"  {times[i]:ss.fff} {time:ss.fff} diff={(times[i]-time).TotalMilliseconds}");
                 Assert.That(times[i], Is.EqualTo(time).Within(TimeSpan.FromMilliseconds(16)));
                 startTime = times[i];
             }
