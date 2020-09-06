@@ -118,6 +118,11 @@ HResult Context::shutdown(TimeSpan timeout)
 	return (HResult)m_nativeContext->shutdown((DWORD)timeout.TotalMilliseconds);
 }
 
+HResult Context::shutdonw(int timeout_msec)
+{
+	return (HResult)m_nativeContext->shutdown(timeout_msec);
+}
+
 HResult Context::triggerEvent(Event^ event)
 {
 	return (HResult)m_nativeContext->triggerEvent(getNative(event));
@@ -131,6 +136,11 @@ HResult Context::handleEvent(Event^ event)
 HResult Context::waitReady(TimeSpan timeout)
 {
 	return (HResult)m_nativeContext->waitReady((DWORD)timeout.TotalMilliseconds);
+}
+
+HResult Context::waitReady(int timeout_msec)
+{
+	return (HResult)m_nativeContext->waitReady(timeout_msec);
 }
 
 State^ Context::getCurrentState()
@@ -262,6 +272,21 @@ void Event::setIntervalTimer(TimerClient^ client, TimeSpan intervalTime)
 void Event::setTimer(TimerClient^ client, TimeSpan delayTime, TimeSpan intervalTime)
 {
 	setTimer(client->getTimerClient(), (int)delayTime.TotalMilliseconds, (int)intervalTime.TotalMilliseconds);
+}
+
+void Event::setDelayTimer(TimerClient^ client, int delayTime_msec)
+{
+	setTimer(client->getTimerClient(), delayTime_msec, 0);
+}
+
+void Event::setIntervalTimer(TimerClient^ client, int intervalTime_msec)
+{
+	setTimer(client->getTimerClient(), 0, intervalTime_msec);
+}
+
+void Event::setTimer(TimerClient^ client, int delayTime_msec, int intervalTime_msec)
+{
+	setTimer(client->getTimerClient(), delayTime_msec, intervalTime_msec);
 }
 
 void Event::setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime)

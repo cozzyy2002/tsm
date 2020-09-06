@@ -53,10 +53,12 @@ public:
 	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
 	HResult setup(S initialState) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState); }
 	HResult shutdown(TimeSpan timeout) { return (HResult)tsm_NET::Context::shutdown(timeout); }
+	HResult shutdown(int timeout_msec) { return (HResult)tsm_NET::Context::shutdonw(timeout_msec); }
 	HResult shutdown() { return (HResult)tsm_NET::Context::shutdown(); }
 	HResult triggerEvent(E event) { return (HResult)tsm_NET::Context::triggerEvent((tsm_NET::Event^)event); }
 	HResult handleEvent(E event) { return (HResult)tsm_NET::Context::handleEvent((tsm_NET::Event^)event); }
 	HResult waitReady(TimeSpan timeout) { return (HResult)tsm_NET::Context::waitReady(timeout); }
+	HResult waitReady(int timeout_msec) { return (HResult)tsm_NET::Context::waitReady(timeout_msec); }
 	S getCurrentState() { return (S)tsm_NET::Context::getCurrentState(); }
 	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 

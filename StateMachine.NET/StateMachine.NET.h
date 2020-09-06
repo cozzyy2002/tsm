@@ -110,10 +110,12 @@ public:
 	HResult setup(State^ initialState, Event^ event);
 	HResult setup(State^ initialState) { return setup(initialState, nullptr); }
 	HResult shutdown(TimeSpan timeout);
+	HResult shutdonw(int timeout_msec);
 	HResult shutdown() { return shutdown(TimeSpan::FromMilliseconds(100)); }
 	HResult triggerEvent(Event^ event);
 	HResult handleEvent(Event^ event);
 	HResult waitReady(TimeSpan timeout);
+	HResult waitReady(int timeout_msec);
 	State^ getCurrentState();
 	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 
@@ -230,6 +232,9 @@ public:
 	void setDelayTimer(TimerClient^ client, TimeSpan delayTime);
 	void setIntervalTimer(TimerClient^ client, TimeSpan intervalTime);
 	void setTimer(TimerClient^ client, TimeSpan delayTime, TimeSpan intervalTime);
+	void setDelayTimer(TimerClient^ client, int delayTime_msec);
+	void setIntervalTimer(TimerClient^ client, int intervalTime_msec);
+	void setTimer(TimerClient^ client, int delayTime_msec, int intervalTime_msec);
 	HResult cancelTimer();
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }

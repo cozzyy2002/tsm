@@ -28,14 +28,14 @@ namespace StateMachine.NET.TimerUnitTest
             e1 = new Event();
             mockState0.IsExitCalledOnShutdown = true;
             Assert.That(context.setup(mockState0), Is.EqualTo(HResult.Ok));
-            Assert.That(context.waitReady(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
+            Assert.That(context.waitReady(1000), Is.EqualTo(HResult.Ok));
             mockState0.Received().entry(context, null, null);
         }
 
         [TearDown]
         public void TearDown()
         {
-            Assert.That(context.shutdown(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
+            Assert.That(context.shutdown(1000), Is.EqualTo(HResult.Ok));
         }
 
         protected Context context;
@@ -60,7 +60,7 @@ namespace StateMachine.NET.TimerUnitTest
             });
 
             // Start interval timer to be canceled.
-            e1.setTimer(mockState0, TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(100));
+            e1.setTimer(mockState0, 50, 100);
             Assert.That(context.triggerEvent(e1), Is.EqualTo(HResult.Ok));
 
             // Wait for e1 to be handled twice.
@@ -115,7 +115,7 @@ namespace StateMachine.NET.TimerUnitTest
         {
             Console.WriteLine($"One-shot timer test using {timerClient}");
 
-            e0.setDelayTimer(timerClient, TimeSpan.FromMilliseconds(100));
+            e0.setDelayTimer(timerClient, 100);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
@@ -140,7 +140,7 @@ namespace StateMachine.NET.TimerUnitTest
         {
             Console.WriteLine($"Cancel one-Shot timer test using {timerClient}");
 
-            e0.setDelayTimer(timerClient, TimeSpan.FromMilliseconds(100));
+            e0.setDelayTimer(timerClient, 100);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
@@ -166,7 +166,7 @@ namespace StateMachine.NET.TimerUnitTest
         {
             Console.WriteLine($"Interval timer test using {timerClient}");
 
-            e0.setTimer(timerClient, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(200));
+            e0.setTimer(timerClient, 100, 200);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
@@ -189,7 +189,7 @@ namespace StateMachine.NET.TimerUnitTest
         [Test]
         public void CancelbyShutdown()
         {
-            e0.setDelayTimer(timerClient, TimeSpan.FromMilliseconds(100));
+            e0.setDelayTimer(timerClient, 100);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
@@ -231,7 +231,7 @@ namespace StateMachine.NET.TimerUnitTest
                 });
 
             var startTime = DateTime.Now;
-            e0.setTimer(timerClient, TimeSpan.FromMilliseconds(50), TimeSpan.FromMilliseconds(100));
+            e0.setTimer(timerClient, 50, 100);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(500);
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
@@ -240,7 +240,7 @@ namespace StateMachine.NET.TimerUnitTest
             Console.WriteLine($"Start time={startTime:ss.fff}");
 
             // Check that the Event has been triggered by
-            // 50 mSec delay and 100 mSec interval with an accuracy less than 16 mSec.
+            // 50 mSec delay and 100 mSec interval with an accuracy of less than 16 mSec.
             for(var i = 0; i < expectedTimes.Length; i++)
             {
                 var time = startTime + TimeSpan.FromMilliseconds(expectedTimes[i]);
