@@ -163,3 +163,45 @@ TEST_F(TriggerEventUnitTest, 4)
 	EXPECT_EQ(0, events.size());
 	EXPECT_TRUE(e1.deleted());
 }
+
+// Accuracy test
+TEST_F(TriggerEventUnitTest, 5)
+{
+	static const DWORD expectedTimes[] = { 50, 100, 100, 100 };
+	static const int TIME_COUNT = ARRAYSIZE(expectedTimes);
+	ULONGLONG times[TIME_COUNT];
+	int timeCount = 0;
+
+	EXPECT_CALL(e0, preHandle(&mockContext)).Times(AnyNumber());
+	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(AnyNumber());
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, _))
+		.WillRepeatedly(Invoke([&times, &timeCount](MockAsyncContext*, MockEvent_t*, tsm::IState**)
+		{
+			if(timeCount < TIME_COUNT) {
+				times[timeCount++] = GetTickCount64();
+			} else {
+				ADD_FAILURE() << "Time count overflow: count = " << timeCount;
+			}
+			return S_OK;
+		}));
+
+	auto startTime = GetTickCount64();
+	e0.setTimer(&mockContext, 50, 100);
+	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
+	Sleep(100 * TIME_COUNT);
+	ASSERT_HRESULT_SUCCEEDED(mockContext.cancelEventTimer(&e0));
+
+	ASSERT_EQ(TIME_COUNT, timeCount);
+
+	LOG4CPLUS_INFO(logger, "Start time=" << startTime);
+
+	// Check that the Event has been triggered by
+	// 50 mSec delay and 100 mSec interval with an accuracy of less than 16 mSec.
+	for(int i = 0; i < TIME_COUNT; i++)
+	{
+		auto time = (DWORD)(times[i] - startTime);
+		LOG4CPLUS_INFO(logger, "  " << time << ", diff=" << time - expectedTimes[i]);
+		EXPECT_NEAR(time, expectedTimes[i], 16);
+		startTime = times[i];
+	}
+}
