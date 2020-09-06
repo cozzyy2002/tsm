@@ -170,9 +170,9 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mocks.cpp" />
-    <ClCompile Include="StateMachineAsyncUnitTest.cpp" />
-    <ClCompile Include="StateMachineTimerUnitTest.cpp" />
-    <ClCompile Include="StateMachineUnitTest.cpp" />
+    <ClCompile Include="AsyncUnitTest.cpp" />
+    <ClCompile Include="TimerUnitTest.cpp" />
+    <ClCompile Include="UnitTest.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

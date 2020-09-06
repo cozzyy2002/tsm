@@ -4,14 +4,14 @@
 #include "../StateMachine/Handles.h"
 #include "Mocks.h"
 
-static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("UnitTest.StateMachineTimerUnitTest"));
+static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("UnitTest.TimerUnitTest"));
 using namespace testing;
 
 template<class C>
-class StateMachineTimerUnitTest : public Test
+class TimerUnitTest : public Test
 {
 public:
-	using UnitTestBase = StateMachineTimerUnitTest<C>;
+	using UnitTestBase = TimerUnitTest<C>;
 	using MockEvent_t = MockEvent<C>;
 
 	void SetUp() {
@@ -40,7 +40,7 @@ public:
 	MockState<C> mockState0, mockState1;
 };
 
-class StateMachineTriggerEventUnitTest : public StateMachineTimerUnitTest<MockAsyncContext>
+class TriggerEventUnitTest : public TimerUnitTest<MockAsyncContext>
 {
 public:
 	void SetUp() { UnitTestBase::SetUp(); }
@@ -48,7 +48,7 @@ public:
 };
 
 // Context timer.
-TEST_F(StateMachineTriggerEventUnitTest, 0)
+TEST_F(TriggerEventUnitTest, 0)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(1);
 	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(1);
@@ -68,7 +68,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 0)
 }
 
 // State timer
-TEST_F(StateMachineTriggerEventUnitTest, 1)
+TEST_F(TriggerEventUnitTest, 1)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(1);
 	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(1);
@@ -88,7 +88,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 1)
 }
 
 // Cancel one-shot state timer
-TEST_F(StateMachineTriggerEventUnitTest, 2)
+TEST_F(TriggerEventUnitTest, 2)
 {
 	EXPECT_CALL(e0, preHandle(_)).Times(0);
 	EXPECT_CALL(e0, postHandle(_, _)).Times(0);
@@ -108,7 +108,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 2)
 }
 
 // Cancel interval state timer
-TEST_F(StateMachineTriggerEventUnitTest, 3)
+TEST_F(TriggerEventUnitTest, 3)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(2);
 	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(2);
@@ -133,7 +133,7 @@ TEST_F(StateMachineTriggerEventUnitTest, 3)
 }
 
 // Cancel event timer of state on State::exit()
-TEST_F(StateMachineTriggerEventUnitTest, 4)
+TEST_F(TriggerEventUnitTest, 4)
 {
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(1);
 	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(1);
