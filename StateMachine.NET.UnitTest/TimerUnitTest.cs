@@ -220,6 +220,25 @@ namespace NET.TimerUnitTest
         }
 
         [Test]
+        public void CancelInHandleEvent()
+        {
+            var count = 3;
+            mockState0.handleEvent(context, e0, ref Arg.Any<State>())
+                .Returns(x => {
+                    Console.WriteLine($" Time: {DateTime.Now:ss.fff}");
+                    if(--count == 0) e0.cancelTimer();
+                    return HResult.Ok;
+                });
+
+            Console.WriteLine($" Time: {DateTime.Now:ss.fff}");
+            e0.setTimer(timerClient, 50, 100);
+            Assert.That(context.handleEvent(e0), Is.EqualTo(HResult.Ok));
+            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(1));
+            Thread.Sleep(500);
+            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(0));
+        }
+
+        [Test]
         public void TimerAccuracyTest()
         {
             var expectedTimes = new int[] { 50, 100, 100, 100, 100 };

@@ -235,7 +235,9 @@ public:
 	void setDelayTimer(TimerClient^ client, int delayTime_msec);
 	void setIntervalTimer(TimerClient^ client, int intervalTime_msec);
 	void setTimer(TimerClient^ client, int delayTime_msec, int intervalTime_msec);
-	HResult cancelTimer();
+	HResult cancelTimer() { return cancelTimer(0); }
+	HResult cancelTimer(TimeSpan timeout) { return cancelTimer((int)timeout.TotalMilliseconds); }
+	HResult cancelTimer(int timeout);
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }
 	property int Priority { int get(); }

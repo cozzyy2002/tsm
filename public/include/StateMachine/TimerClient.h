@@ -11,8 +11,8 @@ struct TimerHandle;
 class TimerClient : public HandleOwner<TimerClient, TimerHandle>
 {
 public:
-	HRESULT cancelEventTimer(IEvent* event);
-	HRESULT cancelAllEventTimers();
+	HRESULT cancelEventTimer(IEvent* event, int timeout = 0);
+	HRESULT cancelAllEventTimers(int timeout = 0);
 	std::vector<CComPtr<IEvent>> getPendingEvents();
 
 	enum class TimerType {

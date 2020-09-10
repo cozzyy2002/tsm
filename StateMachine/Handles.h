@@ -72,7 +72,7 @@ struct TimerHandle
 		CHandle canceledEvent;
 		HANDLE terminatedEvent;
 
-		HRESULT cancel(DWORD timeout = 100);
+		HRESULT cancel(DWORD timeout);
 	};
 
 	std::map<IEvent*, CComPtr<Timer>> timers;

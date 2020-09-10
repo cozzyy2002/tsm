@@ -46,6 +46,9 @@ public:
 		m_intervalTime = intervalTime;
 		m_timerClient = timerClient;
 	}
+	HRESULT cancelTimer(int timeout = 0) {
+		return m_timerClient ? m_timerClient->cancelEventTimer(this, timeout) : E_ILLEGAL_METHOD_CALL;
+	}
 
 protected:
 	int m_priority;
