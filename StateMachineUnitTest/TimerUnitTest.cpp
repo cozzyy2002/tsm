@@ -14,6 +14,8 @@ public:
 	using UnitTestBase = TimerUnitTest<C>;
 	using MockEvent_t = MockEvent<C>;
 
+	static const int CANCEL_TIMER_TIMEOUT = 100;
+
 	void SetUp() {
 		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, nullptr)).WillOnce(Return(S_OK));
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
@@ -46,6 +48,13 @@ public:
 	void SetUp() { UnitTestBase::SetUp(); }
 	void TearDown() { UnitTestBase::TearDown(); }
 };
+
+TEST_F(TriggerEventUnitTest, NotTriggered)
+{
+	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, e0.cancelTimer());
+	e0.setDelayTimer(&mockState0, 100);
+	ASSERT_EQ(S_FALSE, e0.cancelTimer());
+}
 
 // Context timer.
 TEST_F(TriggerEventUnitTest, 0)
@@ -100,7 +109,7 @@ TEST_F(TriggerEventUnitTest, 2)
 	auto events = getPendingEvents(mockState0);
 	EXPECT_EQ(1, events.size());
 	EXPECT_NE(events.end(), events.find(&e0));
-	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
+	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0, CANCEL_TIMER_TIMEOUT));
 	events = getPendingEvents(mockState0);
 	EXPECT_EQ(0, events.size());
 	EXPECT_TRUE(e0.deleted());
@@ -124,7 +133,7 @@ TEST_F(TriggerEventUnitTest, 3)
 	events = getPendingEvents(mockState0);
 	EXPECT_EQ(1, events.size());
 	EXPECT_NE(events.end(), events.find(&e0));
-	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0));
+	ASSERT_EQ(S_OK, mockState0.cancelEventTimer(&e0, CANCEL_TIMER_TIMEOUT));
 	events = getPendingEvents(mockState0);
 	EXPECT_EQ(0, events.size());
 	Sleep(10);
@@ -189,7 +198,7 @@ TEST_F(TriggerEventUnitTest, 5)
 	e0.setTimer(&mockContext, 50, 100);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
 	Sleep(100 * TIME_COUNT);
-	ASSERT_HRESULT_SUCCEEDED(mockContext.cancelEventTimer(&e0));
+	ASSERT_HRESULT_SUCCEEDED(mockContext.cancelEventTimer(&e0, CANCEL_TIMER_TIMEOUT));
 
 	ASSERT_EQ(TIME_COUNT, timeCount);
 

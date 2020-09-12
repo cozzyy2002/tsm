@@ -220,6 +220,49 @@ namespace NET.TimerUnitTest
         }
 
         [Test]
+        public void CancelInHandleEvent()
+        {
+            var count = 3;
+            mockState0.handleEvent(context, e0, ref Arg.Any<State>())
+                .Returns(x => {
+                    Console.WriteLine($" Time: {DateTime.Now:ss.fff}");
+                    if(--count == 0) e0.cancelTimer();
+                    return HResult.Ok;
+                });
+
+            Console.WriteLine($" Time: {DateTime.Now:ss.fff}");
+            e0.setTimer(timerClient, 50, 100);
+            Assert.That(context.handleEvent(e0), Is.EqualTo(HResult.Ok));
+            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(1));
+            Thread.Sleep(500);
+            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void CancelOtherTimerTest()
+        {
+            mockState0.handleEvent(context, e0, ref Arg.Any<State>())
+                .Returns(x => {
+                    // Timer thread should terminate at once.
+                    Assert.That(e1.cancelTimer(1), Is.EqualTo(HResult.Ok));
+                    return HResult.Ok;
+                });
+
+            // Event to cancel e1.
+            e0.setDelayTimer(timerClient, 50);
+            // Event to be canceled.
+            e1.setTimer(timerClient, 100, 50);
+            Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
+            Assert.That(context.triggerEvent(e1), Is.EqualTo(HResult.Ok));
+
+            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(2));
+            Thread.Sleep(200);
+            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(0));
+            mockState0.DidNotReceive()
+                .handleEvent(Arg.Any<Context>(), e1, ref Arg.Any<State>());
+        }
+
+        [Test]
         public void TimerAccuracyTest()
         {
             var expectedTimes = new int[] { 50, 100, 100, 100, 100 };

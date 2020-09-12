@@ -131,6 +131,8 @@ public:
 	Event(int priority) : tsm_NET::Event(priority) {}
 	Event(int priority, bool autoDispose) : tsm_NET::Event(priority, autoDispose) {}
 	HResult cancelTimer() { return (HResult)tsm_NET::Event::cancelTimer(); }
+	HResult cancelTimer(TimeSpan timeout) { return (HResult)tsm_NET::Event::cancelTimer(timeout); }
+	HResult cancelTimer(int timeout) { return (HResult)tsm_NET::Event::cancelTimer(timeout); }
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(C context) { return HResult::Ok; }

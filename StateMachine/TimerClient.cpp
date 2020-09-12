@@ -10,30 +10,32 @@ namespace tsm {
 static DWORD WINAPI timerCallback(LPVOID lpParam);
 
 // Cancel timer.
-HRESULT TimerHandle::Timer::cancel(DWORD timeout /*= 100*/)
+HRESULT TimerHandle::Timer::cancel(DWORD timeout)
 {
 	WIN32_ASSERT(SetEvent(canceledEvent));
-	auto wait = WaitForSingleObject(terminatedEvent, timeout);
 	auto hr = S_OK;
-	switch(wait) {
-	case WAIT_OBJECT_0:
-		// Timer is successfully canceled.
-		break;
-	case WAIT_TIMEOUT:
-		// User method called by timer might be executing.
-		hr = E_ABORT;
-		break;
-	case WAIT_FAILED:
-		hr = HRESULT_FROM_WIN32(GetLastError());
-		break;
-	default:
-		hr = E_UNEXPECTED;
-		break;
+	if(0 < timeout) {
+		auto wait = WaitForSingleObject(terminatedEvent, timeout);
+		switch(wait) {
+		case WAIT_OBJECT_0:
+			// Timer is successfully canceled.
+			break;
+		case WAIT_TIMEOUT:
+			// User method called by timer might be executing.
+			hr = E_ABORT;
+			break;
+		case WAIT_FAILED:
+			hr = HRESULT_FROM_WIN32(GetLastError());
+			break;
+		default:
+			hr = E_UNEXPECTED;
+			break;
+		}
 	}
 	return hr;
 }
 
-HRESULT TimerClient::cancelEventTimer(IEvent* event)
+HRESULT TimerClient::cancelEventTimer(IEvent* event, int timeout /*= 0*/)
 {
 	if(!_isHandleCreated()) { return S_FALSE; }
 
@@ -48,8 +50,9 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 		auto it = th->timers.find(event);
 		if(it != th->timers.end()) {
 			// Cancel and remove timer.
-			HR_ASSERT_OK(it->second->cancel());
+			auto timerClient = it->second;
 			th->timers.erase(it);
+			HR_ASSERT_OK(timerClient->cancel(timeout));
 		} else {
 			// Timer specified might have expired already.
 			hr = S_FALSE;
@@ -58,7 +61,7 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event)
 	return hr;
 }
 
-HRESULT TimerClient::cancelAllEventTimers()
+HRESULT TimerClient::cancelAllEventTimers(int timeout /*= 0*/)
 {
 	if(!_isHandleCreated()) { return S_FALSE; }
 
@@ -70,7 +73,7 @@ HRESULT TimerClient::cancelAllEventTimers()
 
 	// Cancel and delete all pending timers.
 	for(auto& pair : th->timers) {
-		auto _hr = HR_EXPECT_OK(pair.second->cancel());
+		auto _hr = HR_EXPECT_OK(pair.second->cancel(timeout));
 		// Even if canceling a timer fails, continue canceling all other timers.
 		if(FAILED(_hr)) { hr = _hr; }
 	}
@@ -157,8 +160,13 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	// Wait interval time until timer will be canceled.
 	auto interval = event->_getIntervalTime();
 	if(interval) {
-		while(WaitForSingleObject(timer->canceledEvent, interval) == WAIT_TIMEOUT) {
-			th->timerCallback(timerClient, timer, event);
+		while(true) {
+			wait = WaitForSingleObject(timer->canceledEvent, interval);
+			if(wait == WAIT_TIMEOUT) {
+				th->timerCallback(timerClient, timer, event);
+			} else {
+				return 0;
+			}
 		}
 	}
 	return 0;
