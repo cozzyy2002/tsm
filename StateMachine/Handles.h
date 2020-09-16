@@ -79,7 +79,8 @@ struct TimerHandle
 
 	lock_object_t lock;
 
-	HRESULT timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event);
+	HRESULT timerThread(Timer* timer);
+	HRESULT timerCallback(Timer* timer, IEvent* event);
 };
 
 }

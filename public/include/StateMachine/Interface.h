@@ -197,6 +197,7 @@ public:
 	 */
 	virtual void onStateChanged(IContext* context, IEvent* event, IState* previous, IState* next) = 0;
 	virtual void onTimerStarted(IContext* context, IEvent* event) = 0;
+	virtual void onTimerStopped(IContext* context, IEvent* event, HRESULT hr) = 0;
 	virtual void onWorkerThreadExit(IContext* context, HRESULT exitCode) = 0;
 };
 

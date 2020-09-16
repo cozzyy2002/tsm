@@ -7,7 +7,7 @@
 
 namespace tsm {
 
-static DWORD WINAPI timerCallback(LPVOID lpParam);
+static DWORD WINAPI timerThread(LPVOID lpParam);
 
 // Cancel timer.
 HRESULT TimerHandle::Timer::cancel(DWORD timeout)
@@ -127,33 +127,60 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	// Create IAsyncDispatcher and dispatch timer thread with timer object as it's parameter.
 	auto dispatcher = context->_createAsyncDispatcher();
 	HR_ASSERT(dispatcher, E_UNEXPECTED);
-	HR_ASSERT_OK(dispatcher->dispatch(timerCallback, timer.p, &timer->terminatedEvent));
-
-	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
-	{
-		stateMonitor->onTimerStarted(context, event);
-	});
+	HR_ASSERT_OK(dispatcher->dispatch(timerThread, timer.p, &timer->terminatedEvent));
 
 	return S_OK;
 }
 
-// Wait delay time and interval time, then call TimerHandle::timerCallback() method.
-/*static*/ DWORD WINAPI timerCallback(LPVOID lpParam)
+// Wait delay time and interval time, then call TimerHandle::timerThread() method.
+/*static*/ DWORD WINAPI timerThread(LPVOID lpParam)
 {
 	CComPtr<TimerHandle::Timer> timer = (TimerHandle::Timer*)lpParam;
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
 	auto th = timerClient->_getHandle();
 
+	auto context = timer->context;
+	context->_getHandle()->callStateMonitor(context, [event](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onTimerStarted(context, event);
+	});
+
+	auto hr = th->timerThread(timer);
+
+	// FIXIT:
+	//   Uncomment following code,
+	//   Then TimerHandle::Timer::cancel() returns E_ABORT when State::cancelEventTierm() is called in TriggerEventUnitTest.
+	//timerClient->cancelEventTimer(event);
+
+	context->_getHandle()->callStateMonitor(context, [event, hr](IContext* context, IStateMonitor* stateMonitor)
+	{
+		stateMonitor->onTimerStopped(context, event, hr);
+	});
+
+	return S_OK;
+}
+
+HRESULT TimerHandle::timerThread(Timer* timer)
+{
+	auto event = timer->event.p;
+	auto timerClient = event->_getTimerClient();
+
 	// Wait delay time.
 	DWORD wait = WAIT_TIMEOUT;
 	auto delay = event->_getDelayTime();
 	if(delay) {
 		wait = WaitForSingleObject(timer->canceledEvent, delay);
-		if(wait == WAIT_TIMEOUT) {
-			th->timerCallback(timerClient, timer, event);
-		} else {
-			return 0;
+		switch(wait) {
+		case WAIT_TIMEOUT:
+			HR_ASSERT_OK(timerCallback(timer, event));
+			break;
+		case WAIT_OBJECT_0:
+			return S_OK;
+		case WAIT_FAILED:
+			return HRESULT_FROM_WIN32(GetLastError());
+		default:
+			return E_UNEXPECTED;
 		}
 	}
 
@@ -162,17 +189,23 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	if(interval) {
 		while(true) {
 			wait = WaitForSingleObject(timer->canceledEvent, interval);
-			if(wait == WAIT_TIMEOUT) {
-				th->timerCallback(timerClient, timer, event);
-			} else {
-				return 0;
+			switch(wait) {
+			case WAIT_TIMEOUT:
+				HR_ASSERT_OK(timerCallback(timer, event));
+				break;
+			case WAIT_OBJECT_0:
+				return S_OK;
+			case WAIT_FAILED:
+				return HRESULT_FROM_WIN32(GetLastError());
+			default:
+				return E_UNEXPECTED;
 			}
 		}
 	}
 	return 0;
 }
 
-HRESULT TimerHandle::timerCallback(TimerClient* timerClient, Timer* timer, IEvent* event)
+HRESULT TimerHandle::timerCallback(Timer* timer, IEvent* event)
 {
 	{
 		lock_t _lock(lock);
