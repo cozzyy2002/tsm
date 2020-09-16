@@ -54,6 +54,11 @@ void StateMonitorCaller::onTimerStartedCallback(tsm::IContext* context, tsm::IEv
 	m_stateMonitor->onTimerStarted(getManaged((native::Context*)context), getManaged((native::Event*)event));
 }
 
+void StateMonitorCaller::onTimerStoppedCallback(tsm::IContext* context, tsm::IEvent* event, HRESULT hr)
+{
+	m_stateMonitor->onTimerStopped(getManaged((native::Context*)context), getManaged((native::Event*)event), (HResult)hr);
+}
+
 void StateMonitorCaller::onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode)
 {
 	m_stateMonitor->onWorkerThreadExit(getManaged((native::Context*)context), (HResult)exitCode);

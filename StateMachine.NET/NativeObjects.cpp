@@ -45,6 +45,11 @@ void StateMonitor::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
 	m_owner->onTimerStartedCallback(context, event);
 }
 
+void StateMonitor::onTimerStopped(tsm::IContext* context, tsm::IEvent* event, HRESULT hr)
+{
+	m_owner->onTimerStoppedCallback(context, event, hr);
+}
+
 void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 {
 	m_owner->onWorkerThreadExitCallback(context, exitCode);

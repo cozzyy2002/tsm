@@ -124,6 +124,11 @@ namespace StateMachine.NET.TestConsole
                 print($"{context}, {@event}");
             }
 
+            public void onTimerStopped(Context<Event, State> context, Event @event, HResult hr)
+            {
+                print($"{context}, {@event}, {hr,08:x}");
+            }
+
             public void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
             {
                 print($"{context}, ExitCode={exitCode}");

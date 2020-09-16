@@ -76,6 +76,11 @@ namespace StateMachine.NET.TestConsole
             Console.WriteLine($"{Now} onTimerStarted({@event})");
         }
 
+        public void onTimerStopped(Context<Event, State> context, Event @event, HResult hr)
+        {
+            Console.WriteLine($"{Now} onTimerStarted({@event}, {hr,08:x})");
+        }
+
         public virtual void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
         {
             Console.WriteLine($"{Now} onWorkerThreadExit({exitCode})");

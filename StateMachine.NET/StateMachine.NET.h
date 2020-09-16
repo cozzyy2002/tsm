@@ -28,6 +28,7 @@ public interface class IStateMonitor
 	void onEventHandling(Context^ context, Event^ event, State^ current);
 	void onStateChanged(Context^ context, Event^ event, State^ previous, State^ next);
 	void onTimerStarted(Context^ context, Event^ event) = 0;
+	void onTimerStopped(Context^ context, Event^ event, HResult hr) = 0;
 	void onWorkerThreadExit(Context^ context, HResult exitCode) = 0;
 
 	generic<typename H>
@@ -72,6 +73,8 @@ internal:
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
 	// void IStateMonitor::onTimerStarted()
 	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event);
+	// void IStateMonitor::onTimerStopped()
+	virtual void onTimerStoppedCallback(tsm::IContext* context, tsm::IEvent* event, HRESULT hr);
 	// void IStateMonitor::onWorkerThreadExit()
 	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode);
 #pragma endregion

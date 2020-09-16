@@ -89,6 +89,11 @@ void MyContext::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
 	log(_T("Timer started of event %s"), toString(event));
 }
 
+void MyContext::onTimerStopped(tsm::IContext* context, tsm::IEvent* event, HRESULT hr)
+{
+	log(_T("Timer stopped of event %s, Code=0x%08x"), toString(event), hr);
+}
+
 void MyContext::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 {
 	//LOG4CPLUS_INFO(logger, "Worker thread exit. Code=0x" << std::hex << exitCode);

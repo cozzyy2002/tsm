@@ -20,6 +20,7 @@ public interface class IStateMonitor
 	void onEventHandling(Context<E, S>^ context, E event, S current);
 	void onStateChanged(Context<E, S>^ context, E event, S previous, S next);
 	void onTimerStarted(Context<E, S>^ context, E event);
+	void onTimerStopped(Context<E, S>^ context, E event, HResult hr);
 	void onWorkerThreadExit(Context<E, S>^ context, HResult exitCode);
 };
 
@@ -34,6 +35,7 @@ internal:
 	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override;
 	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
 	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event) override;
+	virtual void onTimerStoppedCallback(tsm::IContext* context, tsm::IEvent* event, HRESULT hr) override;
 	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode) override;
 
 protected:

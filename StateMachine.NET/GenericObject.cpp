@@ -46,6 +46,12 @@ namespace Generic
 	}
 
 	generic<typename E, typename S>
+	void StateMonitorCaller<E, S>::onTimerStoppedCallback(tsm::IContext* context, tsm::IEvent* event, HRESULT hr)
+	{
+		m_stateMonitor->onTimerStopped((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (HResult)hr);
+	}
+
+	generic<typename E, typename S>
 	void StateMonitorCaller<E, S>::onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode)
 	{
 		m_stateMonitor->onWorkerThreadExit((Context<E, S>^)getManaged((native::Context*)context), (HResult)exitCode);
