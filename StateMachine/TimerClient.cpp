@@ -41,22 +41,24 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event, int timeout /*= 0*/)
 
 	auto th = _getHandle();
 
-	// Preserve Timer object until callback will complete or will be canceled.
-	CComPtr<TimerHandle::Timer> timer;
 	auto hr = S_OK;
 	{
-		lock_t _lock(th->lock);
+		// Preserve Timer object until callback will complete or will be canceled.
+		CComPtr<TimerHandle::Timer> timer;
+		{
+			lock_t _lock(th->lock);
 
-		auto it = th->timers.find(event);
-		if(it != th->timers.end()) {
-			// Cancel and remove timer.
-			auto timerClient = it->second;
-			th->timers.erase(it);
-			HR_ASSERT_OK(timerClient->cancel(timeout));
-		} else {
-			// Timer specified might have expired already.
-			hr = S_FALSE;
+			auto it = th->timers.find(event);
+			if(it != th->timers.end()) {
+				// Cancel and remove timer.
+				timer = it->second;
+				th->timers.erase(it);
+			} else {
+				// Timer specified might have expired already.
+				hr = S_FALSE;
+			}
 		}
+		if(timer) { hr = HR_EXPECT_OK(timer->cancel(timeout)); }
 	}
 	return hr;
 }
@@ -148,17 +150,19 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 
 	auto hr = th->timerThread(timer);
 
-	// FIXIT:
-	//   Uncomment following code,
-	//   Then TimerHandle::Timer::cancel() returns E_ABORT when State::cancelEventTierm() is called in TriggerEventUnitTest.
-	//timerClient->cancelEventTimer(event);
+	// Clear the event of the timer if exists.
+	{
+		lock_t _lock(th->lock);
+		auto it = th->timers.find(event);
+		if(it != th->timers.end()) { th->timers.erase(it); }
+	}
 
 	context->_getHandle()->callStateMonitor(context, [event, hr](IContext* context, IStateMonitor* stateMonitor)
 	{
 		stateMonitor->onTimerStopped(context, event, hr);
 	});
 
-	return S_OK;
+	return 0;
 }
 
 HRESULT TimerHandle::timerThread(Timer* timer)

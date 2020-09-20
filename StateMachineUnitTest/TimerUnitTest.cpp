@@ -214,3 +214,33 @@ TEST_F(TriggerEventUnitTest, 5)
 		startTime = times[i];
 	}
 }
+
+
+class HandleEventUnitTest : public TimerUnitTest<MockAsyncContext>
+{
+public:
+	void SetUp() { UnitTestBase::SetUp(); }
+	void TearDown() { UnitTestBase::TearDown(); }
+};
+
+// Terminate timer thread by error of handleEvent() method.
+TEST_F(HandleEventUnitTest, 0)
+{
+	auto hr = E_ABORT;
+	EXPECT_CALL(e0, preHandle(&mockContext)).Times(1);
+	EXPECT_CALL(e0, postHandle(&mockContext, hr))
+		.WillOnce(Return(hr));
+	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, Not(nullptr)))
+		.WillOnce(Return(hr));
+
+	e0.setTimer(&mockState0, 100, 100);
+	ASSERT_HRESULT_SUCCEEDED(mockContext.handleEvent(&e0));
+	Sleep(50);
+	auto events = getPendingEvents(mockState0);
+	EXPECT_EQ(1, events.size());
+	EXPECT_NE(events.end(), events.find(&e0));
+	Sleep(100);
+	events = getPendingEvents(mockState0);
+	EXPECT_EQ(0, events.size());
+	EXPECT_TRUE(e0.deleted());
+}
