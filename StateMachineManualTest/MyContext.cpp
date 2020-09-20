@@ -32,14 +32,19 @@ MyState* MyContext::findState(const std::tstring& name) const
 
 void MyContext::log(LPCTSTR fmt, ...)
 {
-	static TCHAR msg[0x100];
+	static const int MSG_MAX = 0x100;
+	std::unique_ptr<TCHAR[]> msg(new TCHAR[MSG_MAX]);
 	va_list args;
 	va_start(args, fmt);
-	_vstprintf_s(msg, fmt, args);
+	auto len = _vstprintf_s(msg.get(), MSG_MAX, fmt, args);
+	if(len < 1) {
+		LOG4CPLUS_FATAL_FMT(logger, _T(__FUNCTION__) _T(": vsprintf(`%s`) returns error %d"), fmt, len);
+		return;
+	}
 
 	if(IsWindow(m_hWnd)) {
 		std::unique_ptr<LogMessage> logMessage(new LogMessage());
-		logMessage->msg = msg;
+		logMessage->msg.assign(msg.get(), len);
 
 		GetLocalTime(&logMessage->time);
 		logMessage->thread = GetCurrentThreadId();
