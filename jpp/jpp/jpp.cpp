@@ -39,9 +39,15 @@ static auto usage =
 "             If this argument is omitted, jpp reads STDIN.\n"
 ;
 
+enum class CHECK_OPTIONS {
+	Ok,
+	TabStop,
+	Error,
+};
+
 static const int defaultTabStop = 2;
 static int checkArgs(int argc, TCHAR* argv[], CJsonParser::Option& option);
-static int checkOptions(TCHAR* options, CJsonParser::Option& option);
+static CHECK_OPTIONS checkOptions(TCHAR* options, CJsonParser::Option& option);
 
 int _tmain(int argc, TCHAR *argv[])
 {
@@ -52,7 +58,7 @@ int _tmain(int argc, TCHAR *argv[])
 		std::cerr << "Error: Remove space and Expand tab are specified." << std::endl;
 		return 1;
 	}
-	if(!option.removeSpace && !option.removeSpace && !option.removeEol && !option.expandTab) {
+	if(!option.removeComment && !option.removeSpace && !option.removeEol && !option.expandTab) {
 		// If no option is specified, set default.
 		option.removeComment = true;
 	}
@@ -89,21 +95,15 @@ int _tmain(int argc, TCHAR *argv[])
 	return 0;
 }
 
-enum {
-	CHECK_OPTIONS_OK,
-	CHECK_OPTIONS_TAB_STOP,
-	CHECK_OPTIONS_ERROR,
-};
-
 /*static*/ int checkArgs(int argc, TCHAR* argv[], CJsonParser::Option& option)
 {
 	int i;
 	for(i = 1; i < argc; i++) {
 		if(*argv[i] == _T('-')) {
 			switch(checkOptions(argv[i] + 1, option)) {
-			case CHECK_OPTIONS_OK:
+			case CHECK_OPTIONS::Ok:
 				break;
-			case CHECK_OPTIONS_TAB_STOP:
+			case CHECK_OPTIONS::TabStop:
 				if((i + 1) < argc) {
 					auto str = argv[i + 1];
 					std::locale loc;
@@ -124,7 +124,7 @@ enum {
 					option.tabStop = defaultTabStop;
 				}
 				break;
-			case CHECK_OPTIONS_ERROR:
+			case CHECK_OPTIONS::Error:
 			default:
 				return -1;
 			}
@@ -135,22 +135,22 @@ enum {
 	return i;
 }
 
-/*static*/ int checkOptions(TCHAR* options, CJsonParser::Option& option)
+/*static*/ CHECK_OPTIONS checkOptions(TCHAR* options, CJsonParser::Option& option)
 {
-	auto ret(CHECK_OPTIONS_OK);
+	auto ret(CHECK_OPTIONS::Ok);
 	for(auto p = options; *p; p++) {
 		switch(*p) {
 		case 'c': option.removeComment = true; break;
 		case 's': option.removeSpace = true; break;
 		case 'r': option.removeEol = true; break;
-		case 'e': option.expandTab = true; ret = CHECK_OPTIONS_TAB_STOP; break;
+		case 'e': option.expandTab = true; ret = CHECK_OPTIONS::TabStop; break;
 		case '?':
 		case 'h':
 			std::cout << usage;
-			return CHECK_OPTIONS_ERROR;
+			return CHECK_OPTIONS::Error;
 		default:
 			std::tcerr << _T("Error: Unknown option: ") << *p << std::endl;
-			return CHECK_OPTIONS_ERROR;
+			return CHECK_OPTIONS::Error;
 		}
 	}
 	return ret;
