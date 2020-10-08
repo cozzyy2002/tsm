@@ -71,6 +71,7 @@ struct TimerHandle
 		std::unique_ptr<IAsyncDispatcher> diapatcher;
 		CHandle canceledEvent;
 		HANDLE terminatedEvent;
+		std::unique_ptr<IAsyncDispatcher> asyncDispatcher;
 
 		HRESULT cancel(DWORD timeout);
 	};

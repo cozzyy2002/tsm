@@ -127,9 +127,9 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	}
 
 	// Create IAsyncDispatcher and dispatch timer thread with timer object as it's parameter.
-	auto dispatcher = context->_createAsyncDispatcher();
-	HR_ASSERT(dispatcher, E_UNEXPECTED);
-	HR_ASSERT_OK(dispatcher->dispatch(timerThread, timer.p, &timer->terminatedEvent));
+	timer->asyncDispatcher.reset(context->_createAsyncDispatcher());
+	HR_ASSERT(timer->asyncDispatcher, E_UNEXPECTED);
+	HR_ASSERT_OK(timer->asyncDispatcher->dispatch(timerThread, timer.p, &timer->terminatedEvent));
 
 	return S_OK;
 }
