@@ -75,7 +75,7 @@ CReportView& CStateMachineManualTestDlg::getActivaReportView()
 
 CStateMachineManualTestDlg::CStateMachineManualTestDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(IDD_STATEMACHINEMANUALTEST_DIALOG, pParent), m_eventProperties(&context)
-	, m_logNo(0)
+	, m_logNo(0), m_hAccel(NULL)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }

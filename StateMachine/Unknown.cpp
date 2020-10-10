@@ -20,6 +20,13 @@ tstring Unknown::toString() const
 	return (LPCTSTR)str;
 }
 
+HRESULT STDMETHODCALLTYPE Unknown::QueryInterface(REFIID riid, _COM_Outptr_ void __RPC_FAR* __RPC_FAR* ppvObject)
+{
+	if(!ppvObject) { return E_POINTER; }
+	*ppvObject = this;
+	return E_NOTIMPL;
+}
+
 ULONG STDMETHODCALLTYPE Unknown::AddRef(void)
 {
 	auto cRef = InterlockedIncrement(&m_cRef);

@@ -14,7 +14,7 @@ public:
 	static const int DefaultPriority = 0;
 
 	Event(int priority = DefaultPriority)
-		: m_priority(priority), m_timerClient(nullptr) {}
+		: m_priority(priority), m_timerClient(nullptr), m_delayTime(0), m_intervalTime(0) {}
 	virtual ~Event() {}
 
 #pragma region Implementation of IState that call methods of sub class.

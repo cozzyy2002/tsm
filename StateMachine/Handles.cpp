@@ -18,8 +18,6 @@ ContextHandle::ContextHandle(IContext* context)
 {
 	if(context->isAsync()) {
 		_asyncData.reset(new AsyncData());
-
-		_asyncData->hWnd = NULL;
 	}
 	asyncData = _asyncData.get();
 }
@@ -40,6 +38,14 @@ IMPLEMTENT_HANDLE_FACTORY(IContext, ContextHandle)
 IMPLEMTENT_HANDLE_FACTORY(TimerClient, TimerHandle)
 
 #pragma endregion
+
+ContextHandle::AsyncData::AsyncData()
+{
+	hWorkerThread = NULL;
+	hWnd = NULL;
+	msg = 0;
+	appWndProc = nullptr;
+}
 
 /**
  * Add the event to event queue.

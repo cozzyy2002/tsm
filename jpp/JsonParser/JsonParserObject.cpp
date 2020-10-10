@@ -4,7 +4,7 @@
 using namespace json_parser;
 
 CParserContext::CParserContext()
-	: column(0)
+	: column(0), option(nullptr), outStream(nullptr), previousCharacter('\0')
 {
 }
 

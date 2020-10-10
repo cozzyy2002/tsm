@@ -30,6 +30,8 @@ protected:
 		WindowProcStateMachine* _this;
 		IContext* context;				// type = Setup, Shutdown, HandleEvent
 		CComPtr<IEvent> event;			// type = Setup
+
+		Message();
 	};
 
 	HRESULT postMessage(IContext* context, MessageType type, Message* message = nullptr);

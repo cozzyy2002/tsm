@@ -47,6 +47,7 @@ struct ContextHandle
 		UINT msg;		// Message ID used by state machine.
 		WNDPROC appWndProc;	// Window procedure of app.
 
+		AsyncData();
 		HRESULT queueEvent(IEvent* event);
 	};
 
@@ -56,7 +57,7 @@ struct ContextHandle
 	void callStateMonitor(IContext* context, std::function<void(IContext* context, IStateMonitor* stateMonitor)> caller);
 
 protected:
-	std::unique_ptr<AsyncData> _asyncData;
+	std::unique_ptr<ContextHandle::AsyncData> _asyncData;
 	lock_object_t _handleEventLock;
 };
 

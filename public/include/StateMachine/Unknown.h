@@ -23,7 +23,7 @@ public:
 	 */
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(
 		/* [in] */ REFIID riid,
-		/* [iid_is][out] */ _COM_Outptr_ void __RPC_FAR *__RPC_FAR *ppvObject) { return E_NOTIMPL; }
+		/* [iid_is][out] */ _COM_Outptr_ void __RPC_FAR* __RPC_FAR* ppvObject);
 	virtual ULONG STDMETHODCALLTYPE AddRef(void);
 	virtual ULONG STDMETHODCALLTYPE Release(void);
 #pragma endregion

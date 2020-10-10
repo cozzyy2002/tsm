@@ -118,6 +118,12 @@ HRESULT WindowProcStateMachine::waitReady(IContext* context, DWORD timeout)
 	return hr;
 }
 
+WindowProcStateMachine::Message::Message()
+{
+	_this = nullptr;
+	context = nullptr;
+}
+
 HRESULT WindowProcStateMachine::postMessage(IContext* context, MessageType type, Message* message /*= nullptr*/)
 {
 	if(!message) message = new Message();

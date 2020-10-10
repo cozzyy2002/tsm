@@ -9,7 +9,7 @@ class MyEvent : public tsm::Event<MyContext>, public MyObject
 public:
 	MyEvent(ILogger& logger, const std::tstring& name, int priority)
 		: MyObject(name.c_str(), &logger), Event(priority) {
-		hrHandleEvent = hrEntry = hrExit = S_OK;
+		hrPreHandle = hrPostHandle = hrHandleEvent = hrEntry = hrExit = S_OK;
 	}
 
 	// Implementation of tsm::Event

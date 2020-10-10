@@ -8,7 +8,7 @@ public:
 	CVar(LPCTSTR str) : str(str) {}
 	CVar(const std::tstring& str) : str(str) {}
 	CVar(int num, int radix = 10) {
-		TCHAR str[40];
+		TCHAR str[40] = { _T("?") };
 		_itot_s(num, str, radix);
 		this->str = str;
 	}

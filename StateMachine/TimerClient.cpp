@@ -165,7 +165,7 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	return 0;
 }
 
-HRESULT TimerHandle::timerThread(Timer* timer)
+HRESULT TimerHandle::timerThread(TimerHandle::Timer* timer)
 {
 	auto event = timer->event.p;
 	auto timerClient = event->_getTimerClient();
@@ -209,7 +209,7 @@ HRESULT TimerHandle::timerThread(Timer* timer)
 	return 0;
 }
 
-HRESULT TimerHandle::timerCallback(Timer* timer, IEvent* event)
+HRESULT TimerHandle::timerCallback(TimerHandle::Timer* timer, IEvent* event)
 {
 	{
 		lock_t _lock(lock);
