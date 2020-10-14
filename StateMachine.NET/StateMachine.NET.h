@@ -243,6 +243,7 @@ public:
 	HResult cancelTimer(int timeout);
 	property TimeSpan DelayTime { TimeSpan get(); }
 	property TimeSpan InterValTime { TimeSpan get(); }
+	property int TimeoutCount { int get(); }
 	property int Priority { int get(); }
 
 #pragma region .NET properties

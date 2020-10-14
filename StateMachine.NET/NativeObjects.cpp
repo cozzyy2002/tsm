@@ -217,6 +217,7 @@ Event::Event(ManagedType^ event, int priority, bool autoDispose)
 	, m_timerClient(nullptr)
 	, m_delayTime(0)
 	, m_intervalTime(0)
+	, m_timeoutCount(-1)
 	, m_autoDispose(autoDispose)
 {
 }

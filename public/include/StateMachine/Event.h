@@ -14,7 +14,7 @@ public:
 	static const int DefaultPriority = 0;
 
 	Event(int priority = DefaultPriority)
-		: m_priority(priority), m_timerClient(nullptr), m_delayTime(0), m_intervalTime(0) {}
+		: m_priority(priority), m_timerClient(nullptr), m_delayTime(0), m_intervalTime(0), m_timeoutCount(-1) {}
 	virtual ~Event() {}
 
 #pragma region Implementation of IState that call methods of sub class.
@@ -35,6 +35,10 @@ public:
 	virtual DWORD _getDelayTime() const override { return m_delayTime; }
 	virtual DWORD _getIntervalTime() const override { return m_intervalTime; }
 	virtual TimerClient* _getTimerClient() const override { return m_timerClient; }
+	virtual int _getTimeoutCount() const override { return m_timeoutCount; }
+protected:
+	virtual void _setTimeoutCount(int count) override { m_timeoutCount = count; }
+public:
 
 	// Set delay time to one-shot timer.
 	void setDelayTimer(TimerClient* timerClient, DWORD delayTime) { setTimer(timerClient, delayTime, 0); }
@@ -55,6 +59,7 @@ protected:
 	DWORD m_delayTime;
 	DWORD m_intervalTime;
 	TimerClient* m_timerClient;
+	int m_timeoutCount;
 };
 
 }

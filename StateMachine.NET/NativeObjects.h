@@ -126,6 +126,10 @@ public:
 	virtual DWORD _getDelayTime() const override { return m_delayTime; }
 	virtual DWORD _getIntervalTime() const override { return m_intervalTime; }
 	virtual tsm::TimerClient* _getTimerClient() const override { return m_timerClient; }
+	virtual int _getTimeoutCount() const override { return m_timeoutCount; }
+protected:
+	virtual void _setTimeoutCount(int count) override { m_timeoutCount = count; }
+public:
 
 	ManagedType^ get() { return m_managedEvent; }
 
@@ -138,5 +142,6 @@ protected:
 	DWORD m_delayTime;
 	DWORD m_intervalTime;
 	tsm::TimerClient* m_timerClient;
+	int m_timeoutCount;
 };
 }

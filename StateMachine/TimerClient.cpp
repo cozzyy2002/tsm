@@ -177,6 +177,7 @@ HRESULT TimerHandle::timerThread(TimerHandle::Timer* timer)
 		wait = WaitForSingleObject(timer->canceledEvent, delay);
 		switch(wait) {
 		case WAIT_TIMEOUT:
+			event->_setTimeoutCount(0);
 			HR_ASSERT_OK(timerCallback(timer, event));
 			break;
 		case WAIT_OBJECT_0:
@@ -190,11 +191,13 @@ HRESULT TimerHandle::timerThread(TimerHandle::Timer* timer)
 
 	// Wait interval time until timer will be canceled.
 	auto interval = event->_getIntervalTime();
+	int timeoutCount = 1;
 	if(interval) {
 		while(true) {
 			wait = WaitForSingleObject(timer->canceledEvent, interval);
 			switch(wait) {
 			case WAIT_TIMEOUT:
+				event->_setTimeoutCount(timeoutCount++);
 				HR_ASSERT_OK(timerCallback(timer, event));
 				break;
 			case WAIT_OBJECT_0:

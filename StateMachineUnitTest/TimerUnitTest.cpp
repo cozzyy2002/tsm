@@ -184,10 +184,12 @@ TEST_F(TriggerEventUnitTest, 5)
 	EXPECT_CALL(e0, preHandle(&mockContext)).Times(AnyNumber());
 	EXPECT_CALL(e0, postHandle(&mockContext, S_OK)).Times(AnyNumber());
 	EXPECT_CALL(mockState0, handleEvent(&mockContext, &e0, _))
-		.WillRepeatedly(Invoke([&times, &timeCount](MockAsyncContext*, MockEvent_t*, tsm::IState**)
+		.WillRepeatedly(Invoke([&times, &timeCount](MockAsyncContext*, MockEvent_t* event, tsm::IState**)
 		{
 			if(timeCount < TIME_COUNT) {
-				times[timeCount++] = GetTickCount64();
+				times[timeCount] = GetTickCount64();
+				EXPECT_EQ(timeCount, event->_getTimeoutCount());
+				timeCount++;
 			} else {
 				ADD_FAILURE() << "Time count overflow: count = " << timeCount;
 			}

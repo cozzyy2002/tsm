@@ -13,6 +13,7 @@ class TimerClient;
 struct EventHandle;
 struct StateHandle;
 struct ContextHandle;
+struct TimerHandle;
 
 struct MByteUnit;
 
@@ -98,6 +99,7 @@ public:
 
 class IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
 {
+	friend struct TimerHandle;
 protected:
 	IEvent();
 
@@ -115,6 +117,10 @@ public:
 	virtual DWORD _getDelayTime() const = 0;
 	virtual DWORD _getIntervalTime() const = 0;
 	virtual TimerClient* _getTimerClient() const = 0;
+	virtual int _getTimeoutCount() const = 0;
+protected:
+	virtual void _setTimeoutCount(int count) = 0;
+public:
 #pragma endregion
 
 	// Sequence number that indicates creation order.

@@ -315,6 +315,11 @@ TimeSpan Event::InterValTime::get()
 	return TimeSpan::FromMilliseconds(m_nativeEvent->_getIntervalTime());
 }
 
+int Event::TimeoutCount::get()
+{
+	return m_nativeEvent->_getTimeoutCount();
+}
+
 int Event::Priority::get()
 {
 	return m_nativeEvent->_getPriority();
