@@ -176,7 +176,7 @@ TEST_F(TriggerEventUnitTest, 4)
 // Accuracy test
 TEST_F(TriggerEventUnitTest, 5)
 {
-	static const DWORD expectedTimes[] = { 50, 100, 100, 100 };
+	static const DWORD expectedTimes[] = { 100, 200, 200, 200 };
 	static const int TIME_COUNT = ARRAYSIZE(expectedTimes);
 	ULONGLONG times[TIME_COUNT];
 	int timeCount = 0;
@@ -197,9 +197,9 @@ TEST_F(TriggerEventUnitTest, 5)
 		}));
 
 	auto startTime = GetTickCount64();
-	e0.setTimer(&mockContext, 50, 100);
+	e0.setTimer(&mockContext, 100, 200);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
-	Sleep(100 * TIME_COUNT);
+	Sleep(200 * TIME_COUNT);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.cancelEventTimer(&e0, CANCEL_TIMER_TIMEOUT));
 
 	ASSERT_EQ(TIME_COUNT, timeCount);

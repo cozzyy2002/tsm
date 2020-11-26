@@ -265,7 +265,7 @@ namespace NET.TimerUnitTest
         [Test]
         public void TimerAccuracyTest()
         {
-            var expectedTimes = new int[] { 50, 100, 100, 100, 100 };
+            var expectedTimes = new int[] { 100, 200, 200, 200, 200 };
             var times = new List<DateTime>();
             mockState0.handleEvent(context, e0, ref Arg.Any<State>())
                 .Returns(x => {
@@ -274,9 +274,9 @@ namespace NET.TimerUnitTest
                 });
 
             var startTime = DateTime.Now;
-            e0.setTimer(timerClient, 50, 100);
+            e0.setTimer(timerClient, 100, 200);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
 
             Assert.That(times.Count, Is.EqualTo(expectedTimes.Length));
