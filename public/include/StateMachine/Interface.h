@@ -18,7 +18,7 @@ struct TimerHandle;
 struct MByteUnit;
 
 template<class T, class H>
-class HandleOwner
+class tsm_STATE_MACHINE_EXPORT HandleOwner
 {
 public:
 	virtual H* _getHandle(bool reset = false) {
@@ -46,7 +46,7 @@ protected:
 /**
  * IAsyncDispatcher interface
  */
-class IAsyncDispatcher
+class tsm_STATE_MACHINE_EXPORT IAsyncDispatcher
 {
 public:
 	/**
@@ -70,7 +70,7 @@ public:
 	virtual HRESULT getExitCode(HRESULT* phr) = 0;
 };
 
-class IContext : public HandleOwner<IContext, ContextHandle>
+class tsm_STATE_MACHINE_EXPORT IContext : public HandleOwner<IContext, ContextHandle>
 {
 public:
 	virtual ~IContext() {}
@@ -97,7 +97,7 @@ public:
 	virtual IContext* _getInstance() override { return this; }
 };
 
-class IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
+class tsm_STATE_MACHINE_EXPORT IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
 {
 	friend struct TimerHandle;
 protected:
@@ -138,7 +138,7 @@ private:
 	MByteUnit* m_memoryWeight;
 };
 
-class IState : public HandleOwner<IState, StateHandle>, public Unknown
+class tsm_STATE_MACHINE_EXPORT IState : public HandleOwner<IState, StateHandle>, public Unknown
 {
 protected:
 	IState();
@@ -174,7 +174,7 @@ private:
 	MByteUnit* m_memoryWeight;
 };
 
-class IStateMachine
+class tsm_STATE_MACHINE_EXPORT IStateMachine
 {
 public:
 	static IStateMachine* create(IContext* context);
@@ -190,7 +190,7 @@ public:
 };
 
 // Monitor interface
-class IStateMonitor
+class tsm_STATE_MACHINE_EXPORT IStateMonitor
 {
 public:
 	virtual void onIdle(IContext* context) = 0;

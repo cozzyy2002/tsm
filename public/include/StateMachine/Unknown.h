@@ -8,7 +8,7 @@ using tstring = std::wstring;
 using tstring = std::string;
 #endif
 
-class Unknown : public IUnknown
+class tsm_STATE_MACHINE_EXPORT Unknown : public IUnknown
 {
 public:
 	Unknown();

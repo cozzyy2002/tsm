@@ -8,7 +8,7 @@ namespace tsm {
 
 struct TimerHandle;
 
-class TimerClient : public HandleOwner<TimerClient, TimerHandle>
+class tsm_STATE_MACHINE_EXPORT TimerClient : public HandleOwner<TimerClient, TimerHandle>
 {
 public:
 	HRESULT cancelEventTimer(IEvent* event, int timeout = 0);

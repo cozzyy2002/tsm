@@ -5,7 +5,7 @@
 namespace tsm {
 
 template<class C = IContext>
-class Event : public IEvent
+class tsm_STATE_MACHINE_EXPORT Event : public IEvent
 {
 public:
 	// Default event priority.

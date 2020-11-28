@@ -6,7 +6,7 @@
 namespace tsm {
 
 template<class C = IContext, class E = IEvent, class S = IState>
-class State : public IState, public TimerClient
+class tsm_STATE_MACHINE_EXPORT State : public IState, public TimerClient
 {
 public:
 	State(IState* masterState = nullptr) : m_masterState(masterState) {}
