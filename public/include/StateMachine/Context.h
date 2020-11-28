@@ -7,7 +7,7 @@
 namespace tsm {
 
 template<class E = IEvent, class S = IState>
-class tsm_STATE_MACHINE_EXPORT Context : public IContext, public TimerClient
+class Context : public IContext, public TimerClient
 {
 public:
 	virtual ~Context() {}
@@ -46,7 +46,7 @@ tsm_STATE_MACHINE_EXPORT HRESULT Context_getAsyncExitCode(IContext* context, HRE
 tsm_STATE_MACHINE_EXPORT IAsyncDispatcher* Context_createAsyncDispatcher();
 
 template<class E = IEvent, class S = IState>
-class tsm_STATE_MACHINE_EXPORT AsyncContext : public Context<E, S>
+class AsyncContext : public Context<E, S>
 {
 public:
 	virtual ~AsyncContext() {}

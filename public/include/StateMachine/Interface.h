@@ -18,7 +18,7 @@ struct TimerHandle;
 struct MByteUnit;
 
 template<class T, class H>
-class tsm_STATE_MACHINE_EXPORT HandleOwner
+class HandleOwner
 {
 public:
 	virtual H* _getHandle(bool reset = false) {
