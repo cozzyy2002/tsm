@@ -4,6 +4,10 @@
 
 #include <vector>
 
+// Suppress compiler warning C4251 at tsm::HandleOwner<T, H>::m_handle member in interface.h.
+#pragma warning(push)
+#pragma warning(disable : 4251)
+
 namespace tsm {
 
 struct TimerHandle;
@@ -24,3 +28,5 @@ public:
 };
 
 }
+
+#pragma warning(pop)

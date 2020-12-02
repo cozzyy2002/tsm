@@ -2,6 +2,10 @@
 
 #include "Unknown.h"
 
+// Suppress compiler warning C4251 at tsm::HandleOwner<T, H>::m_handle member.
+#pragma warning(push)
+#pragma warning(disable : 4251)
+
 namespace tsm {
 
 class IEvent;
@@ -40,6 +44,9 @@ protected:
 		void operator()(H* handle) const;
 	};
 
+private:
+	// The field in this class should be `private` so that the other class can not use it directly.
+	// Then compiler warning C4251 can be disabled.
 	std::unique_ptr<H, HandleFactory> m_handle;
 };
 
@@ -208,3 +215,5 @@ public:
 };
 
 }
+
+#pragma warning(pop)
