@@ -167,6 +167,7 @@
     <ClInclude Include="..\public\include\StateMachine\Unknown.h" />
     <ClInclude Include="AsyncStateMachine.h" />
     <ClInclude Include="Handles.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="WindowProcStateMachine.h" />
@@ -187,6 +188,20 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StateMachine/stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="WindowProcStateMachine.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources\StateMachine.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Resources\StateMachineMessage.mc">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mc -h $(SolutionDir)\public\include\StateMachine\ -r Resources %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mc -h $(SolutionDir)\public\include\StateMachine\ -r Resources %(Identity)</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Performing %(Command)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Performing %(Command)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)public\include\StateMachine\%(Filename).h;Resources\MSG00409.bin;Resources\MSG00411.bin</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)public\include\StateMachine\%(Filename).h;Resources\MSG00409.bin;Resources\MSG00411.bin</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
