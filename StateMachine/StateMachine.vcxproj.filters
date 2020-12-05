@@ -63,8 +63,11 @@
     <ClInclude Include="WindowProcStateMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Resources\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\public\include\StateMachine\StateMachineMessage.h">
+      <Filter>public\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -11,7 +11,7 @@ namespace tsm {
 
 HRESULT Context_getAsyncExitCode(IContext* context, HRESULT* phr)
 {
-	HR_ASSERT(context->isAsync(), E_ILLEGAL_METHOD_CALL);
+	ASSERT_ASYNC(context);
 	auto dispatcher = context->_getHandle(false)->asyncData->asyncDispatcher.get();
 	return dispatcher ? dispatcher->getExitCode(phr) : E_ILLEGAL_METHOD_CALL;
 }
