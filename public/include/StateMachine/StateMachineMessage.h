@@ -1,10 +1,10 @@
- // Message file
- // See https://docs.microsoft.com/en-us/windows/win32/eventlog/sample-message-text-file for message file sample.
- // The following are message definitions.
- //
- // --------------------------------------------------
- // StateMachine success
- // --------------------------------------------------
+// Message file
+// See https://docs.microsoft.com/en-us/windows/win32/eventlog/sample-message-text-file for message file sample.
+ #pragma once
+// The following are message definitions.
+// --------------------------------------------------
+// System success
+// --------------------------------------------------
 //
 //  Values are 32 bit values laid out as follows:
 //
@@ -41,6 +41,7 @@
 //
 // Define the facility codes
 //
+#define TSM_FACILITY_SYSTEM              0x0
 #define TSM_FACILITY_STATE_MACHINE       0x101
 #define TSM_FACILITY_TIMER               0x102
 
@@ -53,14 +54,26 @@
 
 
 //
+// MessageId: TSM_S_OK
+//
+// MessageText:
+//
+// OK(S_OK).
+//
+#define TSM_S_OK                         ((DWORD)0x00000000L)
+
+//
 // MessageId: TSM_S_DONE
 //
 // MessageText:
 //
-// Nothing to do.
+// Nothing to do(S_FALSE).
 //
-#define TSM_S_DONE                       ((DWORD)0x01010001L)
+#define TSM_S_DONE                       ((DWORD)0x00000001L)
 
+// --------------------------------------------------
+// StateMachine success
+// --------------------------------------------------
 //
 // MessageId: TSM_S_NO_WORKER_THREAD
 //
@@ -68,20 +81,32 @@
 //
 // Worker thiread has been terminated.
 //
-#define TSM_S_NO_WORKER_THREAD           ((DWORD)0x01010002L)
+#define TSM_S_NO_WORKER_THREAD           ((DWORD)0x01010001L)
 
 //
-// MessageId: TSM_S_SHUTTED_DOWN
+// MessageId: TSM_S_SHUT_DOWN
 //
 // MessageText:
 //
 // StateMachine::shutdown has been completed.
 //
-#define TSM_S_SHUTTED_DOWN               ((DWORD)0x01010003L)
+#define TSM_S_SHUT_DOWN                  ((DWORD)0x01010002L)
 
- // --------------------------------------------------
- // StateMachine error
- // --------------------------------------------------
+// --------------------------------------------------
+// Timer success
+// --------------------------------------------------
+//
+// MessageId: TSM_S_TIMER_IS_STOPPED
+//
+// MessageText:
+//
+// Timer is not set or is stopped already.
+//
+#define TSM_S_TIMER_IS_STOPPED           ((DWORD)0x01020001L)
+
+// --------------------------------------------------
+// StateMachine error
+// --------------------------------------------------
 //
 // MessageId: TSM_E_SETUP_HAS_BEEN_MADE
 //
@@ -146,9 +171,9 @@
 //
 #define TSM_E_WAIT_EVENT_BY_UNKNOWN_REASON ((DWORD)0x81010007L)
 
- // --------------------------------------------------
- // Timer error
- // --------------------------------------------------
+// --------------------------------------------------
+// Timer error
+// --------------------------------------------------
 //
 // MessageId: TSM_E_CANCEL_TIMER_BY_TIMEOUT
 //
@@ -156,7 +181,7 @@
 //
 // Failed to Cancel timer due to timeout to wait for timer callback to exit.
 //
-#define TSM_E_CANCEL_TIMER_BY_TIMEOUT    ((DWORD)0x81020001L)
+#define TSM_E_CANCEL_TIMER_BY_TIMEOUT    ((DWORD)0x81020002L)
 
 //
 // MessageId: TSM_E_CANCEL_TIMER_BY_UNKNOWN_REASON
@@ -165,7 +190,7 @@
 //
 // Failed to Cancel timer due to unknown error when waiting for timer callback to exit.
 //
-#define TSM_E_CANCEL_TIMER_BY_UNKNOWN_REASON ((DWORD)0x81020002L)
+#define TSM_E_CANCEL_TIMER_BY_UNKNOWN_REASON ((DWORD)0x81020003L)
 
 //
 // MessageId: TSM_E_NULL_TIMER_CLIENT
@@ -174,7 +199,7 @@
 //
 // TimerClient is not specified.
 //
-#define TSM_E_NULL_TIMER_CLIENT          ((DWORD)0x81020003L)
+#define TSM_E_NULL_TIMER_CLIENT          ((DWORD)0x81020004L)
 
 //
 // MessageId: TSM_E_TIMER_HAS_BEEN_CREATRED
@@ -183,7 +208,7 @@
 //
 // Timer has been created already on this Event.
 //
-#define TSM_E_TIMER_HAS_BEEN_CREATRED    ((DWORD)0x81020004L)
+#define TSM_E_TIMER_HAS_BEEN_CREATRED    ((DWORD)0x81020005L)
 
 //
 // MessageId: TSM_E_WAIT_TIMEOUT
@@ -192,5 +217,5 @@
 //
 // Failed to wait for timeout.
 //
-#define TSM_E_WAIT_TIMEOUT               ((DWORD)0x81020005L)
+#define TSM_E_WAIT_TIMEOUT               ((DWORD)0x81020006L)
 

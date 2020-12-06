@@ -1,8 +1,9 @@
 #pragma once
+#include <StateMachine/StateMachineMessage.h>
 #include "StateMachine.h"
 
 // Make sure that IContext is instance of AsyncContext.
-#define ASSERT_ASYNC(c) HR_ASSERT(c->isAsync(), E_INVALIDARG)
+#define ASSERT_ASYNC(c) HR_ASSERT(c->isAsync(), TSM_E_NOT_SUPPORTED)
 
 namespace tsm {
 

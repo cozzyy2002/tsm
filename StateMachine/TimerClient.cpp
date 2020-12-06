@@ -2,6 +2,7 @@
 
 #include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
+#include <StateMachine/StateMachineMessage.h>
 
 #include "Handles.h"
 
@@ -22,13 +23,13 @@ HRESULT TimerHandle::Timer::cancel(DWORD timeout)
 			break;
 		case WAIT_TIMEOUT:
 			// User method called by timer might be executing.
-			hr = E_ABORT;
+			hr = TSM_E_CANCEL_TIMER_BY_TIMEOUT;
 			break;
 		case WAIT_FAILED:
 			hr = HRESULT_FROM_WIN32(GetLastError());
 			break;
 		default:
-			hr = E_UNEXPECTED;
+			hr = TSM_E_CANCEL_TIMER_BY_UNKNOWN_REASON;
 			break;
 		}
 	}
@@ -37,7 +38,7 @@ HRESULT TimerHandle::Timer::cancel(DWORD timeout)
 
 HRESULT TimerClient::cancelEventTimer(IEvent* event, int timeout /*= 0*/)
 {
-	if(!_isHandleCreated()) { return S_FALSE; }
+	if(!_isHandleCreated()) { return TSM_S_TIMER_IS_STOPPED; }
 
 	auto th = _getHandle();
 
@@ -65,13 +66,13 @@ HRESULT TimerClient::cancelEventTimer(IEvent* event, int timeout /*= 0*/)
 
 HRESULT TimerClient::cancelAllEventTimers(int timeout /*= 0*/)
 {
-	if(!_isHandleCreated()) { return S_FALSE; }
+	if(!_isHandleCreated()) { return TSM_S_TIMER_IS_STOPPED; }
 
 	auto hr = S_OK;
 	auto th = _getHandle();
 
 	lock_t _lock(th->lock);
-	if(th->timers.empty()) { return S_FALSE; }
+	if(th->timers.empty()) { return TSM_S_TIMER_IS_STOPPED; }
 
 	// Cancel and delete all pending timers.
 	for(auto& pair : th->timers) {
@@ -105,11 +106,11 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 	CComPtr<IEvent> _event(event);
 
 	// Ensure that timer is required.
-	HR_ASSERT(event->_getTimerClient(), E_ILLEGAL_METHOD_CALL);
+	HR_ASSERT(event->_getTimerClient(), TSM_E_NULL_TIMER_CLIENT);
 
 	// State machine should not call this method with event whose timer is created already.
 	auto eh = event->_getHandle();
-	HR_ASSERT(!eh->isTimerCreated, E_ILLEGAL_METHOD_CALL);
+	HR_ASSERT(!eh->isTimerCreated, TSM_E_TIMER_HAS_BEEN_CREATRED);
 	eh->isTimerCreated = true;
 
 	// Create timer object.
@@ -128,7 +129,7 @@ HRESULT TimerClient::_setEventTimer(TimerType timerType, IContext* context, IEve
 
 	// Create IAsyncDispatcher and dispatch timer thread with timer object as it's parameter.
 	timer->asyncDispatcher.reset(context->_createAsyncDispatcher());
-	HR_ASSERT(timer->asyncDispatcher, E_UNEXPECTED);
+	HR_ASSERT(timer->asyncDispatcher, TSM_E_CREATE_DISPATCHER);
 	HR_ASSERT_OK(timer->asyncDispatcher->dispatch(timerThread, timer.p, &timer->terminatedEvent));
 
 	return S_OK;
@@ -181,11 +182,11 @@ HRESULT TimerHandle::timerThread(TimerHandle::Timer* timer)
 			HR_ASSERT_OK(timerCallback(timer, event));
 			break;
 		case WAIT_OBJECT_0:
-			return S_OK;
+			return TSM_S_TIMER_IS_STOPPED;
 		case WAIT_FAILED:
 			return HRESULT_FROM_WIN32(GetLastError());
 		default:
-			return E_UNEXPECTED;
+			return TSM_E_WAIT_TIMEOUT;
 		}
 	}
 
@@ -201,11 +202,11 @@ HRESULT TimerHandle::timerThread(TimerHandle::Timer* timer)
 				HR_ASSERT_OK(timerCallback(timer, event));
 				break;
 			case WAIT_OBJECT_0:
-				return S_OK;
+				return TSM_S_TIMER_IS_STOPPED;
 			case WAIT_FAILED:
 				return HRESULT_FROM_WIN32(GetLastError());
 			default:
-				return E_UNEXPECTED;
+				return TSM_E_WAIT_TIMEOUT;
 			}
 		}
 	}
@@ -225,7 +226,7 @@ HRESULT TimerHandle::timerCallback(TimerHandle::Timer* timer, IEvent* event)
 			}
 		} else {
 			// The timer has been canceled.
-			return S_FALSE;
+			return TSM_S_TIMER_IS_STOPPED;
 		}
 	}
 

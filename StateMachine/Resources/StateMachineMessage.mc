@@ -1,5 +1,7 @@
-; // Message file
-; // See https://docs.microsoft.com/en-us/windows/win32/eventlog/sample-message-text-file for message file sample.
+;// Message file
+;// See https://docs.microsoft.com/en-us/windows/win32/eventlog/sample-message-text-file for message file sample.
+
+; #pragma once
 
 MessageIdTypedef=DWORD
 
@@ -9,6 +11,7 @@ SeverityNames=(
 )
 
 FacilityNames=(
+	System=0:TSM_FACILITY_SYSTEM
 	StateMachne=0x101:TSM_FACILITY_STATE_MACHINE
 	Timer=0x102:TSM_FACILITY_TIMER
 )
@@ -16,20 +19,18 @@ FacilityNames=(
 LanguageNames=(English=0x409:MSG00409)
 LanguageNames=(Japanese=0x411:MSG00411)
 
-; // The following are message definitions.
+;// The following are message definitions.
 
 
-; //
-
-; // --------------------------------------------------
-; // StateMachine success
-; // --------------------------------------------------
-MessageId=0x1
+;// --------------------------------------------------
+;// System success
+;// --------------------------------------------------
+MessageId=0x0
 Severity=Success
-Facility=StateMachne
-SymbolicName=TSM_S_DONE
+Facility=System
+SymbolicName=TSM_S_OK
 Language=English
-Nothing to do.
+OK(S_OK).
 .
 
 Language=Japanese
@@ -37,6 +38,21 @@ Language=Japanese
 .
 
 MessageId=
+SymbolicName=TSM_S_DONE
+Language=English
+Nothing to do(S_FALSE).
+.
+
+Language=Japanese
+“ú–{Œê
+.
+
+;// --------------------------------------------------
+;// StateMachine success
+;// --------------------------------------------------
+MessageId=0x1
+Severity=Success
+Facility=StateMachne
 SymbolicName=TSM_S_NO_WORKER_THREAD
 Language=English
 Worker thiread has been terminated.
@@ -47,7 +63,7 @@ Language=Japanese
 .
 
 MessageId=
-SymbolicName=TSM_S_SHUTTED_DOWN
+SymbolicName=TSM_S_SHUT_DOWN
 Language=English
 StateMachine::shutdown has been completed.
 .
@@ -56,10 +72,25 @@ Language=Japanese
 “ú–{Œê
 .
 
+;// --------------------------------------------------
+;// Timer success
+;// --------------------------------------------------
 
-; // --------------------------------------------------
-; // StateMachine error
-; // --------------------------------------------------
+MessageId=
+Facility=Timer
+SymbolicName=TSM_S_TIMER_IS_STOPPED
+Language=English
+Timer is not set or is stopped already.
+.
+
+Language=Japanese
+“ú–{Œê
+.
+
+
+;// --------------------------------------------------
+;// StateMachine error
+;// --------------------------------------------------
 
 MessageId=0x1
 Severity=Failure
@@ -135,9 +166,9 @@ Language=Japanese
 .
 
 
-; // --------------------------------------------------
-; // Timer error
-; // --------------------------------------------------
+;// --------------------------------------------------
+;// Timer error
+;// --------------------------------------------------
 
 MessageId=
 Severity=Failure

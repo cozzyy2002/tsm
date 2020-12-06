@@ -68,7 +68,7 @@ HRESULT WindowProcStateMachine::triggerEvent(IContext* context, IEvent* event)
 	CComPtr<IEvent> _event(event);
 
 	ASSERT_ASYNC(context);
-	HR_ASSERT_OK(setupCompleted(context));
+	HR_ASSERT(isSetupCompleted(context), TSM_E_SETUP_HAS_NOT_BEEN_MADE);
 	HR_ASSERT(event, E_INVALIDARG);
 
 	auto timerClient = event->_getTimerClient();

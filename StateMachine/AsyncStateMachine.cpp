@@ -13,7 +13,7 @@ HRESULT Context_getAsyncExitCode(IContext* context, HRESULT* phr)
 {
 	ASSERT_ASYNC(context);
 	auto dispatcher = context->_getHandle(false)->asyncData->asyncDispatcher.get();
-	return dispatcher ? dispatcher->getExitCode(phr) : E_ILLEGAL_METHOD_CALL;
+	return dispatcher ? dispatcher->getExitCode(phr) : TSM_E_GET_DISPATCHER;
 }
 
 class DefaultAsyncDispatcher : public IAsyncDispatcher
@@ -83,7 +83,7 @@ HRESULT AsyncStateMachine::setup(IContext * context, IState * initialState, IEve
 	asyncData->hEventShutdown.Attach(CreateEvent(NULL, TRUE, FALSE, NULL));
 
 	auto dispatcher = context->_createAsyncDispatcher();
-	HR_ASSERT(dispatcher, E_NOTIMPL);
+	HR_ASSERT(dispatcher, TSM_E_CREATE_DISPATCHER);
 	if(!dispatcher) { dispatcher = new DefaultAsyncDispatcher(); }
 	asyncData->asyncDispatcher.reset(dispatcher);
 
@@ -119,8 +119,8 @@ HRESULT AsyncStateMachine::triggerEvent(IContext* context, IEvent* event)
 	CComPtr<IEvent> _event(event);
 
 	ASSERT_ASYNC(context);
-	HR_ASSERT_OK(setupCompleted(context));
-	HR_ASSERT(event, E_INVALIDARG);
+	HR_ASSERT(isSetupCompleted(context), TSM_E_SETUP_HAS_NOT_BEEN_MADE);
+	HR_ASSERT(event, E_POINTER);
 
 	auto timerClient = event->_getTimerClient();
 	if(timerClient && !event->_getHandle()->isTimerCreated) {
@@ -166,12 +166,14 @@ HRESULT AsyncStateMachine::waitReady(IContext * context, DWORD timeout)
 		hr = S_OK;
 		break;
 	case WAIT_OBJECT_0 + 1: // Worker thread has been terminated.
+		hr = TSM_S_NO_WORKER_THREAD;
+		break;
 	case WAIT_OBJECT_0 + 2: // shutdown() has been called.
-		hr = S_FALSE;
+		hr = TSM_S_SHUT_DOWN;
 		break;
 	default:
 		// Unreachable !
-		hr = E_UNEXPECTED;
+		hr = TSM_E_WAIT_READY_BY_UNKNOWN_REASON;
 		break;
 	}
 
@@ -260,7 +262,7 @@ HRESULT AsyncStateMachine::checkWaitResult(DWORD wait, DWORD eventCount /*= 1*/)
 			return S_OK;
 		} else {
 			// Unknown return value.
-			return E_UNEXPECTED;
+			return TSM_E_WAIT_EVENT_BY_UNKNOWN_REASON;
 		}
 	}
 }
