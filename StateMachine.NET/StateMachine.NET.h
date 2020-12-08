@@ -277,6 +277,20 @@ protected:
 	void setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime);
 };
 
+public ref class Error
+{
+public:
+	using UINT32 = HRESULT;
+	Error(HRESULT hr);
+	Error(HResult hr);
+	property HRESULT HResult { HRESULT get(); }
+	property String^ Message { String^ get(); }
+
+protected:
+	HRESULT m_hr;
+	String^ m_message;
+};
+
 namespace common
 {
 template<class C>

@@ -106,7 +106,7 @@ namespace NET.TimerUnitTest
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.IllegalMethodCall));
             e0.setDelayTimer(timerClient, TimeSpan.Zero);
             // Timer is not started.
-            Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.False));
+            Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.TimerIsStopped));
         }
 
         // One-shot timer

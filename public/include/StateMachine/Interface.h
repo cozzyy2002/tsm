@@ -8,6 +8,8 @@
 
 namespace tsm {
 
+tsm_STATE_MACHINE_EXPORT HMODULE GetStateMachineModule();
+
 class IEvent;
 class IState;
 class IStateMachine;

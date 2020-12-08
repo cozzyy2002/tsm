@@ -146,5 +146,12 @@ public:
 	virtual tsm_NET::HResult postHandle(tsm_NET::Context^ context, tsm_NET::HResult hr) override sealed;
 #pragma endregion
 };
+
+public ref class Error : public tsm_NET::Error
+{
+public:
+	Error(tsm_NET::Generic::HResult hr) : tsm_NET::Error((HRESULT)hr) {}
+};
+
 }
 }

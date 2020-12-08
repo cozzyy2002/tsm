@@ -7,6 +7,37 @@
 #include "StateMachine.h"
 #include "Handles.h"
 
+static HMODULE hStateMachineModule;
+
+extern "C" BOOL WINAPI DllMain(
+	HINSTANCE const instance,  // handle to DLL module
+	DWORD     const reason,    // reason for calling function
+	LPVOID    const reserved)  // reserved
+{
+	switch(reason)
+	{
+	case DLL_PROCESS_ATTACH:
+		hStateMachineModule = instance;
+		break;
+
+	case DLL_THREAD_ATTACH:
+		break;
+
+	case DLL_THREAD_DETACH:
+		break;
+
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+	return TRUE;  // Successful DLL_PROCESS_ATTACH.
+}
+
+// Returns HMODULE of this DLL.
+HMODULE tsm::GetStateMachineModule()
+{
+	return hStateMachineModule;
+}
+
 /*static*/ tsm::IContext::OnAssertFailed *tsm::IContext::onAssertFailedProc = nullptr;
 
 HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
