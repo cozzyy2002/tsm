@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ShowErrors.cs" />
     <Compile Include="EventTimer.cs" />
     <Compile Include="MemoryWeight.cs" />
     <Compile Include="Program.cs" />

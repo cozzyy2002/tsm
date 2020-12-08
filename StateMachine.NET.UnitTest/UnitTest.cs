@@ -16,17 +16,6 @@ using HResult = tsm_NET.HResult;
 
 namespace NET.UnitTest
 {
-    [TestFixture]
-    class ErrorTest
-    {
-        [Test]
-        public void ShowMessage([Values] HResult hr)
-        {
-            var error = new tsm_NET.Generic.Error(hr);
-            Console.Write($"HResult=0x{(int)hr:X8} {hr}: {error.Message}");
-        }
-    }
-
 #if GENERIC_TEST
     [TestFixture(typeof(Testee.Generic.Context), typeof(Testee.Generic.Event), typeof(Testee.Generic.State))]
     [TestFixture(typeof(Testee.Generic.AsyncContext), typeof(Testee.Generic.AsyncEvent), typeof(Testee.Generic.AsyncState))]
