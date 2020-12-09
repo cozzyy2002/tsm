@@ -280,7 +280,6 @@ protected:
 public ref class Error
 {
 public:
-	using UINT32 = HRESULT;
 	Error(HRESULT hr);
 	Error(HResult hr);
 	property HRESULT HResult { HRESULT get(); }

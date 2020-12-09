@@ -367,7 +367,7 @@ String^ Error::Message::get()
 		auto flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
 		LPTSTR message;
 		va_list args;
-		FormatMessage(flags, (LPCVOID)hModule, m_hr, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), (LPTSTR)&message, 100, &args);
+		FormatMessage(flags, (LPCVOID)hModule, m_hr, 0, (LPTSTR)&message, 100, &args);
 		m_message = gcnew String(message);
 		LocalFree(message);
 	}

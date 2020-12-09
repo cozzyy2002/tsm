@@ -16,7 +16,7 @@ namespace StateMachine.NET.TestConsole
         void show<H>()
             where H : Enum
         {
-            Console.WriteLine($"---- Enumerating {typeof(H)} ----");
+            Console.WriteLine($"\n---- Enumerating {typeof(H)} ----");
             foreach(var hr in Enum.GetValues(typeof(H)))
             {
                 var error = new Error((int)hr);

@@ -34,7 +34,7 @@ OK(S_OK).
 .
 
 Language=Japanese
-日本語
+正常終了しました。
 .
 
 MessageId=
@@ -44,7 +44,7 @@ Nothing to do(S_FALSE).
 .
 
 Language=Japanese
-日本語
+必要な処理はありません。
 .
 
 ;// --------------------------------------------------
@@ -59,7 +59,7 @@ Worker thiread has been terminated.
 .
 
 Language=Japanese
-日本語
+ワーカースレッドが終了しました。
 .
 
 MessageId=
@@ -69,7 +69,7 @@ StateMachine::shutdown has been completed.
 .
 
 Language=Japanese
-日本語
+シャットダウンしました。
 .
 
 ;// --------------------------------------------------
@@ -84,7 +84,7 @@ Timer is not set or is stopped already.
 .
 
 Language=Japanese
-日本語
+タイマーは停止しました。
 .
 
 
@@ -101,7 +101,7 @@ StateMachine::setup() has been completed on this Context.
 .
 
 Language=Japanese
-日本語
+StateMachine::setup() は実行済みです
 .
 
 MessageId=
@@ -111,7 +111,7 @@ StateMachine::setup() has not been completed on this context.
 .
 
 Language=Japanese
-日本語
+StateMachine::setup() は未実行です。
 .
 
 MessageId=
@@ -121,7 +121,7 @@ Failed to create AsyncDispatcher.
 .
 
 Language=Japanese
-日本語
+AsyncDispatcher が作成できませんでした。
 .
 
 MessageId=
@@ -131,7 +131,7 @@ Failed to get AsyncDispatcher.
 .
 
 Language=Japanese
-日本語
+AsyncDispatcher が取得できませんでした。
 .
 
 MessageId=
@@ -142,7 +142,8 @@ Call method of AsyncStateMachine instead.
 .
 
 Language=Japanese
-日本語
+メソッドが StateMachine でサポートされていません。
+AsyncStatemachine のメソッドを使用してください。
 .
 
 MessageId=
@@ -152,7 +153,7 @@ Failed to wait ready due to unknown error.
 .
 
 Language=Japanese
-日本語
+レディー待ちでエラーが発生しました。
 .
 
 MessageId=
@@ -162,7 +163,7 @@ Failed to wait Event due to unknown error.
 .
 
 Language=Japanese
-日本語
+イベント待ちでエラーが発生しました。
 .
 
 
@@ -179,7 +180,7 @@ Failed to Cancel timer due to timeout to wait for timer callback to exit.
 .
 
 Language=Japanese
-日本語
+コールバックの終了待ちでタイムアウトが発生したため、タイマーをキャンセルできませんでした。
 .
 
 MessageId=
@@ -189,7 +190,7 @@ Failed to Cancel timer due to unknown error when waiting for timer callback to e
 .
 
 Language=Japanese
-日本語
+コールバックの終了待ちでエラーが発生したため、タイマーをキャンセルできませんでした。
 .
 
 MessageId=
@@ -199,7 +200,7 @@ TimerClient is not specified.
 .
 
 Language=Japanese
-日本語
+TimerClient が指定されていません。
 .
 
 MessageId=
@@ -209,7 +210,7 @@ Timer has been created already on this Event.
 .
 
 Language=Japanese
-日本語
+Event に対してタイマーは既に作成されています。
 .
 
 MessageId=
@@ -219,5 +220,5 @@ Failed to wait for timeout.
 .
 
 Language=Japanese
-日本語
+タイムアウト待ちが失敗しました。
 .
