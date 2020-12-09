@@ -150,6 +150,7 @@ public:
 public ref class Error : public tsm_NET::Error
 {
 public:
+	Error(HRESULT hr) : tsm_NET::Error(hr) {}
 	Error(tsm_NET::Generic::HResult hr) : tsm_NET::Error((HRESULT)hr) {}
 };
 

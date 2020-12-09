@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using tsm_NET;
+
+using Error = tsm_NET.Error;
 
 namespace StateMachine.NET.TestConsole
 {
@@ -11,11 +9,20 @@ namespace StateMachine.NET.TestConsole
     {
         void IJob.Start(IList<string> args)
         {
-            foreach(HResult hr in Enum.GetValues(typeof(HResult)))
+            show<tsm_NET.HResult>();
+            show<tsm_NET.Generic.HResult>();
+        }
+
+        void show<H>()
+            where H : Enum
+        {
+            Console.WriteLine($"---- Enumerating {typeof(H)} ----");
+            foreach(var hr in Enum.GetValues(typeof(H)))
             {
-                var error = new Error(hr);
-                Console.WriteLine($"0x{(int)hr:x8} {hr}: {error.Message}");
+                var error = new Error((int)hr);
+                Console.Write($"0x{(int)hr:x8} {hr}: {error.Message}");
             }
         }
     }
 }
+
