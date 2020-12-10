@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-
-using Error = tsm_NET.Error;
+using System.Globalization;
+using Error = tsm_NET.Generic.Error;
 
 namespace StateMachine.NET.TestConsole
 {
@@ -9,7 +9,12 @@ namespace StateMachine.NET.TestConsole
     {
         void IJob.Start(IList<string> args)
         {
-            show<tsm_NET.HResult>();
+            if (0 < args.Count)
+            {
+                // Parse argument as culture name such as `ja-JP`.
+                Error.CultureInfo = new CultureInfo(args[0]);
+            }
+            //show<tsm_NET.HResult>();
             show<tsm_NET.Generic.HResult>();
         }
 
@@ -25,4 +30,3 @@ namespace StateMachine.NET.TestConsole
         }
     }
 }
-
