@@ -381,6 +381,6 @@ String^ Error::Message::get()
 		FormatMessage(flags, (LPCVOID)hModule, m_hr, langId, (LPTSTR)&message, 100, &args);
 		m_message = gcnew String(message);
 		LocalFree(message);
-	}MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
+	}
 	return m_message;
 }
