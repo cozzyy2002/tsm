@@ -96,7 +96,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /D /Y $(OutDir)StateMachine.dll $(SolutionDir)$(Configuration)</Command>
+      <Command>xcopy /D /Y "$(OutDir)StateMachine.dll" "$(SolutionDir)$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -132,7 +132,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /D /Y $(OutDir)StateMachine.dll $(SolutionDir)$(Configuration)</Command>
+      <Command>xcopy /D /Y "$(OutDir)StateMachine.dll" "$(SolutionDir)$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -196,8 +196,8 @@
   <ItemGroup>
     <CustomBuild Include="Resources\StateMachineMessage.mc">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mc -o -h $(SolutionDir)\public\include\StateMachine\ -r Resources %(Identity)</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mc -o -h $(SolutionDir)\public\include\StateMachine\ -r Resources %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">mc -o -h "$(SolutionDir)\public\include\StateMachine" -r Resources %(Identity)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">mc -o -h "$(SolutionDir)\public\include\StateMachine" -r Resources %(Identity)</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Performing %(Command)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Performing %(Command)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)public\include\StateMachine\%(Filename).h;Resources\MSG00409.bin;Resources\MSG00411.bin</Outputs>
