@@ -29,8 +29,11 @@ namespace StateMachine.NET.TestConsole
             case 2:
                 job = new EventTimer();
                 break;
+            case 3:
+                job = new ShowErrors();
+                break;
             default:
-                Console.WriteLine("Specify number 1=MemoryWeight, 2=EventTimer");
+                Console.WriteLine("Specify number 1=MemoryWeight, 2=EventTimer, 3=ShowErrors");
                 return;
             }
             job.Start(args);

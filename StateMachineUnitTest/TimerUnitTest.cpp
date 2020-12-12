@@ -1,6 +1,7 @@
 #include "stdafx.h"
 
 #include <StateMachine/TimerClient.h>
+#include <StateMachine/StateMachineMessage.h>
 #include "../StateMachine/Handles.h"
 #include "Mocks.h"
 
@@ -53,7 +54,7 @@ TEST_F(TriggerEventUnitTest, NotTriggered)
 {
 	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, e0.cancelTimer());
 	e0.setDelayTimer(&mockState0, 100);
-	ASSERT_EQ(S_FALSE, e0.cancelTimer());
+	ASSERT_EQ(TSM_S_TIMER_IS_STOPPED, e0.cancelTimer());
 }
 
 // Context timer.

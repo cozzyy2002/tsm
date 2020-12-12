@@ -21,3 +21,9 @@
 #include <memory>
 #include <functional>
 #include <atlbase.h>
+
+#if defined(tsm_STATE_MACHINE_EXPORTS)
+#define tsm_STATE_MACHINE_EXPORT __declspec(dllexport)
+#else
+#define tsm_STATE_MACHINE_EXPORT __declspec(dllimport)
+#endif

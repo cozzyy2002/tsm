@@ -38,8 +38,8 @@ public:
 	virtual int _getTimeoutCount() const override { return m_timeoutCount; }
 protected:
 	virtual void _setTimeoutCount(int count) override { m_timeoutCount = count; }
-public:
 
+public:
 	// Set delay time to one-shot timer.
 	void setDelayTimer(TimerClient* timerClient, DWORD delayTime) { setTimer(timerClient, delayTime, 0); }
 	// Set interval time to interval timer.

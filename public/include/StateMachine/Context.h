@@ -42,8 +42,8 @@ protected:
 	CComPtr<IState> m_currentState;
 };
 
-extern HRESULT Context_getAsyncExitCode(IContext* context, HRESULT* phr);
-extern IAsyncDispatcher* Context_createAsyncDispatcher();
+tsm_STATE_MACHINE_EXPORT HRESULT Context_getAsyncExitCode(IContext* context, HRESULT* phr);
+tsm_STATE_MACHINE_EXPORT IAsyncDispatcher* Context_createAsyncDispatcher();
 
 template<class E = IEvent, class S = IState>
 class AsyncContext : public Context<E, S>

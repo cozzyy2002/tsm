@@ -3,8 +3,40 @@
 #include <StateMachine/State.h>
 #include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
+#include <StateMachine/StateMachineMessage.h>
 #include "StateMachine.h"
 #include "Handles.h"
+
+static HMODULE hStateMachineModule;
+
+extern "C" BOOL WINAPI DllMain(
+	HINSTANCE const instance,  // handle to DLL module
+	DWORD     const reason,    // reason for calling function
+	LPVOID    const reserved)  // reserved
+{
+	switch(reason)
+	{
+	case DLL_PROCESS_ATTACH:
+		hStateMachineModule = instance;
+		break;
+
+	case DLL_THREAD_ATTACH:
+		break;
+
+	case DLL_THREAD_DETACH:
+		break;
+
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+	return TRUE;  // Successful DLL_PROCESS_ATTACH.
+}
+
+// Returns HMODULE of this DLL.
+HMODULE tsm::GetStateMachineModule()
+{
+	return hStateMachineModule;
+}
 
 /*static*/ tsm::IContext::OnAssertFailed *tsm::IContext::onAssertFailedProc = nullptr;
 
@@ -25,7 +57,7 @@ namespace tsm {
 HRESULT StateMachine::setupInner(IContext* context, IState * initialState, IEvent* /*event*/)
 {
 	// Check if setup() has not been called.
-	HR_ASSERT(FAILED(setupCompleted(context)), E_ILLEGAL_METHOD_CALL);
+	HR_ASSERT(!isSetupCompleted(context), TSM_E_SETUP_HAS_BEEN_MADE);
 
 	// Set StartupState object as current state.
 	context->_setCurrentState(initialState);
@@ -85,7 +117,7 @@ HRESULT StateMachine::triggerEvent(IContext * context, IEvent * event)
 	// Ensure to release object on error.
 	CComPtr<IEvent> _event(event);
 
-	return E_NOTIMPL;
+	return TSM_E_NOT_SUPPORTED;
 }
 
 HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
@@ -93,8 +125,8 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 	// Ensure to release object on error.
 	CComPtr<IEvent> _event(event);
 
-	HR_ASSERT_OK(setupCompleted(context));
-	HR_ASSERT(event, E_INVALIDARG);
+	HR_ASSERT(isSetupCompleted(context), TSM_E_SETUP_HAS_NOT_BEEN_MADE);
+	HR_ASSERT(event, E_POINTER);
 
 	auto timerClient = event->_getTimerClient();
 	if(timerClient && !event->_getHandle()->isTimerCreated) {
@@ -166,9 +198,9 @@ HRESULT StateMachine::waitReady(IContext * context, DWORD timeout)
 	return S_OK;
 }
 
-HRESULT StateMachine::setupCompleted(IContext* context) const
+bool StateMachine::isSetupCompleted(IContext* context) const
 {
-	return context->_getCurrentState() ? S_OK : E_ILLEGAL_METHOD_CALL;
+	return context->_getCurrentState() ? true : false;
 }
 
 // Call function with IState object from sub state to it's master state.

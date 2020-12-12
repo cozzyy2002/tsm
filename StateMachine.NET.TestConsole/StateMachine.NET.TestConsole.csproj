@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ShowErrors.cs" />
     <Compile Include="EventTimer.cs" />
     <Compile Include="MemoryWeight.cs" />
     <Compile Include="Program.cs" />
@@ -57,4 +58,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /D /Y "$(SolutionDir)public\lib\$(ConfigurationName)\StateMachine.dll"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

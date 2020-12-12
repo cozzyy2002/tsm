@@ -4,8 +4,15 @@
 #include "stdafx.h"
 
 #include "Mocks.h"
+#include <StateMachine/StateMachineMessage.h>
 
 using namespace testing;
+
+TEST(ErrorCodeUnitTest, Success)
+{
+	ASSERT_EQ(S_OK, TSM_S_OK);
+	ASSERT_EQ(S_FALSE, TSM_S_DONE);
+}
 
 template<class T>
 static LPCSTR getObjectName(T* obj) { return typeid(*obj).name(); }
@@ -81,9 +88,9 @@ TYPED_TEST(SetupUnitTest, 2)
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
 	if(mockContext.isAsync()) {
-		// AsyncContext::waitRady() should return the error code from State::entry().
+		// AsyncContext::getAsyncExitCode() should return the error code from State::entry().
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
-		ASSERT_EQ(S_FALSE, mockContext.waitReady());
+		ASSERT_EQ(TSM_S_NO_WORKER_THREAD, mockContext.waitReady());
 		HRESULT hrExitCode;
 		ASSERT_EQ(S_OK, mockContext.getAsyncExitCode(&hrExitCode));
 		ASSERT_EQ(hr, hrExitCode);
@@ -106,7 +113,7 @@ TYPED_TEST(SetupUnitTest, 3)
 	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
 	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
-	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, mockContext.setup(&mockState0, &mockEvent));
+	ASSERT_EQ(TSM_E_SETUP_HAS_BEEN_MADE, mockContext.setup(&mockState0, &mockEvent));
 	ASSERT_EQ(S_OK, mockContext.waitReady());
 
 	EXPECT_TRUE(mockEvent.deleted());
@@ -127,7 +134,7 @@ TYPED_TEST(SetupUnitTest, 4)
 // StateMachine::handleEvent() is called before setup().
 TYPED_TEST(SetupUnitTest, 5)
 {
-	ASSERT_EQ(E_ILLEGAL_METHOD_CALL, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(TSM_E_SETUP_HAS_NOT_BEEN_MADE, mockContext.handleEvent(&mockEvent));
 
 	EXPECT_TRUE(mockEvent.deleted());
 }
@@ -367,7 +374,7 @@ TEST_F(NotImplTest, 0)
 	EXPECT_EQ(E_NOTIMPL, mockContext.getAsyncExitCode(&hrExitCode));
 
 	MockEvent<MockContext> mockEvent;
-	EXPECT_EQ(E_NOTIMPL, mockContext.triggerEvent(&mockEvent));
+	EXPECT_EQ(TSM_E_NOT_SUPPORTED, mockContext.triggerEvent(&mockEvent));
 
 	EXPECT_TRUE(mockEvent.deleted());
 }

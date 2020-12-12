@@ -26,3 +26,5 @@
 **/TestResult.xml
 *.lnk
 /setenv.bat
+/StateMachine/Resources/MSG00411.bin
+/StateMachine/Resources/MSG00409.bin

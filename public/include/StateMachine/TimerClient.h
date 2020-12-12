@@ -4,11 +4,15 @@
 
 #include <vector>
 
+// Suppress compiler warning C4251 at tsm::HandleOwner<T, H>::m_handle member in interface.h.
+#pragma warning(push)
+#pragma warning(disable : 4251)
+
 namespace tsm {
 
 struct TimerHandle;
 
-class TimerClient : public HandleOwner<TimerClient, TimerHandle>
+class tsm_STATE_MACHINE_EXPORT TimerClient : public HandleOwner<TimerClient, TimerHandle>
 {
 public:
 	HRESULT cancelEventTimer(IEvent* event, int timeout = 0);
@@ -24,3 +28,5 @@ public:
 };
 
 }
+
+#pragma warning(pop)

@@ -8,4 +8,4 @@
 #define WIN32_ASSERT(exp) HR_ASSERT(exp, HRESULT_FROM_WIN32(GetLastError()))
 #define WIN32_EXPECT(exp) HR_EXPECT(exp, HRESULT_FROM_WIN32(GetLastError()))
 
-HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
+tsm_STATE_MACHINE_EXPORT HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);

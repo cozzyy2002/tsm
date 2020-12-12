@@ -3,6 +3,7 @@
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace Runtime::InteropServices;
+using namespace System::Globalization;
 
 namespace native
 {
@@ -275,6 +276,21 @@ protected:
 	NativeType* m_nativeEvent;
 
 	void setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime);
+};
+
+public ref class Error
+{
+public:
+	static property CultureInfo^ CultureInfo { ::CultureInfo^ get(); void set(::CultureInfo^ value); }
+	Error(HRESULT hr);
+	Error(HResult hr);
+	property HRESULT HResult { HRESULT get(); }
+	property String^ Message { String^ get(); }
+
+protected:
+	static ::CultureInfo^ s_cultureInfo;
+	HRESULT m_hr;
+	String^ m_message;
 };
 
 namespace common

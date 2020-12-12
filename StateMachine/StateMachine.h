@@ -20,7 +20,7 @@ public:
 protected:
 	HRESULT setupInner(IContext* context, IState* initialState, IEvent* event);
 	HRESULT shutdownInner(IContext* context, DWORD timeout);
-	HRESULT setupCompleted(IContext* context) const;
+	bool isSetupCompleted(IContext* context) const;
 	HRESULT forEachState(IState* state, std::function<HRESULT(IState*)> func);
 
 	HRESULT callHandleEvent(IState* state, IContext* context, IEvent* event, IState** nextState);

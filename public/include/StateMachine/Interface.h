@@ -2,7 +2,13 @@
 
 #include "Unknown.h"
 
+// Suppress compiler warning C4251 at tsm::HandleOwner<T, H>::m_handle member.
+#pragma warning(push)
+#pragma warning(disable : 4251)
+
 namespace tsm {
+
+tsm_STATE_MACHINE_EXPORT HMODULE GetStateMachineModule();
 
 class IEvent;
 class IState;
@@ -40,13 +46,16 @@ protected:
 		void operator()(H* handle) const;
 	};
 
+private:
+	// The field in this class should be `private` so that the other class can not use it directly.
+	// Then compiler warning C4251 can be disabled.
 	std::unique_ptr<H, HandleFactory> m_handle;
 };
 
 /**
  * IAsyncDispatcher interface
  */
-class IAsyncDispatcher
+class tsm_STATE_MACHINE_EXPORT IAsyncDispatcher
 {
 public:
 	/**
@@ -70,7 +79,7 @@ public:
 	virtual HRESULT getExitCode(HRESULT* phr) = 0;
 };
 
-class IContext : public HandleOwner<IContext, ContextHandle>
+class tsm_STATE_MACHINE_EXPORT IContext : public HandleOwner<IContext, ContextHandle>
 {
 public:
 	virtual ~IContext() {}
@@ -97,7 +106,7 @@ public:
 	virtual IContext* _getInstance() override { return this; }
 };
 
-class IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
+class tsm_STATE_MACHINE_EXPORT IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
 {
 	friend struct TimerHandle;
 protected:
@@ -138,7 +147,7 @@ private:
 	MByteUnit* m_memoryWeight;
 };
 
-class IState : public HandleOwner<IState, StateHandle>, public Unknown
+class tsm_STATE_MACHINE_EXPORT IState : public HandleOwner<IState, StateHandle>, public Unknown
 {
 protected:
 	IState();
@@ -174,7 +183,7 @@ private:
 	MByteUnit* m_memoryWeight;
 };
 
-class IStateMachine
+class tsm_STATE_MACHINE_EXPORT IStateMachine
 {
 public:
 	static IStateMachine* create(IContext* context);
@@ -190,7 +199,7 @@ public:
 };
 
 // Monitor interface
-class IStateMonitor
+class tsm_STATE_MACHINE_EXPORT IStateMonitor
 {
 public:
 	virtual void onIdle(IContext* context) = 0;
@@ -208,3 +217,5 @@ public:
 };
 
 }
+
+#pragma warning(pop)

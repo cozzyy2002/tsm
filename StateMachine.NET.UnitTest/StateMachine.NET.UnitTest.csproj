@@ -92,7 +92,6 @@
     </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>xcopy /D /Y "$(SolutionDir)public\lib\$(ConfigurationName)\StateMachine.dll"</PostBuildEvent>
   </PropertyGroup>
 </Project>

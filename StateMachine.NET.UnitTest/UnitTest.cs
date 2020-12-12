@@ -108,9 +108,9 @@ namespace NET.UnitTest
             HResult hrExitCode;
             if (context.IsAsync)
             {
-                // AsyncContext::waitRady() should return the error code from State::entry().
+                // AsyncContext::getAsyncExitCode() should return the error code from State::entry().
                 Assert.That(context.setup(mockState), Is.EqualTo(HResult.Ok));
-                Assume.That(context.waitReady(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.False));
+                Assume.That(context.waitReady(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.NoWorkerThread));
                 Assert.That(context.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.Ok));
                 Assert.That(hrExitCode, Is.EqualTo(hr));
             }
@@ -133,7 +133,7 @@ namespace NET.UnitTest
             var mockState = Substitute.For<TState>();
 
             Assert.That(context.setup(mockState), Is.EqualTo(HResult.Ok));
-            Assert.That(context.setup(mockState), Is.EqualTo(HResult.IllegalMethodCall));
+            Assert.That(context.setup(mockState), Is.EqualTo(HResult.SetupHasBeenMade));
             Assert.That(context.waitReady(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
 
             mockState.Received()
@@ -155,7 +155,7 @@ namespace NET.UnitTest
         public void SetupUnitTest_5()
         {
             var mockEvent = Substitute.For<TEvent>();
-            Assume.That(context.handleEvent(mockEvent), Is.EqualTo(HResult.IllegalMethodCall));
+            Assume.That(context.handleEvent(mockEvent), Is.EqualTo(HResult.SetupHasNotBeenMade));
         }
     }
 
