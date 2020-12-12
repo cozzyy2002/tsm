@@ -108,7 +108,7 @@ namespace NET.UnitTest
             HResult hrExitCode;
             if (context.IsAsync)
             {
-                // AsyncContext::waitRady() should return the error code from State::entry().
+                // AsyncContext::getAsyncExitCode() should return the error code from State::entry().
                 Assert.That(context.setup(mockState), Is.EqualTo(HResult.Ok));
                 Assume.That(context.waitReady(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.NoWorkerThread));
                 Assert.That(context.getAsyncExitCode(out hrExitCode), Is.EqualTo(HResult.Ok));

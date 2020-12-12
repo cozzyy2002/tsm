@@ -88,7 +88,7 @@ TYPED_TEST(SetupUnitTest, 2)
 	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
 
 	if(mockContext.isAsync()) {
-		// AsyncContext::waitRady() should return the error code from State::entry().
+		// AsyncContext::getAsyncExitCode() should return the error code from State::entry().
 		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
 		ASSERT_EQ(TSM_S_NO_WORKER_THREAD, mockContext.waitReady());
 		HRESULT hrExitCode;
