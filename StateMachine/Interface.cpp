@@ -1,6 +1,8 @@
 #include <StateMachine/stdafx.h>
 #include <StateMachine/Interface.h>
 
+#include "Handles.h"
+
 using namespace tsm;
 
 namespace tsm

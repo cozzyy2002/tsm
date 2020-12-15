@@ -2,11 +2,12 @@
 
 #include "Interface.h"
 #include "TimerClient.h"
+#include <StateMachine/Unknown.h>
 
 namespace tsm {
 
 template<class C = IContext, class E = IEvent, class S = IState>
-class State : public IState, public TimerClient
+class State : public Unknown<IState>, public TimerClient
 {
 public:
 	State(IState* masterState = nullptr) : m_masterState(masterState) {}

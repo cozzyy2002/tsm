@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Interface.h"
+#include <StateMachine/Unknown.h>
 
 namespace tsm {
 
 template<class C = IContext>
-class Event : public IEvent
+class Event : public Unknown<IEvent>
 {
 public:
 	// Default event priority.

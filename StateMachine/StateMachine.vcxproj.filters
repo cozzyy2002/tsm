@@ -77,9 +77,6 @@
     <ClCompile Include="StateMachine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Unknown.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="AsyncStateMachine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
