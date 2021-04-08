@@ -38,23 +38,22 @@ HMODULE tsm::GetStateMachineModule()
 	return hStateMachineModule;
 }
 
-/*static*/ tsm::IContext::OnAssertFailed tsm::IContext::onAssertFailedProc = nullptr;
-/*static*/ tsm::IContext::OnAssertFailedWriter tsm::IContext::onAssertFailedWriter = nullptr;
+/*static*/ tsm::IContext::OnAssertFailed tsm::IContext::onAssertFailedProc = [](HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
+{
+	TCHAR msg[1000];
+	_stprintf_s(msg, _T("'%s' failed: HRESULT=0x%08x at:\n%s:%d"), exp, hr, sourceFile, line);
+	onAssertFailedWriter(msg);
+};
+/*static*/ tsm::IContext::OnAssertFailedWriter tsm::IContext::onAssertFailedWriter = [](LPCTSTR msg)
+{
+	OutputDebugString(msg);
+	OutputDebugString(_T("\n"));
+};
 
 HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 {
 	if(FAILED(hr)) {
-		if(tsm::IContext::onAssertFailedProc) {
-			tsm::IContext::onAssertFailedProc(hr, exp, sourceFile, line);
-		} else {
-			TCHAR msg[1000];
-			_stprintf_s(msg, _T("'%s' failed: HRESULT=0x%08x at:\n%s:%d\n"), exp, hr, sourceFile, line);
-			if(tsm::IContext::onAssertFailerWriter) {
-				tsm::IContext::onAssertFailerWriter(msg);
-			} else {
-				OutputDebugString(msg);
-			}
-		}
+		tsm::IContext::onAssertFailedProc(hr, exp, sourceFile, line);
 	}
 	return hr;
 }
