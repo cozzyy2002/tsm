@@ -24,11 +24,15 @@ public:
 	HRESULT _postHandle(IContext* context, HRESULT hr) override {
 		return postHandle((C*)context, hr);
 	}
+	int _comparePriority(IEvent* other) const override {
+		return comparePriority((Event*)other);
+	}
 #pragma endregion
 
 #pragma region Methods to be implemented by sub class.
 	virtual HRESULT preHandle(C* context) { return S_OK; }
 	virtual HRESULT postHandle(C* context, HRESULT hr) { return hr; }
+	virtual int comparePriority(Event* other) const { return (this->m_priority - other->m_priority); }
 #pragma endregion
 
 	virtual int _getPriority() const override { return m_priority; }

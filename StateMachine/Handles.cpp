@@ -49,8 +49,9 @@ ContextHandle::AsyncData::AsyncData()
 
 /**
  * Add the event to event queue.
- * Events are added to the queue by priority order.
- * deque::back() returns event with highest priority.
+ * Events are added to the queue by ascending priority order.
+ * That is First event has the lowest priority and was queued most recent.
+ * Then deque::back() returns event with highest priority.
  * Events with same priority are added by FIFO order(deque::back() returns event triggered first).
  */
 HRESULT ContextHandle::AsyncData::queueEvent(IEvent* event)
@@ -58,7 +59,7 @@ HRESULT ContextHandle::AsyncData::queueEvent(IEvent* event)
 	lock_t _lock(eventQueueLock);
 	auto it = eventQueue.begin();
 	for(; it != eventQueue.end(); it++) {
-		if(event->_getPriority() <= (*it)->_getPriority()) break;
+		if(event->_comparePriority(*it) <= 0) { break; }
 	}
 	eventQueue.insert(it, event);
 
