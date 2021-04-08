@@ -64,12 +64,12 @@ public:
 	using Method = DWORD(WINAPI *)(LPVOID lpParam);
 
 	/**
-	 * dispathc method.
+	 * dispatch method.
 	 *
 	 * method: Method to be dispatched.
 	 * lpParam: Pointer to parameter to be passed to `method`.
 	 * Creates synchronization object handle that is set when the method terminates.
-	 * IAsyncDispatcher implementation shooul close this handle on it's destructor.
+	 * IAsyncDispatcher implementation should close this handle on it's destructor.
 	 */
 	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread = nullptr) = 0;
 
@@ -123,6 +123,15 @@ public:
 #pragma region Methods to be called by StateMachine.
 	virtual HRESULT _preHandle(IContext* context) = 0;
 	virtual HRESULT _postHandle(IContext* context, HRESULT hr) = 0;
+	/**
+	 * Compare priority with other IEvent object.
+	 * This method is used to queue event by priority order in IStateMachine::triggerEvent().
+	 * Implement to return:
+	 *   < 0  : Priority is lower than other's.
+	 *   == 0 : Priority is same as other's.
+	 *   0 <  : Priority is higher than other's.
+	 */
+	virtual int _comparePriority(IEvent* other) const = 0;
 #pragma endregion
 
 #pragma region Definition for event timer
