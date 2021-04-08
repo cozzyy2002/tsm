@@ -22,6 +22,14 @@
 #include <functional>
 #include <atlbase.h>
 
+namespace std {
+#if defined(UNICODE)
+using tstring = std::wstring;
+#else
+using tstring = std::string;
+#endif
+}
+
 #if defined(tsm_STATE_MACHINE_EXPORTS)
 #define tsm_STATE_MACHINE_EXPORT __declspec(dllexport)
 #else

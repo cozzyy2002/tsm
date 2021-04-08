@@ -14,7 +14,7 @@ Unknown::~Unknown()
 {
 }
 
-tstring Unknown::toString() const
+std::tstring Unknown::toString() const
 {
 	CA2T str(typeid(*this).name());
 	return (LPCTSTR)str;
