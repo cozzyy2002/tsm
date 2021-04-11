@@ -118,6 +118,7 @@ public:
 #pragma region Implementation of IState that call methods of managed class.
 	virtual HRESULT _preHandle(tsm::IContext* Icontext) override;
 	virtual HRESULT _postHandle(tsm::IContext* Icontext, HRESULT hr) override;
+	virtual int _comparePriority(IEvent* other) const override { return (this->_getPriority() - other->_getPriority()); }
 #pragma endregion
 
 	void setTimer(tsm::TimerClient* timerClient, DWORD delayTime, DWORD intervalTime = 0);
