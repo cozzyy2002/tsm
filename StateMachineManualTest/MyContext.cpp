@@ -9,7 +9,7 @@ static log4cplus::Logger logger = log4cplus::Logger::getInstance(_T("MyContext")
 
 MyContext::MyContext()
 {
-	tsm::IContext::onAssertFailedProc = MyContext::onAssertFailed;
+	tsm::Assert::onAssertFailedProc = MyContext::onAssertFailed;
 }
 
 void MyContext::createStateMachine(HWND hWnd)

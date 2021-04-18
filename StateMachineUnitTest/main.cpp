@@ -21,7 +21,7 @@ int _tmain(int argc, TCHAR *argv[])
 	} else {
 		log4cplus::BasicConfigurator::doConfigure();
 	}
-	tsm::IContext::onAssertFailedProc = mockOnAssertFailed;
+	tsm::Assert::onAssertFailedProc = mockOnAssertFailed;
 
 	InitGoogleMock(&argc, argv);
 
