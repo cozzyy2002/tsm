@@ -1,5 +1,7 @@
 #pragma once
 
+#include <StateMachine/Assert.h>
+
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace Runtime::InteropServices;
@@ -31,27 +33,6 @@ public interface class IStateMonitor
 	void onTimerStarted(Context^ context, Event^ event) = 0;
 	void onTimerStopped(Context^ context, Event^ event, HResult hr) = 0;
 	void onWorkerThreadExit(Context^ context, HResult exitCode) = 0;
-
-	generic<typename H>
-	ref class AssertFailedEventArgs : public EventArgs
-	{
-	public:
-		AssertFailedEventArgs(H hr, String^ expression, String^ sourceFile, int lineNumber)
-			: _hr(hr), _expression(expression), _sourceFile(sourceFile), _lineNumber(lineNumber) {}
-
-		property H hr { H get() { return _hr; } }
-		property String^ expression { String^ get() { return _expression; } }
-		property String^ sourceFile { String^ get() { return _sourceFile; } }
-		property int lineNumber { int get() { return _lineNumber; } }
-
-	protected:
-		H _hr;
-		String^ _expression;
-		String^ _sourceFile;
-		int _lineNumber;
-	};
-
-	///*static*/ event EventHandler<AssertFailedEventArgs<HResult>^>^ AssertFailedEvent;
 };
 
 public ref class StateMonitorCaller
@@ -108,8 +89,6 @@ public:
 	virtual ~Context();
 	!Context();
 
-	static property unsigned int CurrentTherad { unsigned int get() { return GetCurrentThreadId(); }}
-
 	bool isAsync();
 	HResult setup(State^ initialState, Event^ event);
 	HResult setup(State^ initialState) { return setup(initialState, nullptr); }
@@ -124,6 +103,8 @@ public:
 	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 
 #pragma region .NET properties
+	static property unsigned int CurrentTherad { unsigned int get() { return GetCurrentThreadId(); }}
+
 	property IStateMonitor^ StateMonitor {
 		IStateMonitor^ get() { return m_stateMonitor; }
 		void set(IStateMonitor^ value);
@@ -291,6 +272,32 @@ protected:
 	static ::CultureInfo^ s_cultureInfo;
 	HRESULT m_hr;
 	String^ m_message;
+};
+
+public ref class Assert
+{
+public:
+	static Assert();
+
+	delegate void OnAssertFailedProcDelegate(HResult hr, String^ exp, String^ sourceFile, int line);
+	static property OnAssertFailedProcDelegate^ OnAssertFailedProc {
+		OnAssertFailedProcDelegate^ get() { return onAssertFailedProc; }
+		void set(OnAssertFailedProcDelegate^ value) { onAssertFailedProc = value; }
+	}
+
+	delegate void OnAssertFailedWriterDelegate(String^ msg);
+	static property OnAssertFailedWriterDelegate^ OnAssertFailedWriter {
+		OnAssertFailedWriterDelegate^ get() { return onAssertFailedWriter; }
+		void set(OnAssertFailedWriterDelegate^ value) { onAssertFailedWriter = value; }
+	}
+
+protected:
+	static OnAssertFailedProcDelegate^ onAssertFailedProc;
+	static OnAssertFailedWriterDelegate^ onAssertFailedWriter;
+
+internal:
+	static tsm::Assert::OnAssertFailedProc onAssertFailedProcDefault;
+	static tsm::Assert::OnAssertFailedWriter onAssertFailedWriterDefault;
 };
 
 namespace common

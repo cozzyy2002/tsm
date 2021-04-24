@@ -4,6 +4,9 @@ using System;
 using System.Threading;
 using tsm_NET;
 
+// Use NUnit.Framework.Assert class without namespace prior to tms_NET.Assert class.
+using Assert = NUnit.Framework.Assert;
+
 namespace StateMachine.NET.UnitTest
 {
     [TestFixture]
