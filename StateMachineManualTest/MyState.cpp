@@ -4,14 +4,12 @@
 #include "MyEvent.h"
 #include "MyState.h"
 
-MyState::MyState(ILogger& logger, const std::tstring& name, MyState* masterState /*= nullptr*/)
-	: State(masterState), MyObject(name.c_str(), &logger), isExitCalledOnShutdown(false)
+ULONG MyState::Release(void)
 {
-}
-
-MyState::~MyState()
-{
-	m_logger->log(_T("Deleting %s"), MyObject::toString());
+	if(1 == m_cRef) {
+		m_logger->log(_T("Deleting %s"), MyObject::toString());
+	}
+	return Unknown::Release();
 }
 
 HRESULT MyState::handleEvent(MyContext*, MyEvent* event, MyState** nextState)

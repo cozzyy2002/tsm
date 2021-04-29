@@ -7,25 +7,10 @@
 #include <deque>
 #include <mutex>
 
-#include "StateMachine/Unknown.h"
-
 namespace tsm {
 
 using lock_object_t = std::recursive_mutex;
 using lock_t = std::lock_guard<lock_object_t>;
-
-template<class T, class H>
-H* HandleOwner<T, H>::_getHandle(bool reset /*= false*/)
-{
-	if(!m_handle || reset) m_handle.reset(HandleFactory::create(_getInstance()));
-	return m_handle.get();
-}
-
-template<class T, class H>
-bool HandleOwner<T, H>::_isHandleCreated() const
-{
-	return (m_handle != nullptr);
-}
 
 struct EventHandle
 {
@@ -80,8 +65,7 @@ struct TimerHandle
 {
 	TimerHandle(TimerClient*);
 
-	struct Timer : public Unknown<IUnknown>
-	{
+	struct Timer : public Unknown {
 		TimerClient::TimerType timerType;
 		IContext* context;
 		CComPtr<IEvent> event;

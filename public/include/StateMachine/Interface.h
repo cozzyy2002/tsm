@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Unknown.h"
+
 // Suppress compiler warning C4251 at tsm::HandleOwner<T, H>::m_handle member.
 #pragma warning(push)
 #pragma warning(disable : 4251)
@@ -25,8 +27,14 @@ template<class T, class H>
 class HandleOwner
 {
 public:
-	virtual H* _getHandle(bool reset = false);
-	virtual bool _isHandleCreated() const;
+	virtual H* _getHandle(bool reset = false) {
+		if(!m_handle || reset) m_handle.reset(HandleFactory::create(_getInstance()));
+		return m_handle.get();
+	}
+
+	virtual bool _isHandleCreated() const {
+		return (m_handle != nullptr);
+	}
 
 protected:
 	// Returns sub class instance.
@@ -98,7 +106,7 @@ public:
 	virtual IContext* _getInstance() override { return this; }
 };
 
-class tsm_STATE_MACHINE_EXPORT IEvent : public HandleOwner<IEvent, EventHandle>, public IUnknown
+class tsm_STATE_MACHINE_EXPORT IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
 {
 	friend struct TimerHandle;
 protected:
@@ -139,7 +147,7 @@ private:
 	MByteUnit* m_memoryWeight;
 };
 
-class tsm_STATE_MACHINE_EXPORT IState : public HandleOwner<IState, StateHandle>, public IUnknown
+class tsm_STATE_MACHINE_EXPORT IState : public HandleOwner<IState, StateHandle>, public Unknown
 {
 protected:
 	IState();

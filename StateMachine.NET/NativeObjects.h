@@ -75,7 +75,7 @@ protected:
 	tsm::IStateMonitor* m_stateMonitor;
 };
 
-class State : public tsm::Unknown<tsm::IState>, public tsm::TimerClient
+class State : public tsm::IState, public tsm::TimerClient
 {
 public:
 	using ManagedType = tsm_NET::State;
@@ -107,7 +107,7 @@ protected:
 	CComPtr<State> m_masterState;
 };
 
-class Event : public tsm::Unknown<tsm::IEvent>
+class Event : public tsm::IEvent
 {
 public:
 	using ManagedType = tsm_NET::Event;
