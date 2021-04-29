@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Runtime.CompilerServices;
 
 namespace Testee
 {
@@ -47,8 +46,8 @@ namespace Testee
     };
 
 namespace Generic
-{
-    public class Context : tsm_NET.Generic.Context<Event, State>
+    {
+        public class Context : tsm_NET.Generic.Context<Event, State>
     {
     };
 

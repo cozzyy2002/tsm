@@ -14,6 +14,7 @@
 
 // TODO: reference additional headers your program requires here
 #include <StateMachine/stdafx.h>
+#include <StateMachine/Assert.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
