@@ -15,71 +15,16 @@ class IState;
 class IStateMachine;
 class IStateMonitor;
 class TimerClient;
+class IAsyncDispatcher;
 
+struct ContextHandle;
 struct EventHandle;
 struct StateHandle;
-struct ContextHandle;
 struct TimerHandle;
 
 struct MByteUnit;
 
-template<class T, class H>
-class HandleOwner
-{
-public:
-	virtual H* _getHandle(bool reset = false) {
-		if(!m_handle || reset) m_handle.reset(HandleFactory::create(_getInstance()));
-		return m_handle.get();
-	}
-
-	virtual bool _isHandleCreated() const {
-		return (m_handle != nullptr);
-	}
-
-protected:
-	// Returns sub class instance.
-	// Override if constructor of handle class depends on the instance.
-	virtual T* _getInstance() { return nullptr; }
-
-	struct HandleFactory {
-		static H* create(T* instance);
-		void operator()(H* handle) const;
-	};
-
-private:
-	// The field in this class should be `private` so that the other class can not use it directly.
-	// Then compiler warning C4251 can be disabled.
-	std::unique_ptr<H, HandleFactory> m_handle;
-};
-
-/**
- * IAsyncDispatcher interface
- */
-class tsm_STATE_MACHINE_EXPORT IAsyncDispatcher
-{
-public:
-	/**
-	 * Signature of method to be dispatched.
-	 */
-	using Method = DWORD(WINAPI *)(LPVOID lpParam);
-
-	/**
-	 * dispathc method.
-	 *
-	 * method: Method to be dispatched.
-	 * lpParam: Pointer to parameter to be passed to `method`.
-	 * Creates synchronization object handle that is set when the method terminates.
-	 * IAsyncDispatcher implementation shooul close this handle on it's destructor.
-	 */
-	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread = nullptr) = 0;
-
-	/**
-	 * Returns exit code of dispatched method.
-	 */
-	virtual HRESULT getExitCode(HRESULT* phr) = 0;
-};
-
-class tsm_STATE_MACHINE_EXPORT IContext : public HandleOwner<IContext, ContextHandle>
+class tsm_STATE_MACHINE_EXPORT IContext
 {
 public:
 	virtual ~IContext() {}
@@ -101,12 +46,14 @@ public:
 	// Sub class may returns this pointer.
 	virtual TimerClient* _getTimerClient() = 0;
 
+	virtual ContextHandle* _getHandle(bool reset = false) = 0;
+
 	// Implementation of HandleOwner::_getInstance().
 	// Creating ContextHandle depends on value returned by isAsync() method.
-	virtual IContext* _getInstance() override { return this; }
+	virtual IContext* _getInstance() { return this; }
 };
 
-class tsm_STATE_MACHINE_EXPORT IEvent : public HandleOwner<IEvent, EventHandle>, public Unknown
+class tsm_STATE_MACHINE_EXPORT IEvent : public Unknown
 {
 	friend struct TimerHandle;
 protected:
@@ -132,6 +79,8 @@ protected:
 public:
 #pragma endregion
 
+	virtual EventHandle* _getHandle() = 0;
+
 	// Sequence number that indicates creation order.
 	// If this method return Zero, it means that overflow occurred.
 	long getSequenceNumber() const { return m_sequenceNumber; }
@@ -147,7 +96,7 @@ private:
 	MByteUnit* m_memoryWeight;
 };
 
-class tsm_STATE_MACHINE_EXPORT IState : public HandleOwner<IState, StateHandle>, public Unknown
+class tsm_STATE_MACHINE_EXPORT IState : public Unknown
 {
 protected:
 	IState();
@@ -167,6 +116,8 @@ public:
 	// Returns TimerClient instance.
 	// Sub class may returns this pointer.
 	virtual TimerClient* _getTimerClient() = 0;
+
+	virtual StateHandle* _getHandle() = 0;
 
 	// Sequence number that indicates creation order.
 	// If this method return Zero, it means that overflow occurred.
@@ -198,6 +149,33 @@ public:
 	virtual HRESULT waitReady(IContext* context, DWORD timeout) = 0;
 };
 
+/**
+ * IAsyncDispatcher interface
+ */
+class tsm_STATE_MACHINE_EXPORT IAsyncDispatcher
+{
+public:
+	/**
+	 * Signature of method to be dispatched.
+	 */
+	using Method = DWORD(WINAPI*)(LPVOID lpParam);
+
+	/**
+	 * dispathc method.
+	 *
+	 * method: Method to be dispatched.
+	 * lpParam: Pointer to parameter to be passed to `method`.
+	 * Creates synchronization object handle that is set when the method terminates.
+	 * IAsyncDispatcher implementation shooul close this handle on it's destructor.
+	 */
+	virtual HRESULT dispatch(Method method, LPVOID lpParam, LPHANDLE phWorkerThread = nullptr) = 0;
+
+	/**
+	 * Returns exit code of dispatched method.
+	 */
+	virtual HRESULT getExitCode(HRESULT* phr) = 0;
+};
+
 // Monitor interface
 class tsm_STATE_MACHINE_EXPORT IStateMonitor
 {
@@ -214,6 +192,12 @@ public:
 	virtual void onTimerStarted(IContext* context, IEvent* event) = 0;
 	virtual void onTimerStopped(IContext* context, IEvent* event, HRESULT hr) = 0;
 	virtual void onWorkerThreadExit(IContext* context, HRESULT exitCode) = 0;
+};
+
+template<class T, class H>
+struct tsm_STATE_MACHINE_EXPORT HandleFactory {
+	static H* create(T* instance);
+	void operator()(H* handle) const;
 };
 
 }

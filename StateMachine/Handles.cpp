@@ -29,8 +29,8 @@ TimerHandle::TimerHandle(TimerClient*)
 #pragma region Implementation of HandleFactory class.
 
 #define IMPLEMTENT_HANDLE_FACTORY(T, H) \
-	template<> /*static*/ H* HandleOwner<T, H>::HandleFactory::create(T* instance) { return new H(instance); } \
-	template<> void HandleOwner<T, H>::HandleFactory::operator()(H* handle) const { delete handle; }
+	template<> /*static*/ H* HandleFactory<T, H>::create(T* instance) { return new H(instance); } \
+	template<> void HandleFactory<T, H>::operator()(H* handle) const { delete handle; }
 
 IMPLEMTENT_HANDLE_FACTORY(IEvent, EventHandle)
 IMPLEMTENT_HANDLE_FACTORY(IState, StateHandle)

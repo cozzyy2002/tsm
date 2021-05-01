@@ -14,7 +14,8 @@ public:
 	static const int DefaultPriority = 0;
 
 	Event(int priority = DefaultPriority)
-		: m_priority(priority), m_timerClient(nullptr), m_delayTime(0), m_intervalTime(0), m_timeoutCount(-1) {}
+		: m_priority(priority), m_timerClient(nullptr), m_delayTime(0), m_intervalTime(0), m_timeoutCount(-1)
+		, m_handle(HandleFactory<IEvent, EventHandle>::create(this)) {}
 	virtual ~Event() {}
 
 #pragma region Implementation of IState that call methods of sub class.
@@ -54,7 +55,10 @@ public:
 		return m_timerClient ? m_timerClient->cancelEventTimer(this, timeout) : E_ILLEGAL_METHOD_CALL;
 	}
 
+	virtual EventHandle* _getHandle() override { return m_handle.get(); }
+
 protected:
+	std::unique_ptr<EventHandle, HandleFactory<IEvent, EventHandle>> m_handle;
 	int m_priority;
 	DWORD m_delayTime;
 	DWORD m_intervalTime;

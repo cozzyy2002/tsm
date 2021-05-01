@@ -9,7 +9,9 @@ template<class C = IContext, class E = IEvent, class S = IState>
 class State : public IState, public TimerClient
 {
 public:
-	State(IState* masterState = nullptr) : m_masterState(masterState) {}
+	State(IState* masterState = nullptr)
+		: m_masterState(masterState)
+		, m_handle(HandleFactory<IState, StateHandle>::create(this)) {}
 	virtual ~State() {}
 
 #pragma region Implementation of IState that call methods of sub class.
@@ -27,6 +29,7 @@ public:
 	virtual IState* _getMasterState() const override { return m_masterState; }
 
 	virtual TimerClient* _getTimerClient() override { return this; }
+	virtual StateHandle* _getHandle() override { return m_handle.get(); }
 #pragma endregion
 
 #pragma region Methods to be implemented by sub class.
@@ -41,6 +44,7 @@ public:
 	bool isSubState() const { return m_masterState ? true : false; }
 
 protected:
+	std::unique_ptr<StateHandle, HandleFactory<IState, StateHandle>> m_handle;
 	CComPtr<IState> m_masterState;
 };
 
