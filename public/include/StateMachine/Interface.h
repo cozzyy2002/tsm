@@ -10,11 +10,11 @@ namespace tsm {
 
 tsm_STATE_MACHINE_EXPORT HMODULE GetStateMachineModule();
 
+class IContext;
 class IEvent;
 class IState;
 class IStateMachine;
 class IStateMonitor;
-class TimerClient;
 class IAsyncDispatcher;
 
 struct ContextHandle;
@@ -24,7 +24,40 @@ struct TimerHandle;
 
 struct MByteUnit;
 
-class tsm_STATE_MACHINE_EXPORT IContext
+class tsm_STATE_MACHINE_EXPORT ITimerClient
+{
+public:
+	virtual ~ITimerClient() {}
+
+	virtual HRESULT cancelEventTimer(IEvent* event, int timeout = 0) = 0;
+	virtual HRESULT cancelAllEventTimers(int timeout = 0) = 0;
+	virtual std::vector<CComPtr<IEvent>> getPendingEvents() = 0;
+
+	enum class TimerType {
+		None,			// Event is handled ASAP. This value is not used.
+		HandleEvent,	// Call StateMachine::handleEvent() when the timer expires.
+		TriggerEvent,	// Call StateMachine::triggerEvent() when the timer expires.
+	};
+
+	virtual TimerHandle* _getHandle() = 0;
+	virtual bool _isHandleCreated() const = 0;
+	virtual HRESULT _setEventTimer(TimerType timerType, IContext* context, IEvent* event) = 0;
+};
+
+class tsm_STATE_MACHINE_EXPORT ITimerOwner
+{
+public:
+	virtual ITimerClient* _getTimerClient() = 0;
+
+	static ITimerClient* createClient();
+
+	// Short cut for ITimerClient methods.
+	HRESULT cancelEventTimer(IEvent* event, int timeout = 0) { return _getTimerClient()->cancelEventTimer(event, timeout); }
+	HRESULT cancelAllEventTimers(int timeout = 0) { return _getTimerClient()->cancelAllEventTimers(timeout); }
+	std::vector<CComPtr<IEvent>> getPendingEvents() { return _getTimerClient()->getPendingEvents(); }
+};
+
+class tsm_STATE_MACHINE_EXPORT IContext : public ITimerOwner
 {
 public:
 	virtual ~IContext() {}
@@ -41,10 +74,6 @@ public:
 	static OnAssertFailed* onAssertFailedProc;
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
-
-	// Returns TimerClient instance.
-	// Sub class may returns this pointer.
-	virtual TimerClient* _getTimerClient() = 0;
 
 	virtual ContextHandle* _getHandle(bool reset = false) = 0;
 
@@ -72,7 +101,7 @@ public:
 #pragma region Definition for event timer
 	virtual DWORD _getDelayTime() const = 0;
 	virtual DWORD _getIntervalTime() const = 0;
-	virtual TimerClient* _getTimerClient() const = 0;
+	virtual ITimerClient* _getTimerClient() const = 0;
 	virtual int _getTimeoutCount() const = 0;
 protected:
 	virtual void _setTimeoutCount(int count) = 0;
@@ -96,7 +125,7 @@ private:
 	MByteUnit* m_memoryWeight;
 };
 
-class tsm_STATE_MACHINE_EXPORT IState : public Unknown
+class tsm_STATE_MACHINE_EXPORT IState : public ITimerOwner, public Unknown
 {
 protected:
 	IState();
@@ -112,10 +141,6 @@ public:
 	virtual bool _isExitCalledOnShutdown() const = 0;
 	virtual IState* _getMasterState() const = 0;
 #pragma endregion
-
-	// Returns TimerClient instance.
-	// Sub class may returns this pointer.
-	virtual TimerClient* _getTimerClient() = 0;
 
 	virtual StateHandle* _getHandle() = 0;
 

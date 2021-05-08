@@ -1,12 +1,17 @@
 #include <StateMachine/stdafx.h>
 
-#include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
 #include <StateMachine/StateMachineMessage.h>
 
+#include "TimerClient.h"
 #include "Handles.h"
 
 namespace tsm {
+
+/*static*/ ITimerClient* ITimerOwner::createClient()
+{
+	return new TimerClient();
+}
 
 static DWORD WINAPI timerThread(LPVOID lpParam);
 
