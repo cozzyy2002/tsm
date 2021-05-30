@@ -58,6 +58,74 @@ namespace Generic
 	}
 
 	generic<typename E, typename S>
+	void Context<E, S>::construct(bool isAsync, bool useNativeThread)
+	{
+		m_useNativeThread = useNativeThread;
+		m_nativeContext = new native::Context(this, isAsync);
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::setup(S initialState, E event)
+	{
+		return (HResult)m_nativeContext->setup(getNative((IState^)initialState), getNative((IEvent^)event));
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::setup(S initialState)
+	{
+		return (HResult)m_nativeContext->setup(getNative((IState^)initialState));
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::shutdown(TimeSpan timeout)
+	{
+		return (HResult)m_nativeContext->shutdown((DWORD)timeout.TotalMilliseconds);
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::shutdown(int timeout_msec)
+	{
+		return (HResult)m_nativeContext->shutdown((DWORD)timeout_msec);
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::shutdown()
+	{
+		return (HResult)m_nativeContext->shutdown();
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::triggerEvent(E event)
+	{
+		return (HResult)m_nativeContext->triggerEvent(event->get());
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::handleEvent(E event)
+	{
+		return (HResult)m_nativeContext->handleEvent(event->get());
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::waitReady(TimeSpan timeout)
+	{
+		return (HResult)m_nativeContext->waitReady((DWORD)timeout.TotalMilliseconds);
+	}
+
+	generic<typename E, typename S>
+	HResult Context<E, S>::waitReady(int timeout_msec)
+	{
+		return (HResult)m_nativeContext->waitReady(timeout_msec);
+	}
+
+	generic<typename E, typename S>
+	S Context<E, S>::getCurrentState()
+	{
+		auto state = m_nativeContext->getCurrentState();
+		return (S)(state ? state->get() : nullptr);
+	}
+
+	generic<typename E, typename S>
 	void Context<E, S>::StateMonitor::set(IStateMonitor<E, S>^ value)
 	{
 		m_stateMonitor = value;
@@ -71,8 +139,42 @@ namespace Generic
 		}
 	}
 
+	generic<typename E, typename S>
+	HResult AsyncContext<E, S>::getAsyncExitCode([Out] HResult% hrExitCode)
+	{
+		HRESULT _hrExitCode;
+		auto hr = tsm_NET::getAsyncExitCode(m_nativeContext, &_hrExitCode);
+		if(SUCCEEDED(hr)) { hrExitCode = (HResult)_hrExitCode; }
+		return (HResult)hr;
+	}
+
 	generic<typename C, typename E, typename S>
-	tsm_NET::HResult State<C, E, S>::handleEvent(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^% nextState)
+	void State<C, E, S>::construct(S masterState, bool autoDispose)
+	{
+		m_nativeState = new native::State(this, masterState, autoDispose);
+		if(!autoDispose) {
+			// Prevent native object from being deleted automatically.
+			m_nativeState->AddRef();
+		}
+	}
+
+	generic<typename C, typename E, typename S>
+	State<C, E, S>::~State()
+	{
+		this->!State();
+	}
+
+	generic<typename C, typename E, typename S>
+	State<C, E, S>::!State()
+	{
+		if(m_nativeState && !m_nativeState->m_autoDispose) {
+			m_nativeState->Release();
+		}
+		m_nativeState = nullptr;
+	}
+
+	generic<typename C, typename E, typename S>
+	HResult State<C, E, S>::_handleEvent(tsm_NET::IContext^ context, tsm_NET::IEvent^ event, tsm_NET::IState^% nextState)
 	{
 		S _nextState;
 		auto hr = handleEvent((C)context, (E)event, _nextState);
@@ -83,27 +185,101 @@ namespace Generic
 	}
 
 	generic<typename C, typename E, typename S>
-		tsm_NET::HResult State<C, E, S>::entry(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ previousState)
+	HResult State<C, E, S>::_entry(tsm_NET::IContext^ context, tsm_NET::IEvent^ event, tsm_NET::IState^ previousState)
 	{
 		return (tsm_NET::HResult)entry((C)context, (E)event, (S)previousState);
 	}
 
 	generic<typename C, typename E, typename S>
-	tsm_NET::HResult State<C, E, S>::exit(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ nextState)
+	HResult State<C, E, S>::_exit(tsm_NET::IContext^ context, tsm_NET::IEvent^ event, tsm_NET::IState^ nextState)
 	{
 		return (tsm_NET::HResult)exit((C)context, (E)event, (S)nextState);
 	}
 
+	generic<typename C, typename E, typename S>
+	S State<C, E, S>::getMasterState()
+	{
+		auto state = m_nativeState->getMasterState();
+		return (S)(state ? state->get() : nullptr);
+	}
+
+	generic<typename C, typename E, typename S>
+	bool State<C, E, S>::AutoDispose::get()
+	{
+		return m_nativeState->m_autoDispose;
+	}
+
 	generic<typename C>
-	tsm_NET::HResult Event<C>::preHandle(tsm_NET::Context^ context)
+	void Event<C>::construct(int priority, bool autoDispose)
+	{
+		m_nativeEvent = new native::Event(this, priority, autoDispose);
+		if(autoDispose) {
+			// Prevent native object from being deleted automatically.
+			m_nativeEvent->AddRef();
+		}
+	}
+
+	generic<typename C>
+	Event<C>::~Event()
+	{
+		this->!Event();
+	}
+
+	generic<typename C>
+	Event<C>::!Event()
+	{
+		if(m_nativeEvent && !m_nativeEvent->m_autoDispose) {
+			m_nativeEvent->Release();
+		}
+		m_nativeEvent = nullptr;
+	}
+
+	generic<typename C>
+	HResult Event<C>::_preHandle(tsm_NET::IContext^ context)
 	{
 		return (tsm_NET::HResult)preHandle((C)context);
 	}
 
 	generic<typename C>
-	tsm_NET::HResult Event<C>::postHandle(tsm_NET::Context^ context, tsm_NET::HResult hr)
+	HResult Event<C>::_postHandle(tsm_NET::IContext^ context, HResult hr)
 	{
 		return (tsm_NET::HResult)postHandle((C)context, (HResult)hr);
 	}
+
+	generic<typename C>
+	HResult Event<C>::cancelTimer()
+	{
+		return (HResult)m_nativeEvent->cancelTimer();
+	}
+
+	generic<typename C>
+	HResult Event<C>::cancelTimer(TimeSpan timeout)
+	{
+		return (HResult)m_nativeEvent->cancelTimer((int)timeout.TotalMilliseconds);
+	}
+
+	generic<typename C>
+	HResult Event<C>::cancelTimer(int timeout)
+	{
+		return (HResult)m_nativeEvent->cancelTimer(timeout);
+	}
+
+	generic<typename C>
+	void Event<C>::setTimer(tsm::ITimerOwner* timerOwner, int delayTime, int intervalTime)
+	{
+		m_nativeEvent->setTimer(timerOwner, delayTime, intervalTime);
+	}
+
+	generic<typename C>
+	bool Event<C>::AutoDispose::get()
+	{
+		return m_nativeEvent->m_autoDispose;
+	}
+
+}
+
+HRESULT tsm_NET::getAsyncExitCode(native::Context* context, HRESULT* phr)
+{
+	return context->getAsyncExitCode(phr);
 }
 }

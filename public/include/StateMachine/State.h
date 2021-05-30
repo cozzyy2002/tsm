@@ -27,7 +27,7 @@ public:
 	virtual bool _isExitCalledOnShutdown() const override { return false; }
 	virtual IState* _getMasterState() const override { return m_masterState; }
 
-	virtual ITimerClient* ITimerOwner::_getTimerClient() override {
+	virtual ITimerClient* _getTimerClient() override {
 		if(!m_timerClient) { m_timerClient.reset(ITimerOwner::createClient()); }
 		return m_timerClient.get();
 	}

@@ -6,13 +6,24 @@ namespace tsm_NET
 {
 namespace Generic
 {
-// Define HResult in tsm_NET::Getneric namespace
-#include "HResult.h"
+using HResult = tsm_NET::HResult;
 
 generic<typename E, typename S>
+	where E : tsm_NET::IEvent
+	where S : tsm_NET::IState
 ref class Context;
+generic<typename C, typename E, typename S>
+	where C : tsm_NET::IContext
+	where E : tsm_NET::IEvent
+	where S : tsm_NET::IState
+ref class State;
+generic<typename C>
+	where C : tsm_NET::IContext
+ref class Event;
 
 generic<typename E, typename S>
+	where E : tsm_NET::IEvent
+	where S : tsm_NET::IState
 public interface class IStateMonitor
 {
 	void onIdle(Context<E, S>^ context);
@@ -25,6 +36,8 @@ public interface class IStateMonitor
 };
 
 generic<typename E, typename S>
+	where E : tsm_NET::IEvent
+	where S : tsm_NET::IState
 public ref class StateMonitorCaller : public tsm_NET::StateMonitorCaller
 {
 internal:
@@ -43,28 +56,40 @@ protected:
 };
 
 generic<typename E, typename S>
-public ref class Context : public tsm_NET::Context
+	where E : tsm_NET::IEvent
+	where S : tsm_NET::IState
+public ref class Context : public tsm_NET::IContext
 {
+private:
+	void construct(bool isAsync, bool useNativeThread);
+
 protected:
-	Context(bool isAsync, bool useNativeThread) : tsm_NET::Context(isAsync, useNativeThread), m_stateMonitor(nullptr) {}
+	// Protected constructor called by AsyncContext derived class.
+	Context(bool isAsync, bool useNativeThread) : m_stateMonitor(nullptr) { construct(isAsync, useNativeThread); }
 
 public:
-	Context() : tsm_NET::Context(false, false), m_stateMonitor(nullptr) {}
+	Context() : m_stateMonitor(nullptr) { construct(false, false); }
 	virtual ~Context() {}
 
-	HResult setup(S initialState, E event) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState, (tsm_NET::Event^)event); }
-	HResult setup(S initialState) { return (HResult)tsm_NET::Context::setup((tsm_NET::State^)initialState); }
-	HResult shutdown(TimeSpan timeout) { return (HResult)tsm_NET::Context::shutdown(timeout); }
-	HResult shutdown(int timeout_msec) { return (HResult)tsm_NET::Context::shutdonw(timeout_msec); }
-	HResult shutdown() { return (HResult)tsm_NET::Context::shutdown(); }
-	HResult triggerEvent(E event) { return (HResult)tsm_NET::Context::triggerEvent((tsm_NET::Event^)event); }
-	HResult handleEvent(E event) { return (HResult)tsm_NET::Context::handleEvent((tsm_NET::Event^)event); }
-	HResult waitReady(TimeSpan timeout) { return (HResult)tsm_NET::Context::waitReady(timeout); }
-	HResult waitReady(int timeout_msec) { return (HResult)tsm_NET::Context::waitReady(timeout_msec); }
-	S getCurrentState() { return (S)tsm_NET::Context::getCurrentState(); }
+	HResult setup(S initialState, E event);
+	HResult setup(S initialState);
+	HResult shutdown(TimeSpan timeout);
+	HResult shutdown(int timeout_msec);
+	HResult shutdown();
+	HResult triggerEvent(E event);
+	HResult handleEvent(E event);
+	HResult waitReady(TimeSpan timeout);
+	HResult waitReady(int timeout_msec);
+	S getCurrentState();
 	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 
 	property S CurrentState { S get() { return getCurrentState(); } }
+
+#pragma region Implementation of IContext
+public:
+	IContext::NativeType* get() { return m_nativeContext; }
+	virtual property bool UseNativeThread { bool get() { return m_useNativeThread; } }
+#pragma endregion
 
 #pragma region .NET properties
 	property IStateMonitor<E, S>^ StateMonitor
@@ -74,37 +99,42 @@ public:
 	}
 #pragma endregion
 
+
 protected:
+	IContext::NativeType* m_nativeContext;
+	bool m_useNativeThread;
 	IStateMonitor<E, S>^ m_stateMonitor;
 	StateMonitorCaller<E, S>^ m_stateMonitorCaller;
 };
 
 generic<typename E, typename S>
+	where E : tsm_NET::IEvent
+	where S : tsm_NET::IState
 public ref class AsyncContext : public Context<E, S>
 {
 public:
 	AsyncContext() : Context(true, false) {}
 	AsyncContext(bool useNativeThread) : Context(true, useNativeThread) {}
 
-	HResult getAsyncExitCode([Out] HResult% hrExitCode) override {
-		HRESULT _hrExitCode;
-		auto hr = tsm_NET::getAsyncExitCode(m_nativeContext, &_hrExitCode);
-		if(SUCCEEDED(hr)) { hrExitCode = (HResult)_hrExitCode; }
-		return (HResult)hr;
-	}
+	HResult getAsyncExitCode([Out] HResult% hrExitCode) override;
 };
 
 generic<typename C, typename E, typename S>
-	where C : tsm_NET::Context
-	where E : tsm_NET::Event
-	where S : tsm_NET::State
-public ref class State : public tsm_NET::State
+	where C : tsm_NET::IContext
+	where E : tsm_NET::IEvent
+	where S : tsm_NET::IState
+public ref class State : public tsm_NET::IState, public tsm_NET::IAutoDisposable
 {
+	void construct(S masterState, bool autoDispose);
+
 public:
-	State() : tsm_NET::State(nullptr) {}
-	State(bool autoDispose) : tsm_NET::State(autoDispose) {}
-	State(S masterState) : tsm_NET::State((tsm_NET::State^)masterState) {}
-	State(S masterState, bool autoDispose) : tsm_NET::State(masterState, autoDispose) {}
+	State() { construct(S(), IAutoDisposable::Default); }
+	State(bool autoDispose) { construct(S(), autoDispose); }
+	State(S masterState) { construct(masterState, IAutoDisposable::Default); }
+	State(S masterState, bool autoDispose) { construct(masterState, autoDispose); }
+
+	~State();
+	!State();
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(C context, E event, S% nextState) { return HResult::Ok; }
@@ -112,29 +142,45 @@ public:
 	virtual HResult exit(C context, E event, S nextState) { return HResult::Ok; }
 #pragma endregion
 
-	S getMasterState() { return (S)tsm_NET::State::getMasterState(); }
+	S getMasterState();
 
 	property S MasterState { S get() { return getMasterState(); } }
 
-#pragma region Override methods of tsm_NET::State that call sub class with generic parameters.
-	virtual tsm_NET::HResult handleEvent(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^% nextState) override sealed;
-	virtual tsm_NET::HResult entry(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ previousState) override sealed;
-	virtual tsm_NET::HResult exit(tsm_NET::Context^ context, tsm_NET::Event^ event, tsm_NET::State^ nextState) override sealed;
+#pragma region Override methods of tsm_NET::IState that call sub class with generic parameters.
+	virtual HResult _handleEvent(tsm_NET::IContext^ context, tsm_NET::IEvent^ event, tsm_NET::IState^% nextState) sealed;
+	virtual HResult _entry(tsm_NET::IContext^ context, tsm_NET::IEvent^ event, tsm_NET::IState^ previousState) sealed;
+	virtual HResult _exit(tsm_NET::IContext^ context, tsm_NET::IEvent^ event, tsm_NET::IState^ nextState) sealed;
+
+	// IsExitCallOnShutdown property returns false as default.
+	// Sub class may override if necessary
+	virtual property bool IsExitCalledOnShutdown { bool get() { return false; } }
+
+	virtual property bool AutoDispose { bool get() sealed; }
+	virtual IState::NativeType* get() sealed { return m_nativeState; }
 #pragma endregion
+
+internal:
+	IState::NativeType* m_nativeState;
 };
 
 generic<typename C>
-	where C : tsm_NET::Context
-public ref class Event : public tsm_NET::Event
+	where C : tsm_NET::IContext
+public ref class Event : public tsm_NET::IEvent, public tsm_NET::IAutoDisposable
 {
+	void construct(int priority, bool autoDispose);
+
 public:
-	Event() : tsm_NET::Event() {}
-	Event(bool autoDispose) : tsm_NET::Event(autoDispose) {}
-	Event(int priority) : tsm_NET::Event(priority) {}
-	Event(int priority, bool autoDispose) : tsm_NET::Event(priority, autoDispose) {}
-	HResult cancelTimer() { return (HResult)tsm_NET::Event::cancelTimer(); }
-	HResult cancelTimer(TimeSpan timeout) { return (HResult)tsm_NET::Event::cancelTimer(timeout); }
-	HResult cancelTimer(int timeout) { return (HResult)tsm_NET::Event::cancelTimer(timeout); }
+	Event() { construct(0, IAutoDisposable::Default); }
+	Event(bool autoDispose) { construct(0, autoDispose); }
+	Event(int priority) { construct(priority, IAutoDisposable::Default); }
+	Event(int priority, bool autoDispose) { construct(priority, IAutoDisposable::Default); }
+
+	~Event();
+	!Event();
+
+	HResult cancelTimer();
+	HResult cancelTimer(TimeSpan timeout);
+	HResult cancelTimer(int timeout);
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(C context) { return HResult::Ok; }
@@ -142,9 +188,18 @@ public:
 #pragma endregion
 
 #pragma region Methods that call sub class with generic parameters.
-	virtual tsm_NET::HResult preHandle(tsm_NET::Context^ context) override sealed;
-	virtual tsm_NET::HResult postHandle(tsm_NET::Context^ context, tsm_NET::HResult hr) override sealed;
+	virtual HResult _preHandle(tsm_NET::IContext^ context) sealed;
+	virtual HResult _postHandle(tsm_NET::IContext^ context, HResult hr) sealed;
 #pragma endregion
+
+	property bool AutoDispose { virtual bool get() sealed; }
+
+	virtual IEvent::NativeType* get() sealed { return m_nativeEvent; }
+
+protected:
+	IEvent::NativeType* m_nativeEvent;
+
+	void setTimer(tsm::ITimerOwner* timerOwner, int delayTime, int intervalTime);
 };
 
 public ref class Error : public tsm_NET::Error

@@ -2,6 +2,7 @@
 
 #include "StateMachine.NET.h"
 #include "NativeObjects.h"
+#include "GenericObject.h"
 
 using namespace tsm_NET;
 using namespace tsm_NET::common;
@@ -65,9 +66,9 @@ void StateMonitorCaller::onWorkerThreadExitCallback(tsm::IContext* context, HRES
 }
 
 //-------------- Managed TimerClient class. --------------------//
-IList<Event^>^ TimerClient::PendingEvents::get()
+IList<IEvent^>^ ITimerOwner::PendingEvents::get()
 {
-	auto ret = gcnew List<Event^>();
+	auto ret = gcnew List<IEvent^>();
 	auto timerClient = getTimerClient();
 	for(auto e : timerClient->getPendingEvents()) {
 		ret->Add(getManaged((native::Event*)e.p));
@@ -75,6 +76,7 @@ IList<Event^>^ TimerClient::PendingEvents::get()
 	return ret;
 }
 
+#if 0
 //-------------- Managed Context class. --------------------//
 void Context::construct(bool isAsync, bool useNativeThread)
 {
@@ -116,11 +118,6 @@ HRESULT tsm_NET::getAsyncExitCode(native::Context* context, HRESULT* phr)
 HResult Context::setup(State^ initialState, Event^ event)
 {
 	return (HResult)m_nativeContext->setup(getNative(initialState), getNative(event));
-}
-
-HResult Context::shutdown(TimeSpan timeout)
-{
-	return (HResult)m_nativeContext->shutdown((DWORD)timeout.TotalMilliseconds);
 }
 
 HResult Context::shutdonw(int timeout_msec)
@@ -166,7 +163,7 @@ void Context::StateMonitor::set(IStateMonitor^ value)
 	}
 }
 
-tsm::TimerClient* Context::getTimerClient()
+tsm::ITimerClient* Context::getTimerClient()
 {
 	return get()->_getTimerClient();
 }
@@ -180,8 +177,6 @@ void State::construct(State^ masterState, bool autoDispose)
 		// Prevent native object from deleting automatically.
 		m_nativeState->AddRef();
 	}
-
-	IsExitCalledOnShutdown = false;
 }
 
 State^ State::getMasterState()
@@ -344,6 +339,7 @@ bool Event::AutoDispose::get()
 {
 	return m_nativeEvent->m_autoDispose;
 }
+#endif
 
 ::CultureInfo^ Error::CultureInfo::get()
 {

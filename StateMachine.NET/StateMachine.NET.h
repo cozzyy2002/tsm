@@ -18,19 +18,23 @@ namespace tsm_NET
 // Define HResult in tsm_NET namespace
 #include "HResult.h"
 
+interface class IContext;
+interface class IState;
+interface class IEvent;
+
 ref class Context;
 ref class State;
 ref class Event;
 
 public interface class IStateMonitor
 {
-	void onIdle(Context^ context);
-	void onEventTriggered(Context^ context, Event^ event);
-	void onEventHandling(Context^ context, Event^ event, State^ current);
-	void onStateChanged(Context^ context, Event^ event, State^ previous, State^ next);
-	void onTimerStarted(Context^ context, Event^ event) = 0;
-	void onTimerStopped(Context^ context, Event^ event, HResult hr) = 0;
-	void onWorkerThreadExit(Context^ context, HResult exitCode) = 0;
+	void onIdle(IContext^ context);
+	void onEventTriggered(IContext^ context, IEvent^ event);
+	void onEventHandling(IContext^ context, IEvent^ event, IState^ current);
+	void onStateChanged(IContext^ context, IEvent^ event, IState^ previous, IState^ next);
+	void onTimerStarted(IContext^ context, IEvent^ event) = 0;
+	void onTimerStopped(IContext^ context, IEvent^ event, HResult hr) = 0;
+	void onWorkerThreadExit(IContext^ context, HResult exitCode) = 0;
 
 	generic<typename H>
 	ref class AssertFailedEventArgs : public EventArgs
@@ -87,16 +91,62 @@ protected:
 	IStateMonitor^ m_stateMonitor;
 };
 
-public ref class TimerClient abstract
+public ref class ITimerOwner abstract
 {
 public:
-	property IList<Event^>^ PendingEvents { IList<Event^>^ get(); }
+	property IList<IEvent^>^ PendingEvents { IList<IEvent^>^ get(); }
 
 internal:
-	virtual tsm::TimerClient* getTimerClient() = 0;
+	virtual tsm::ITimerClient* getTimerClient() = 0;
 };
 
-public ref class Context : public TimerClient
+public interface class IContext
+{
+	using NativeType = native::Context;
+
+	property bool UseNativeThread { bool get(); }
+};
+
+public interface class IState
+{
+	using NativeType = native::State;
+
+	HResult _handleEvent(IContext^ context, IEvent^ event, IState^% nextState);
+	HResult _entry(IContext^ context, IEvent^ event, IState^ previousState);
+	HResult _exit(IContext^ context, IEvent^ event, IState^ nextState);
+	property bool IsExitCalledOnShutdown { bool get(); }
+	NativeType* get();
+};
+
+public interface class IEvent
+{
+	using NativeType = native::Event;
+
+	HResult _preHandle(IContext^ context);
+	HResult _postHandle(IContext^ context, HResult hr);
+	NativeType* get();
+};
+
+public interface class IAutoDisposable
+{
+	/**
+	 * AutoDispose : Determine the way to dispose this object.
+	 * If this value is true(default)
+	 *	* Event object is disposed when Context::handleEvent(Event) is completed.
+	 * else
+	 *	* StateMachine never disposes Event object.
+	 *	* The object should be disposed by user.
+	 *  * Then user can use one Event object to call Context::handleEvent(Event) more than once.
+	 *
+	 * This value is specified by autoDispose argument of constructor.
+	 */
+	property bool AutoDispose { bool get(); }
+
+	static bool Default = true;
+};
+
+#if 0
+public ref class Context : public IContext, public ITimerOwner
 {
 	void construct(bool isAsync, bool useNativeThread);
 
@@ -116,6 +166,16 @@ public:
 	HResult shutdown(TimeSpan timeout);
 	HResult shutdonw(int timeout_msec);
 	HResult shutdown() { return shutdown(TimeSpan::FromMilliseconds(100)); }
+	template<typename E, typename S>
+	inline HResult Generic::Context<E, S>::triggerEvent(E event)
+	{
+		return HResult();
+	}
+	template<typename E, typename S>
+	inline HResult Generic::Context<E, S>::handleEvent(E event)
+	{
+		return HResult();
+	}
 	HResult triggerEvent(Event^ event);
 	HResult handleEvent(Event^ event);
 	HResult waitReady(TimeSpan timeout);
@@ -146,7 +206,7 @@ protected:
 	tsm_NET::IStateMonitor^ m_stateMonitor;
 
 internal:
-	virtual tsm::TimerClient* getTimerClient() override;
+	virtual tsm::ITimerClient* getTimerClient() override;
 };
 
 public ref class AsyncContext : public Context
@@ -157,9 +217,7 @@ public:
 	HResult getAsyncExitCode([Out] HResult% hrExitCode) override;
 };
 
-extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
-
-public ref class State : public TimerClient
+public ref class State : public IState, public ITimerOwner
 {
 	void construct(State^ masterState, bool autoDispose);
 
@@ -170,6 +228,24 @@ public:
 	State(State^ masterState, bool autoDispose) { construct(masterState, autoDispose); }
 	~State();
 	!State();
+
+#pragma region Implementation of IState interface
+	virtual HResult _handleEvent(IContext^ context, IEvent^ event, IState^% nextState) override {
+		State^ _nextState;
+		auto hr = handleEvent((Context^)context, (Event^)event, _nextState);
+		nextState = _nextState;
+		return hr;
+	}
+	virtual HResult _entry(IContext^ context, IEvent^ event, IState^ previousState) override {
+		return entry((Context^)context, (Event^)event, (State^)previousState);
+	}
+	virtual HResult _exit(IContext^ context, IEvent^ event, IState^ nextState) override {
+		return exit((Context^)context, (Event^)event, (State^)nextState);
+	}
+	virtual property bool IsExitCalledOnShutdown {
+		bool get() override { return false; }
+	}
+#pragma endregion
 
 #pragma region Methods to be implemented by sub class.
 	virtual HResult handleEvent(Context^ context, Event^ event, State^% nextState) { return HResult::Ok; }
@@ -184,7 +260,6 @@ public:
 #pragma region .NET properties
 	property State^ MasterState { State^ get() { return getMasterState(); } }
 	property bool IsSubState { bool get() { return isSubState(); } }
-	property bool IsExitCalledOnShutdown;
 
 	property long SequenceNumber { long get(); }
 	static property int MemoryWeight { int get(); void set(int value); }
@@ -207,16 +282,16 @@ public:
 internal:
 	using NativeType = native::State;
 
-	NativeType* get() { return m_nativeState; }
+	tsm::IState* get() override { return m_nativeState; }
 
 protected:
 	NativeType* m_nativeState;
 
 internal:
-	virtual tsm::TimerClient* getTimerClient() override;
+	virtual tsm::ITimerClient* getTimerClient() override;
 };
 
-public ref class Event
+public ref class Event : public IEvent
 {
 	void construct(int priority, bool autoDispose);
 
@@ -228,17 +303,26 @@ public:
 	~Event();
 	!Event();
 
+#pragma region Implementation of IEvent interface
+	virtual HResult _preHandle(IContext^ context) {
+		return preHandle((Context^)context);
+	}
+	virtual HResult _postHandle(IContext^ context, HResult hr) {
+		return postHandle((Context^)context, hr);
+	}
+#pragma endregion
+
 #pragma region Methods to be implemented by sub class.
 	virtual HResult preHandle(Context^ context) { return HResult::Ok; }
 	virtual HResult postHandle(Context^ context, HResult hr) { return hr; }
 #pragma endregion
 
-	void setDelayTimer(TimerClient^ client, TimeSpan delayTime);
-	void setIntervalTimer(TimerClient^ client, TimeSpan intervalTime);
-	void setTimer(TimerClient^ client, TimeSpan delayTime, TimeSpan intervalTime);
-	void setDelayTimer(TimerClient^ client, int delayTime_msec);
-	void setIntervalTimer(TimerClient^ client, int intervalTime_msec);
-	void setTimer(TimerClient^ client, int delayTime_msec, int intervalTime_msec);
+	void setDelayTimer(ITimerOwner^ client, TimeSpan delayTime);
+	void setIntervalTimer(ITimerOwner^ client, TimeSpan intervalTime);
+	void setTimer(ITimerOwner^ client, TimeSpan delayTime, TimeSpan intervalTime);
+	void setDelayTimer(ITimerOwner^ client, int delayTime_msec);
+	void setIntervalTimer(ITimerOwner^ client, int intervalTime_msec);
+	void setTimer(ITimerOwner^ client, int delayTime_msec, int intervalTime_msec);
 	HResult cancelTimer() { return cancelTimer(0); }
 	HResult cancelTimer(TimeSpan timeout) { return cancelTimer((int)timeout.TotalMilliseconds); }
 	HResult cancelTimer(int timeout);
@@ -275,8 +359,11 @@ internal:
 protected:
 	NativeType* m_nativeEvent;
 
-	void setTimer(tsm::TimerClient* timerClient, int delayTime, int intervalTime);
+	void setTimer(tsm::ITimerClient* timerClient, int delayTime, int intervalTime);
 };
+#endif
+
+extern HRESULT getAsyncExitCode(native::Context* context, HRESULT* phr);
 
 public ref class Error
 {
