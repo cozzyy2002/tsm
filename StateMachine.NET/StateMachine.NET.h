@@ -91,23 +91,22 @@ protected:
 	IStateMonitor^ m_stateMonitor;
 };
 
-public ref class ITimerOwner abstract
+public interface class ITimerOwner
 {
 public:
 	property IList<IEvent^>^ PendingEvents { IList<IEvent^>^ get(); }
 
-internal:
-	virtual tsm::ITimerClient* getTimerClient() = 0;
+	tsm::ITimerClient* getTimerClient();
 };
 
-public interface class IContext
+public interface class IContext : public ITimerOwner
 {
 	using NativeType = native::Context;
 
 	property bool UseNativeThread { bool get(); }
 };
 
-public interface class IState
+public interface class IState : public ITimerOwner
 {
 	using NativeType = native::State;
 

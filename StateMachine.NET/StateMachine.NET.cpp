@@ -66,15 +66,6 @@ void StateMonitorCaller::onWorkerThreadExitCallback(tsm::IContext* context, HRES
 }
 
 //-------------- Managed TimerClient class. --------------------//
-IList<IEvent^>^ ITimerOwner::PendingEvents::get()
-{
-	auto ret = gcnew List<IEvent^>();
-	auto timerClient = getTimerClient();
-	for(auto e : timerClient->getPendingEvents()) {
-		ret->Add(getManaged((native::Event*)e.p));
-	}
-	return ret;
-}
 
 #if 0
 //-------------- Managed Context class. --------------------//

@@ -8,6 +8,16 @@ using namespace common;
 
 namespace Generic
 {
+	static IList<IEvent^>^ getPendingEvents(ITimerOwner^ timerOwner)
+	{
+		auto ret = gcnew List<IEvent^>();
+		auto timerClient = timerOwner->getTimerClient();
+		for(auto e : timerClient->getPendingEvents()) {
+			ret->Add(getManaged((native::Event*)e.p));
+		}
+		return ret;
+	}
+
 	generic<typename E, typename S>
 	StateMonitorCaller<E, S>::StateMonitorCaller(IStateMonitor<E, S>^ stateMonitor)
 		: tsm_NET::StateMonitorCaller(nullptr)
@@ -126,6 +136,18 @@ namespace Generic
 	}
 
 	generic<typename E, typename S>
+	IList<IEvent^>^ Context<E, S>::PendingEvents::get()
+	{
+		return getPendingEvents(this);
+	}
+
+	generic<typename E, typename S>
+	tsm::ITimerClient* Context<E, S>::getTimerClient()
+	{
+		return m_nativeContext->_getTimerClient();
+	}
+
+	generic<typename E, typename S>
 	void Context<E, S>::StateMonitor::set(IStateMonitor<E, S>^ value)
 	{
 		m_stateMonitor = value;
@@ -207,6 +229,18 @@ namespace Generic
 	bool State<C, E, S>::AutoDispose::get()
 	{
 		return m_nativeState->m_autoDispose;
+	}
+
+	generic<typename C, typename E, typename S>
+	IList<IEvent^>^ State<C, E, S>::PendingEvents::get()
+	{
+		return getPendingEvents(this);
+	}
+
+	generic<typename C, typename E, typename S>
+	tsm::ITimerClient* State<C, E, S>::getTimerClient()
+	{
+		return m_nativeState->_getTimerClient();
 	}
 
 	generic<typename C>
