@@ -129,19 +129,16 @@ public interface class IEvent
 public interface class IAutoDisposable
 {
 	/**
-	 * AutoDispose : Determine the way to dispose this object.
+	 * AutoDispose property determine the way to dispose this object.
 	 * If this value is true(default)
-	 *	* Event object is disposed when Context::handleEvent(Event) is completed.
+	 *	* This object is disposed by State Machine when the object is no longer needed.
 	 * else
 	 *	* StateMachine never disposes Event object.
 	 *	* The object should be disposed by user.
-	 *  * Then user can use one Event object to call Context::handleEvent(Event) more than once.
 	 *
 	 * This value is specified by autoDispose argument of constructor.
 	 */
 	property bool AutoDispose { bool get(); }
-
-	static bool Default = true;
 };
 
 #if 0

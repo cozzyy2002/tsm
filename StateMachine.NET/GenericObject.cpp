@@ -232,6 +232,24 @@ namespace Generic
 	}
 
 	generic<typename C, typename E, typename S>
+	long State<C, E, S>::SequenceNumber::get()
+	{
+		return m_nativeState->getSequenceNumber();
+	}
+
+	generic<typename C, typename E, typename S>
+	int State<C, E, S>::MemoryWeight::get()
+	{
+		return tsm::IState::getMemoryWeight();
+	}
+
+	generic<typename C, typename E, typename S>
+	void State<C, E, S>::MemoryWeight::set(int value)
+	{
+		tsm::IState::setMemoryWeight(value);
+	}
+
+	generic<typename C, typename E, typename S>
 	IList<IEvent^>^ State<C, E, S>::PendingEvents::get()
 	{
 		return getPendingEvents(this);
@@ -281,6 +299,36 @@ namespace Generic
 	}
 
 	generic<typename C>
+	void Event<C>::setTimer(tsm_NET::ITimerOwner^ timerOwner, int delayTime_msec, int intervalTime_msec)
+	{
+		m_nativeEvent->setTimer(timerOwner->getTimerClient(), delayTime_msec, intervalTime_msec);
+	}
+
+	generic<typename C>
+	TimeSpan Event<C>::DelayTime::get()
+	{
+		return TimeSpan::FromMilliseconds(m_nativeEvent->_getDelayTime());
+	}
+
+	generic<typename C>
+	TimeSpan Event<C>::IntervalTime::get()
+	{
+		return TimeSpan::FromMilliseconds(m_nativeEvent->_getIntervalTime());
+	}
+	
+	generic<typename C>
+	int Event<C>::TimeoutCount::get()
+	{
+		return m_nativeEvent->_getTimeoutCount();
+	}
+	
+	generic<typename C>
+	int Event<C>::Priority::get()
+	{
+		return m_nativeEvent->_getPriority();
+	}
+
+	generic<typename C>
 	HResult Event<C>::cancelTimer()
 	{
 		return (HResult)m_nativeEvent->cancelTimer();
@@ -299,17 +347,28 @@ namespace Generic
 	}
 
 	generic<typename C>
-	void Event<C>::setTimer(tsm::ITimerOwner* timerOwner, int delayTime, int intervalTime)
-	{
-		m_nativeEvent->setTimer(timerOwner, delayTime, intervalTime);
-	}
-
-	generic<typename C>
 	bool Event<C>::AutoDispose::get()
 	{
 		return m_nativeEvent->m_autoDispose;
 	}
 
+	generic<typename C>
+	long Event<C>::SequenceNumber::get()
+	{
+		return m_nativeEvent->getSequenceNumber();
+	}
+
+	generic<typename C>
+	int Event<C>::MemoryWeight::get()
+	{
+		return tsm::IEvent::getMemoryWeight();
+	}
+
+	generic<typename C>
+	void Event<C>::MemoryWeight::set(int value)
+	{
+		tsm::IEvent::setMemoryWeight(value);
+	}
 }
 
 HRESULT tsm_NET::getAsyncExitCode(native::Context* context, HRESULT* phr)

@@ -47,9 +47,12 @@ public:
 	void setIntervaleTimer(ITimerOwner* timerOwner, DWORD intervalTime) { setTimer(timerOwner, 0, intervalTime); }
 	// Set delay time and interval time.
 	void setTimer(ITimerOwner* timerOwner, DWORD delayTime, DWORD intervalTime = 0) {
+		setTimer(timerOwner->_getTimerClient(), delayTime, intervalTime);
+	}
+	void setTimer(ITimerClient* timerClient, DWORD delayTime, DWORD intervalTime = 0) {
 		m_delayTime = delayTime;
 		m_intervalTime = intervalTime;
-		m_timerClient = timerOwner->_getTimerClient();
+		m_timerClient = timerClient;
 	}
 	HRESULT cancelTimer(int timeout = 0) {
 		return m_timerClient ? m_timerClient->cancelEventTimer(this, timeout) : E_ILLEGAL_METHOD_CALL;

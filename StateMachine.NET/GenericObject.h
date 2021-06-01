@@ -131,9 +131,9 @@ public ref class State : public tsm_NET::IState, public tsm_NET::IAutoDisposable
 	void construct(S masterState, bool autoDispose);
 
 public:
-	State() { construct(S(), IAutoDisposable::Default); }
+	State() { construct(S(), DefaultAutoDispose); }
 	State(bool autoDispose) { construct(S(), autoDispose); }
-	State(S masterState) { construct(masterState, IAutoDisposable::Default); }
+	State(S masterState) { construct(masterState, DefaultAutoDispose); }
 	State(S masterState, bool autoDispose) { construct(masterState, autoDispose); }
 
 	~State();
@@ -159,6 +159,11 @@ public:
 	virtual property bool IsExitCalledOnShutdown { bool get() { return false; } }
 
 	virtual property bool AutoDispose { bool get() sealed; }
+	static bool DefaultAutoDispose = true;
+
+	property long SequenceNumber { long get(); }
+	static property int MemoryWeight { int get(); void set(int value); }
+
 	virtual IState::NativeType* get() sealed { return m_nativeState; }
 
 	virtual property IList<IEvent^>^ PendingEvents { IList<IEvent^>^ get(); }
@@ -176,13 +181,25 @@ public ref class Event : public tsm_NET::IEvent, public tsm_NET::IAutoDisposable
 	void construct(int priority, bool autoDispose);
 
 public:
-	Event() { construct(0, IAutoDisposable::Default); }
+	Event() { construct(0, DefaultAutoDispose); }
 	Event(bool autoDispose) { construct(0, autoDispose); }
-	Event(int priority) { construct(priority, IAutoDisposable::Default); }
-	Event(int priority, bool autoDispose) { construct(priority, IAutoDisposable::Default); }
+	Event(int priority) { construct(priority, DefaultAutoDispose); }
+	Event(int priority, bool autoDispose) { construct(priority, DefaultAutoDispose); }
 
 	~Event();
 	!Event();
+
+	void setTimer(tsm_NET::ITimerOwner^ timerOwner, TimeSpan delayTime, TimeSpan intervalTime) { setTimer(timerOwner, (int)delayTime.TotalMilliseconds, (int)intervalTime.TotalMilliseconds); }
+	void setTimer(tsm_NET::ITimerOwner^ timerOwner, int delayTime_msec, int intervalTime_msec);
+	void setDelayTime(tsm_NET::ITimerOwner^ timerOwner, TimeSpan delayTime) { setTimer(timerOwner, (int)delayTime.TotalMilliseconds, 0); }
+	void setDelayTime(tsm_NET::ITimerOwner^ timerOwner, int delayTime_msec) { setTimer(timerOwner, delayTime_msec, 0); }
+	void setIntervalTime(tsm_NET::ITimerOwner^ timerOwner, TimeSpan intervalTime) { setTimer(timerOwner, 0, (int)intervalTime.TotalMilliseconds); }
+	void setIntervalTime(tsm_NET::ITimerOwner^ timerOwner, int intervalTime_msec) { setTimer(timerOwner, 0, intervalTime_msec); }
+
+	property TimeSpan DelayTime { TimeSpan get(); }
+	property TimeSpan IntervalTime { TimeSpan get(); }
+	property int TimeoutCount { int get(); }
+	property int Priority { int get(); }
 
 	HResult cancelTimer();
 	HResult cancelTimer(TimeSpan timeout);
@@ -198,14 +215,16 @@ public:
 	virtual HResult _postHandle(tsm_NET::IContext^ context, HResult hr) sealed;
 #pragma endregion
 
-	property bool AutoDispose { virtual bool get() sealed; }
+	virtual property bool AutoDispose { bool get() sealed; }
+	static bool DefaultAutoDispose = true;
+
+	property long SequenceNumber { long get(); }
+	static property int MemoryWeight { int get(); void set(int value); }
 
 	virtual IEvent::NativeType* get() sealed { return m_nativeEvent; }
 
 protected:
 	IEvent::NativeType* m_nativeEvent;
-
-	void setTimer(tsm::ITimerOwner* timerOwner, int delayTime, int intervalTime);
 };
 
 public ref class Error : public tsm_NET::Error
