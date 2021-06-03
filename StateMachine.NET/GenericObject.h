@@ -83,6 +83,7 @@ public:
 	S getCurrentState();
 	virtual HResult getAsyncExitCode([Out] HResult% hrExitCode) { return HResult::NotImpl; }
 
+	property bool IsAsync { bool get(); }
 	property S CurrentState { S get() { return getCurrentState(); } }
 
 #pragma region Implementation of IContext
@@ -145,6 +146,7 @@ public:
 	virtual HResult exit(C context, E event, S nextState) { return HResult::Ok; }
 #pragma endregion
 
+	property bool IsSubState { bool get(); }
 	S getMasterState();
 
 	property S MasterState { S get() { return getMasterState(); } }
@@ -156,7 +158,7 @@ public:
 
 	// IsExitCallOnShutdown property returns false as default.
 	// Sub class may override if necessary
-	virtual property bool IsExitCalledOnShutdown { bool get() { return false; } }
+	virtual property bool IsExitCalledOnShutdown;
 
 	virtual property bool AutoDispose { bool get() sealed; }
 	static bool DefaultAutoDispose = true;

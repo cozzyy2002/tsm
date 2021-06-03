@@ -129,6 +129,12 @@ namespace Generic
 	}
 
 	generic<typename E, typename S>
+	bool Context<E, S>::IsAsync::get()
+	{
+		return m_nativeContext->isAsync();
+	}
+
+	generic<typename E, typename S>
 	S Context<E, S>::getCurrentState()
 	{
 		auto state = m_nativeContext->getCurrentState();
@@ -178,6 +184,8 @@ namespace Generic
 			// Prevent native object from being deleted automatically.
 			m_nativeState->AddRef();
 		}
+
+		IsExitCalledOnShutdown = false;
 	}
 
 	generic<typename C, typename E, typename S>
@@ -216,6 +224,12 @@ namespace Generic
 	HResult State<C, E, S>::_exit(tsm_NET::IContext^ context, tsm_NET::IEvent^ event, tsm_NET::IState^ nextState)
 	{
 		return (tsm_NET::HResult)exit((C)context, (E)event, (S)nextState);
+	}
+
+	generic<typename C, typename E, typename S>
+	bool State<C, E, S>::IsSubState::get()
+	{
+		return m_nativeState->isSubState();
 	}
 
 	generic<typename C, typename E, typename S>
