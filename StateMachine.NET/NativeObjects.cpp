@@ -170,7 +170,8 @@ HRESULT Context::getAsyncExitCode(HRESULT* pht)
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState, bool autoDispose)
-	: m_managedState(state)
+	: tsm::State<Context, Event, State>(masterState ? masterState->get() : nullptr)
+	, m_managedState(state)
 	, m_autoDispose(autoDispose)
 {
 }
