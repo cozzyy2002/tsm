@@ -210,8 +210,8 @@ bool State::_isExitCalledOnShutdown() const
 }
 
 Event::Event(ManagedType^ event, int priority, bool autoDispose)
-	: m_managedEvent(event)
-	, m_autoDispose(autoDispose)
+	: tsm::Event<Context>(priority)
+	, m_managedEvent(event), m_autoDispose(autoDispose)
 {
 }
 
