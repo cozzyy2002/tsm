@@ -91,8 +91,8 @@ public:
 	IContext::NativeType* get() { return m_nativeContext; }
 	virtual property bool UseNativeThread { bool get() { return m_useNativeThread; } }
 
-	virtual property IList<IEvent^>^ PendingEvents { IList<IEvent^>^ get(); }
-	virtual tsm::ITimerClient* getTimerClient();
+	virtual property IList<IEvent^>^ PendingEvents { IList<IEvent^>^ get() sealed; }
+	virtual tsm::ITimerClient* getTimerClient() sealed;
 #pragma endregion
 
 #pragma region .NET properties
@@ -168,8 +168,8 @@ public:
 
 	virtual IState::NativeType* get() sealed { return m_nativeState; }
 
-	virtual property IList<IEvent^>^ PendingEvents { IList<IEvent^>^ get(); }
-	virtual tsm::ITimerClient* getTimerClient();
+	virtual property IList<IEvent^>^ PendingEvents { IList<IEvent^>^ get() sealed; }
+	virtual tsm::ITimerClient* getTimerClient() sealed;
 #pragma endregion
 
 internal:
