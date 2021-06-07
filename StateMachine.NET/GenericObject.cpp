@@ -67,11 +67,28 @@ namespace Generic
 		m_stateMonitor->onWorkerThreadExit((Context<E, S>^)getManaged((native::Context*)context), (HResult)exitCode);
 	}
 
+	//-------------- Managed Context class. --------------------//
+
 	generic<typename E, typename S>
 	void Context<E, S>::construct(bool isAsync, bool useNativeThread)
 	{
 		m_useNativeThread = useNativeThread;
 		m_nativeContext = new native::Context(this, isAsync);
+	}
+
+	generic<typename E, typename S>
+	Context<E, S>::~Context()
+	{
+		this->!Context();
+	}
+
+	generic<typename E, typename S>
+	Context<E, S>::!Context()
+	{
+		if(m_nativeContext) {
+			delete m_nativeContext;
+			m_nativeContext = nullptr;
+		}
 	}
 
 	generic<typename E, typename S>
@@ -137,8 +154,7 @@ namespace Generic
 	generic<typename E, typename S>
 	S Context<E, S>::getCurrentState()
 	{
-		auto state = m_nativeContext->getCurrentState();
-		return (S)(state ? state->get() : nullptr);
+		return (S)getManaged(m_nativeContext->getCurrentState());
 	}
 
 	generic<typename E, typename S>
@@ -167,6 +183,8 @@ namespace Generic
 		}
 	}
 
+	//-------------- Managed AsyncContext class. --------------------//
+
 	generic<typename E, typename S>
 	HResult AsyncContext<E, S>::getAsyncExitCode([Out] HResult% hrExitCode)
 	{
@@ -175,6 +193,8 @@ namespace Generic
 		if(SUCCEEDED(hr)) { hrExitCode = (HResult)_hrExitCode; }
 		return (HResult)hr;
 	}
+
+	//-------------- Managed State class. --------------------//
 
 	generic<typename C, typename E, typename S>
 	void State<C, E, S>::construct(S masterState, bool autoDispose)
@@ -198,6 +218,7 @@ namespace Generic
 	State<C, E, S>::!State()
 	{
 		if(m_nativeState && !m_nativeState->m_autoDispose) {
+			// Delete native object.
 			m_nativeState->Release();
 		}
 		m_nativeState = nullptr;
@@ -235,8 +256,7 @@ namespace Generic
 	generic<typename C, typename E, typename S>
 	S State<C, E, S>::getMasterState()
 	{
-		auto state = m_nativeState->getMasterState();
-		return (S)(state ? state->get() : nullptr);
+		return (S)getManaged(m_nativeState->getMasterState());
 	}
 
 	generic<typename C, typename E, typename S>
@@ -275,6 +295,8 @@ namespace Generic
 		return m_nativeState->_getTimerClient();
 	}
 
+	//-------------- Managed Event class. --------------------//
+
 	generic<typename C>
 	void Event<C>::construct(int priority, bool autoDispose)
 	{
@@ -295,6 +317,7 @@ namespace Generic
 	Event<C>::!Event()
 	{
 		if(m_nativeEvent && !m_nativeEvent->m_autoDispose) {
+			// Delete native object.
 			m_nativeEvent->Release();
 		}
 		m_nativeEvent = nullptr;

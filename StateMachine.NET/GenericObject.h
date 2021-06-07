@@ -69,7 +69,8 @@ protected:
 
 public:
 	Context() : m_stateMonitor(nullptr) { construct(false, false); }
-	virtual ~Context() {}
+	~Context();
+	!Context();
 
 	HResult setup(S initialState, E event);
 	HResult setup(S initialState);
@@ -137,7 +138,7 @@ public:
 	State(S masterState) { construct(masterState, DefaultAutoDispose); }
 	State(S masterState, bool autoDispose) { construct(masterState, autoDispose); }
 
-	~State();
+	virtual ~State();
 	!State();
 
 #pragma region Methods to be implemented by sub class.
