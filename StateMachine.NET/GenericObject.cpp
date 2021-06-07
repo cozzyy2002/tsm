@@ -279,7 +279,7 @@ namespace Generic
 	void Event<C>::construct(int priority, bool autoDispose)
 	{
 		m_nativeEvent = new native::Event(this, priority, autoDispose);
-		if(autoDispose) {
+		if(!autoDispose) {
 			// Prevent native object from being deleted automatically.
 			m_nativeEvent->AddRef();
 		}
