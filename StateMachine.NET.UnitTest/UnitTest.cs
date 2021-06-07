@@ -8,11 +8,7 @@ using NSubstitute;
 using NUnit.Framework;
 using System;
 
-#if GENERIC_TEST
-using HResult = tsm_NET.Generic.HResult;
-#else
 using HResult = tsm_NET.HResult;
-#endif
 
 namespace NET.UnitTest
 {

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Testee
 {
+#if false
     public class Context : tsm_NET.Context
     {
     };
@@ -45,6 +46,7 @@ namespace Testee
         public AsyncState(AsyncState masterState) : base(masterState) { }
         public AsyncState(AsyncState masterState, bool autoDispose) : base(masterState, autoDispose) { }
     };
+#endif
 
 namespace Generic
 {

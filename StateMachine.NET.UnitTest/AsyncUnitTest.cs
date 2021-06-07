@@ -9,7 +9,7 @@ namespace NET.AsyncUnitTest
     using Context = Testee.Generic.AsyncContext;
     using Event = Testee.Generic.AsyncEvent;
     using State = Testee.Generic.AsyncState;
-    using HResult = tsm_NET.Generic.HResult;
+    using HResult = tsm_NET.HResult;
 
     [TestFixture]
     class AsyncUnitTest
@@ -47,7 +47,7 @@ namespace NET.AsyncUnitTest
             var ActualSequences = new int[EventCount];
             var AllEventsHandled = new EventWaitHandle(false, EventResetMode.ManualReset);
 
-            // Creatje and trigger events that has same priority.
+            // Create and trigger events that have same priority.
             var firstEvent = Substitute.For<Event>();
             firstEvent.preHandle(context)
                 .Returns(x => {

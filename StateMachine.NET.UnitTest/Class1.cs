@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System;
 using System.Threading;
 using tsm_NET.Generic;
+using HResult = tsm_NET.HResult;
 
 namespace StateMachine.NET.UnitTest.Generic
 {
@@ -240,9 +241,9 @@ namespace StateMachine.NET.UnitTest.Generic
             Assert.That(context.setup(mockInitialState), Is.EqualTo(HResult.Ok));
             mockEvent.setTimer(mockInitialState, TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(100));
             Assume.That(mockEvent.DelayTime, Is.EqualTo(TimeSpan.FromMilliseconds(200)));
-            Assume.That(mockEvent.InterValTime, Is.EqualTo(TimeSpan.FromMilliseconds(100)));
+            Assume.That(mockEvent.IntervalTime, Is.EqualTo(TimeSpan.FromMilliseconds(100)));
 
-            Console.WriteLine($"{Now} Triggering event: Timer: Delay={mockEvent.DelayTime:fff}, Intervale={mockEvent.InterValTime:fff}");
+            Console.WriteLine($"{Now} Triggering event: Timer: Delay={mockEvent.DelayTime:fff}, Intervale={mockEvent.IntervalTime:fff}");
             Assert.That(context.triggerEvent(mockEvent), Is.EqualTo(HResult.Ok));
 
             var pendingEvents = mockInitialState.PendingEvents;

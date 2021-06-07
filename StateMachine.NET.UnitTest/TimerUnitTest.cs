@@ -13,7 +13,7 @@ namespace NET.TimerUnitTest
     using Context = Testee.Generic.AsyncContext;
     using Event = Testee.Generic.AsyncEvent;
     using State = Testee.Generic.AsyncState;
-    using HResult = tsm_NET.Generic.HResult;
+    using HResult = tsm_NET.HResult;
 
     [TestFixture]
     class TimerUnitTest
@@ -80,31 +80,31 @@ namespace NET.TimerUnitTest
         }
     }
 
-    [TestFixture(true)]     // Use Context as TimerClient
-    [TestFixture(false)]    // Use State as TimerClient
+    [TestFixture(true)]     // Use Context as ITimerOwner
+    [TestFixture(false)]    // Use State as ITimerOwner
     class TimerClientUnitTest : TimerUnitTest
     {
-        public TimerClientUnitTest(bool isTimerClientContext)
+        public TimerClientUnitTest(bool isTmerOwnerContext)
         {
-            this.isTimerClientContext = isTimerClientContext;
+            this.isTmerOwnerContext = isTmerOwnerContext;
         }
 
         [SetUp]
         public new void SetUp()
         {
-            // Set timerClient according to argument of TestFixture attribute.
-            timerClient = isTimerClientContext ? (tsm_NET.TimerClient)context : mockState0;
+            // Set timerOwner according to argument of TestFixture attribute.
+            timerOwner = isTmerOwnerContext ? (tsm_NET.ITimerOwner)context : mockState0;
         }
 
-        bool isTimerClientContext;
-        tsm_NET.TimerClient timerClient;
+        bool isTmerOwnerContext;
+        tsm_NET.ITimerOwner timerOwner;
 
         [Test]
         public void CancelTimerReturnValueTest()
         {
             // Timer is not set.
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.IllegalMethodCall));
-            e0.setDelayTimer(timerClient, TimeSpan.Zero);
+            e0.setDelayTime(timerOwner, TimeSpan.Zero);
             // Timer is not started.
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.TimerIsStopped));
         }
@@ -113,20 +113,20 @@ namespace NET.TimerUnitTest
         [Test]
         public void OneShotTimer()
         {
-            Console.WriteLine($"One-shot timer test using {timerClient}");
+            Console.WriteLine($"One-shot timer test using {timerOwner}");
 
-            e0.setDelayTimer(timerClient, 100);
+            e0.setDelayTime(timerOwner, 100);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
             // Timer should be working.
-            var events = timerClient.PendingEvents;
+            var events = timerOwner.PendingEvents;
             Assert.That(events.Count, Is.EqualTo(1));
             Assert.That(events.Contains(e0), Is.True);
             Thread.Sleep(100);
 
             // Timer should be stopped.
-            events = timerClient.PendingEvents;
+            events = timerOwner.PendingEvents;
             Assert.That(events.Count, Is.EqualTo(0));
 
             // Timer event should have been handled once.
@@ -138,20 +138,20 @@ namespace NET.TimerUnitTest
         [Test]
         public void CancelOneShotTimer()
         {
-            Console.WriteLine($"Cancel one-Shot timer test using {timerClient}");
+            Console.WriteLine($"Cancel one-Shot timer test using {timerOwner}");
 
-            e0.setDelayTimer(timerClient, 100);
+            e0.setDelayTime(timerOwner, 100);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
             // Timer should be working.
-            var events = timerClient.PendingEvents;
+            var events = timerOwner.PendingEvents;
             Assert.That(events.Count, Is.EqualTo(1));
             Assert.That(events.Contains(e0), Is.True);
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
 
             // Timer should be canceled.
-            events = timerClient.PendingEvents;
+            events = timerOwner.PendingEvents;
             Assert.That(events.Count, Is.EqualTo(0));
             Thread.Sleep(100);
 
@@ -164,21 +164,21 @@ namespace NET.TimerUnitTest
         [Test]
         public void IntervalTimer()
         {
-            Console.WriteLine($"Interval timer test using {timerClient}");
+            Console.WriteLine($"Interval timer test using {timerOwner}");
 
-            e0.setTimer(timerClient, 100, 200);
+            e0.setTimer(timerOwner, 100, 200);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
             // Timer should be working.
-            var events = timerClient.PendingEvents;
+            var events = timerOwner.PendingEvents;
             Assert.That(events.Count, Is.EqualTo(1));
             Assert.That(events.Contains(e0), Is.True);
             Thread.Sleep(500);
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
 
             // Timer should be stopped.
-            events = timerClient.PendingEvents;
+            events = timerOwner.PendingEvents;
             Assert.That(events.Count, Is.EqualTo(0));
 
             // Timer event should have been handled 3 times(Delay x 1 + Interval x 2).
@@ -189,28 +189,28 @@ namespace NET.TimerUnitTest
         [Test]
         public void CancelbyShutdown()
         {
-            e0.setDelayTimer(timerClient, 100);
+            e0.setDelayTime(timerOwner, 100);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(50);
 
             // Timer should be working.
-            var events = timerClient.PendingEvents;
+            var events = timerOwner.PendingEvents;
             Assert.That(events.Count, Is.EqualTo(1));
             Assert.That(events.Contains(e0), Is.True);
 
             Assert.That(context.shutdown(), Is.EqualTo(HResult.Ok));
             Thread.Sleep(100);
 
-            if (timerClient == context)
+            if (timerOwner == context)
             {
                 // Timer should be stopped.
-                events = timerClient.PendingEvents;
+                events = timerOwner.PendingEvents;
                 Assert.That(events.Count, Is.EqualTo(0));
             }
             else
             {
                 // NOTE:
-                // `timerClient.PendingEvents` can not be called when timerClient is State object
+                // `timerOwner.PendingEvents` can not be called when timerOwner is State object
                 // because State object is disposed by Context.Shutdown().
             }
 
@@ -231,11 +231,11 @@ namespace NET.TimerUnitTest
                 });
 
             Console.WriteLine($" Time: {DateTime.Now:ss.fff}");
-            e0.setTimer(timerClient, 50, 100);
+            e0.setTimer(timerOwner, 50, 100);
             Assert.That(context.handleEvent(e0), Is.EqualTo(HResult.Ok));
-            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(1));
+            Assert.That(timerOwner.PendingEvents.Count, Is.EqualTo(1));
             Thread.Sleep(500);
-            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(0));
+            Assert.That(timerOwner.PendingEvents.Count, Is.EqualTo(0));
         }
 
         [Test]
@@ -249,15 +249,15 @@ namespace NET.TimerUnitTest
                 });
 
             // Event to cancel e1.
-            e0.setDelayTimer(timerClient, 50);
+            e0.setDelayTime(timerOwner, 50);
             // Event to be canceled.
-            e1.setTimer(timerClient, 100, 50);
+            e1.setTimer(timerOwner, 100, 50);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Assert.That(context.triggerEvent(e1), Is.EqualTo(HResult.Ok));
 
-            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(2));
+            Assert.That(timerOwner.PendingEvents.Count, Is.EqualTo(2));
             Thread.Sleep(200);
-            Assert.That(timerClient.PendingEvents.Count, Is.EqualTo(0));
+            Assert.That(timerOwner.PendingEvents.Count, Is.EqualTo(0));
             mockState0.DidNotReceive()
                 .handleEvent(Arg.Any<Context>(), e1, ref Arg.Any<State>());
         }
@@ -274,7 +274,7 @@ namespace NET.TimerUnitTest
                 });
 
             var startTime = DateTime.Now;
-            e0.setTimer(timerClient, 100, 200);
+            e0.setTimer(timerOwner, 100, 200);
             Assert.That(context.triggerEvent(e0), Is.EqualTo(HResult.Ok));
             Thread.Sleep(1000);
             Assert.That(e0.cancelTimer(), Is.EqualTo(HResult.Ok));
