@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace NET.TimerUnitTest
 {
-    using Context = Testee.Generic.AsyncContext;
-    using Event = Testee.Generic.AsyncEvent;
-    using State = Testee.Generic.AsyncState;
+    using Context = Testee.AsyncContext;
+    using Event = Testee.AsyncEvent;
+    using State = Testee.AsyncState;
     using HResult = tsm_NET.HResult;
 
     [TestFixture]

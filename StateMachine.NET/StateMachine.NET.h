@@ -24,13 +24,17 @@ interface class IEvent;
 
 public interface class IStateMonitor
 {
+	using NativeType = tsm::IStateMonitor;
+
 	void onIdle(IContext^ context);
 	void onEventTriggered(IContext^ context, IEvent^ event);
 	void onEventHandling(IContext^ context, IEvent^ event, IState^ current);
 	void onStateChanged(IContext^ context, IEvent^ event, IState^ previous, IState^ next);
-	void onTimerStarted(IContext^ context, IEvent^ event) = 0;
-	void onTimerStopped(IContext^ context, IEvent^ event, HResult hr) = 0;
-	void onWorkerThreadExit(IContext^ context, HResult exitCode) = 0;
+	void onTimerStarted(IContext^ context, IEvent^ event);
+	void onTimerStopped(IContext^ context, IEvent^ event, HResult hr);
+	void onWorkerThreadExit(IContext^ context, HResult exitCode);
+
+	NativeType* get();
 
 	generic<typename H>
 	ref class AssertFailedEventArgs : public EventArgs
@@ -52,39 +56,6 @@ public interface class IStateMonitor
 	};
 
 	///*static*/ event EventHandler<AssertFailedEventArgs<HResult>^>^ AssertFailedEvent;
-};
-
-public ref class StateMonitorCaller
-{
-internal:
-	StateMonitorCaller(IStateMonitor^ stateMonitor);
-	virtual ~StateMonitorCaller();
-	!StateMonitorCaller();
-
-	using NativeType = native::StateMonitor;
-
-#pragma region Definition of delegate, callback signature and callback method. See native::Callback<> template class.
-	// void IStateMonitor::onIdle()
-	virtual void onIdleCallback(tsm::IContext* context);
-	// void IstateMonitor::onEventTriggered()
-	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event);
-	// void IStateMonitor::onEventHandling()
-	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current);
-	// void IStateMonitor::onStateChanged()
-	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next);
-	// void IStateMonitor::onTimerStarted()
-	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event);
-	// void IStateMonitor::onTimerStopped()
-	virtual void onTimerStoppedCallback(tsm::IContext* context, tsm::IEvent* event, HRESULT hr);
-	// void IStateMonitor::onWorkerThreadExit()
-	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode);
-#pragma endregion
-
-	NativeType* get() { return m_nativeStateMonitor; }
-
-protected:
-	NativeType* m_nativeStateMonitor;
-	IStateMonitor^ m_stateMonitor;
 };
 
 public interface class ITimerOwner

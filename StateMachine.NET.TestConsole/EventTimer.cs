@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using tsm_NET.Generic;
+using tsm_NET;
 
 namespace StateMachine.NET.TestConsole
 {
@@ -11,7 +11,7 @@ namespace StateMachine.NET.TestConsole
         void IJob.Start(IList<string> args)
         {
             var context = new Context();
-            context.StateMonitor = new StateMonitor();
+            context.StateMonitor = new StateMonitor<IContext, IEvent, IState>();
 
             context.Count = 2;
             var initialState = new InitialState();
@@ -58,7 +58,7 @@ namespace StateMachine.NET.TestConsole
             public override HResult entry(Context context, Event @event, State previousState)
             {
                 var _event = new Event("Next");
-                _event.setTimer(this, @event.DelayTime, @event.InterValTime);
+                _event.setTimer(this, @event.DelayTime, @event.IntervalTime);
                 context.triggerEvent(_event);
                 return HResult.Ok;
             }
@@ -88,15 +88,15 @@ namespace StateMachine.NET.TestConsole
             public string Name { get; protected set; }
             public override string ToString()
             {
-                return $"Event: {Name}, Delay={DelayTime.TotalSeconds}, Interval={InterValTime.TotalSeconds}";
+                return $"Event: {Name}, Delay={DelayTime.TotalSeconds}, Interval={IntervalTime.TotalSeconds}";
             }
         }
 
-        class StateMonitor : IStateMonitor<Event, State>
+        class StateMonitor : StateMonitor<Context, Event, State>
         {
             void print(string args, [CallerMemberName] string caller="")
             {
-                Console.WriteLine($"{Now} [{Context.CurrentTherad}] {caller}({args})");
+                Console.WriteLine($"{Now} [{Context.CurrentThread}] {caller}({args})");
             }
 
             public void onEventHandling(Context<Event, State> context, Event @event, State current)

@@ -21,37 +21,37 @@ StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner)
 
 void StateMonitor::onIdle(tsm::IContext* context)
 {
-	m_owner->onIdleCallback(context);
+	m_owner->onIdle(getManaged((native::Context*)context));
 }
 
 void StateMonitor::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
 {
-	m_owner->onEventTriggeredCallback(context, event);
+	m_owner->onEventTriggered(getManaged((native::Context*)context), getManaged((native::Event*)event));
 }
 
 void StateMonitor::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
 {
-	m_owner->onEventHandlingCallback(context, event, current);
+	m_owner->onEventHandling(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)current));
 }
 
 void StateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
-	m_owner->onStateChangedCallback(context, event, previous, next);
+	m_owner->onStateChanged(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previous), getManaged((native::State*)next));
 }
 
 void StateMonitor::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
 {
-	m_owner->onTimerStartedCallback(context, event);
+	m_owner->onTimerStarted(getManaged((native::Context*)context), getManaged((native::Event*)event));
 }
 
 void StateMonitor::onTimerStopped(tsm::IContext* context, tsm::IEvent* event, HRESULT hr)
 {
-	m_owner->onTimerStoppedCallback(context, event, hr);
+	m_owner->onTimerStopped(getManaged((native::Context*)context), getManaged((native::Event*)event), (tsm_NET::HResult)hr);
 }
 
 void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 {
-	m_owner->onWorkerThreadExitCallback(context, exitCode);
+	m_owner->onWorkerThreadExit(getManaged((native::Context*)context), (tsm_NET::HResult)exitCode);
 }
 
 class AsyncDispatcher;

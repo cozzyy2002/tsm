@@ -2,10 +2,9 @@
 using NUnit.Framework;
 using System;
 using System.Threading;
-using tsm_NET.Generic;
-using HResult = tsm_NET.HResult;
+using tsm_NET;
 
-namespace StateMachine.NET.UnitTest.Generic
+namespace StateMachine.NET.UnitTest
 {
     [TestFixture]
     public class TestCase
@@ -30,7 +29,7 @@ namespace StateMachine.NET.UnitTest.Generic
             var mockEvent = Substitute.For<Event>();
             var mockInitialState = Substitute.For<State>();
             var mockNextState = Substitute.For<State>();
-            var mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
+            var mockStateMonitor = Substitute.For<StateMonitor<Context, Event, State>>();
 
             // Create synchronous Context object.
             var c = new Context();
@@ -112,7 +111,7 @@ namespace StateMachine.NET.UnitTest.Generic
         Event mockEvent;
         State mockInitialState;
         State mockNextState;
-        IStateMonitor<Event, State> mockStateMonitor;
+        StateMonitor<Context, Event, State> mockStateMonitor;
 
         string Now { get { return DateTime.Now.ToString("ss.fff"); } }
 
@@ -124,7 +123,7 @@ namespace StateMachine.NET.UnitTest.Generic
             mockEvent = Substitute.For<Event>();
             mockInitialState = Substitute.For<State>();
             mockNextState = Substitute.For<State>();
-            mockStateMonitor = Substitute.For<IStateMonitor<Event, State>>();
+            mockStateMonitor = Substitute.For<StateMonitor<Context, Event, State>>();
         }
 
         [TearDown]

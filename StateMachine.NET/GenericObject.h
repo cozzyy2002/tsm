@@ -19,38 +19,38 @@ generic<typename C>
 	where C : tsm_NET::IContext
 ref class Event;
 
-generic<typename E, typename S>
+generic<typename C, typename E, typename S>
+	where C : tsm_NET::IContext
 	where E : tsm_NET::IEvent
 	where S : tsm_NET::IState
-public interface class IStateMonitor
+public ref class StateMonitor : public IStateMonitor
 {
-	void onIdle(Context<E, S>^ context);
-	void onEventTriggered(Context<E, S>^ context, E event);
-	void onEventHandling(Context<E, S>^ context, E event, S current);
-	void onStateChanged(Context<E, S>^ context, E event, S previous, S next);
-	void onTimerStarted(Context<E, S>^ context, E event);
-	void onTimerStopped(Context<E, S>^ context, E event, HResult hr);
-	void onWorkerThreadExit(Context<E, S>^ context, HResult exitCode);
-};
+public:
+	StateMonitor();
+	~StateMonitor();
+	!StateMonitor();
 
-generic<typename E, typename S>
-	where E : tsm_NET::IEvent
-	where S : tsm_NET::IState
-public ref class StateMonitorCaller : public tsm_NET::StateMonitorCaller
-{
-internal:
-	StateMonitorCaller(IStateMonitor<E, S>^ stateMonitor);
+	virtual void onIdle(IContext^ context) sealed { onIdle((C)context); }
+	virtual void onEventTriggered(IContext^ context, IEvent^ event) sealed { onEventTriggered((C)context, (E)event); }
+	virtual void onEventHandling(IContext^ context, IEvent^ event, IState^ current) sealed { onEventHandling((C)context, (E)event, (S)current); }
+	virtual void onStateChanged(IContext^ context, IEvent^ event, IState^ previous, IState^ next) sealed { onStateChanged((C)context, (E)event, (S)previous, (S)next); }
+	virtual void onTimerStarted(IContext^ context, IEvent^ event) sealed { onTimerStarted((C)context, (E)event); }
+	virtual void onTimerStopped(IContext^ context, IEvent^ event, HResult hr) sealed { onTimerStopped((C)context, (E)event, hr); }
+	virtual void onWorkerThreadExit(IContext^ context, HResult exitCode) sealed { onWorkerThreadExit((C)context, exitCode); }
+	virtual IStateMonitor::NativeType* get() sealed { return m_nativeStateMonitor; }
 
-	virtual void onIdleCallback(tsm::IContext* context) override;
-	virtual void onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event) override;
-	virtual void onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current) override;
-	virtual void onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next) override;
-	virtual void onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event) override;
-	virtual void onTimerStoppedCallback(tsm::IContext* context, tsm::IEvent* event, HRESULT hr) override;
-	virtual void onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode) override;
+#pragma region Methods to be implemented by sub class.
+	virtual void onIdle(C context) {}
+	virtual void onEventTriggered(C context, E event) {}
+	virtual void onEventHandling(C context, E event, S current) {}
+	virtual void onStateChanged(C context, E event, S previous, S next) {}
+	virtual void onTimerStarted(C context, E event) {}
+	virtual void onTimerStopped(C context, E event, HResult hr) {}
+	virtual void onWorkerThreadExit(C E, HResult exitCode) {}
+#pragma endregion
 
 protected:
-	IStateMonitor<E, S>^ m_stateMonitor;
+	IStateMonitor::NativeType* m_nativeStateMonitor;
 };
 
 generic<typename E, typename S>
@@ -95,19 +95,20 @@ public:
 #pragma endregion
 
 #pragma region .NET properties
-	property IStateMonitor<E, S>^ StateMonitor
+	property IStateMonitor^ StateMonitor
 	{
-		IStateMonitor<E, S>^ get() { return m_stateMonitor; }
-		void set(IStateMonitor<E, S>^ value);
+		IStateMonitor^ get() { return m_stateMonitor; }
+		void set(IStateMonitor^ value);
 	}
+
+	static property unsigned int CurrentThread { unsigned int get() { return GetCurrentThreadId(); }}
 #pragma endregion
 
 
 protected:
 	IContext::NativeType* m_nativeContext;
 	bool m_useNativeThread;
-	IStateMonitor<E, S>^ m_stateMonitor;
-	StateMonitorCaller<E, S>^ m_stateMonitorCaller;
+	IStateMonitor^ m_stateMonitor;
 };
 
 generic<typename E, typename S>
@@ -226,13 +227,6 @@ public:
 
 protected:
 	IEvent::NativeType* m_nativeEvent;
-};
-
-public ref class Error : public tsm_NET::Error
-{
-public:
-	Error(HRESULT hr) : tsm_NET::Error(hr) {}
-	Error(tsm_NET::HResult hr) : tsm_NET::Error((HRESULT)hr) {}
 };
 
 }

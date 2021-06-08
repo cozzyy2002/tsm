@@ -11,7 +11,7 @@ class Event;
 class StateMonitor : public tsm::IStateMonitor
 {
 public:
-	using OwnerType = tsm_NET::StateMonitorCaller;
+	using OwnerType = tsm_NET::IStateMonitor;
 
 	StateMonitor(OwnerType^ owner);
 

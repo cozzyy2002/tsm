@@ -1,10 +1,4 @@
-﻿// Constant to switch namespace to be tested, tsm_NET or tsm_NET.Generic.
-// Both namespaces are not tested together.
-//   - tsm_NET.HResult and tsm_NET.Generic.HResult conflict with each other.
-//   - `ref Arg.Is<TState>` occurs compile error. See test NoStateTransition().
-#define GENERIC_TEST
-
-using NSubstitute;
+﻿using NSubstitute;
 using NUnit.Framework;
 using System;
 
@@ -12,23 +6,13 @@ using HResult = tsm_NET.HResult;
 
 namespace NET.UnitTest
 {
-#if GENERIC_TEST
-    [TestFixture(typeof(Testee.Generic.Context), typeof(Testee.Generic.Event), typeof(Testee.Generic.State))]
-    [TestFixture(typeof(Testee.Generic.AsyncContext), typeof(Testee.Generic.AsyncEvent), typeof(Testee.Generic.AsyncState))]
-#else
     [TestFixture(typeof(Testee.Context), typeof(Testee.Event), typeof(Testee.State))]
     [TestFixture(typeof(Testee.AsyncContext), typeof(Testee.AsyncEvent), typeof(Testee.AsyncState))]
-#endif
+
     class UnitTest<TContext, TEvent, TState>
-#if GENERIC_TEST
-        where TContext : tsm_NET.Generic.Context<TEvent, TState>, new()
-        where TEvent : tsm_NET.Generic.Event<TContext>
-        where TState : tsm_NET.Generic.State<TContext, TEvent, TState>
-#else
-        where TContext : tsm_NET.Context, new()
-        where TEvent : tsm_NET.Event
-        where TState : tsm_NET.State
-#endif
+        where TContext : tsm_NET.Context<TEvent, TState>, new()
+        where TEvent : tsm_NET.Event<TContext>
+        where TState : tsm_NET.State<TContext, TEvent, TState>
     {
         protected TContext context;
 
@@ -47,15 +31,9 @@ namespace NET.UnitTest
     }
 
     class SetupUnitTest<TContext, TEvent, TState> : UnitTest<TContext, TEvent, TState>
-#if GENERIC_TEST
-        where TContext : tsm_NET.Generic.Context<TEvent, TState>, new()
-        where TEvent : tsm_NET.Generic.Event<TContext>
-        where TState : tsm_NET.Generic.State<TContext, TEvent, TState>
-#else
-        where TContext : tsm_NET.Context, new()
-        where TEvent : tsm_NET.Event
-        where TState : tsm_NET.State
-#endif
+        where TContext : tsm_NET.Context<TEvent, TState>, new()
+        where TEvent : tsm_NET.Event<TContext>
+        where TState : tsm_NET.State<TContext, TEvent, TState>
     {
         // StateMachine.setup(Event = null)
         [Test]
@@ -156,15 +134,9 @@ namespace NET.UnitTest
     }
 
     class EventUnitTest<TContext, TEvent, TState> : UnitTest<TContext, TEvent, TState>
-#if GENERIC_TEST
-        where TContext : tsm_NET.Generic.Context<TEvent, TState>, new()
-        where TEvent : tsm_NET.Generic.Event<TContext>
-        where TState : tsm_NET.Generic.State<TContext, TEvent, TState>
-#else
-        where TContext : tsm_NET.Context, new()
-        where TEvent : tsm_NET.Event
-        where TState : tsm_NET.State
-#endif
+        where TContext : tsm_NET.Context<TEvent, TState>, new()
+        where TEvent : tsm_NET.Event<TContext>
+        where TState : tsm_NET.State<TContext, TEvent, TState>
     {
         TState mockState0, mockState1;
         TEvent mockEvent;
@@ -197,13 +169,7 @@ namespace NET.UnitTest
             Received.InOrder(() =>
             {
                 mockEvent.Received().preHandle(context);
-                mockState0.Received().handleEvent(context, mockEvent,
-#if GENERIC_TEST
-                    ref Arg.Any<TState>());
-#else
-                    // When TState = tsm_NET.State, `ref Arg.Any<TState>()` occurs compile error.
-                    ref Arg.Any<tsm_NET.State>());
-#endif
+                mockState0.Received().handleEvent(context, mockEvent, ref Arg.Any<TState>());
                 mockEvent.Received().postHandle(context, HResult.Ok);
             });
             mockState0.DidNotReceive().exit(Arg.Any<TContext>(), Arg.Any<TEvent>(), Arg.Any<TState>());

@@ -16,53 +16,27 @@ using namespace common;
 		return ret;
 	}
 
-	generic<typename E, typename S>
-	StateMonitorCaller<E, S>::StateMonitorCaller(IStateMonitor<E, S>^ stateMonitor)
-		: tsm_NET::StateMonitorCaller(nullptr)
-		, m_stateMonitor(stateMonitor)
+	//-------------- Managed StateMonitor class. --------------------//
+
+	generic<typename C, typename E, typename S>
+	StateMonitor<C, E, S>::StateMonitor()
 	{
+		m_nativeStateMonitor = new native::StateMonitor(this);
 	}
 
-	generic<typename E, typename S>
-	void StateMonitorCaller<E, S>::onIdleCallback(tsm::IContext* context)
+	generic<typename C, typename E, typename S>
+	StateMonitor<C, E, S>::~StateMonitor()
 	{
-		m_stateMonitor->onIdle((Context<E, S>^)getManaged((native::Context*)context));
+		this->!StateMonitor();
 	}
 
-	generic<typename E, typename S>
-	void StateMonitorCaller<E, S>::onEventTriggeredCallback(tsm::IContext* context, tsm::IEvent* event)
+	generic<typename C, typename E, typename S>
+	StateMonitor<C, E, S>::!StateMonitor()
 	{
-		m_stateMonitor->onEventTriggered((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event));
-	}
-
-	generic<typename E, typename S>
-	void StateMonitorCaller<E, S>::onEventHandlingCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
-	{
-		m_stateMonitor->onEventHandling((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)current));
-	}
-
-	generic<typename E, typename S>
-	void StateMonitorCaller<E, S>::onStateChangedCallback(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
-	{
-		m_stateMonitor->onStateChanged((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (S)getManaged((native::State*)previous), (S)getManaged((native::State*)next));
-	}
-
-	generic<typename E, typename S>
-	void StateMonitorCaller<E, S>::onTimerStartedCallback(tsm::IContext* context, tsm::IEvent* event)
-	{
-		m_stateMonitor->onTimerStarted((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event));
-	}
-
-	generic<typename E, typename S>
-	void StateMonitorCaller<E, S>::onTimerStoppedCallback(tsm::IContext* context, tsm::IEvent* event, HRESULT hr)
-	{
-		m_stateMonitor->onTimerStopped((Context<E, S>^)getManaged((native::Context*)context), (E)getManaged((native::Event*)event), (HResult)hr);
-	}
-
-	generic<typename E, typename S>
-	void StateMonitorCaller<E, S>::onWorkerThreadExitCallback(tsm::IContext* context, HRESULT exitCode)
-	{
-		m_stateMonitor->onWorkerThreadExit((Context<E, S>^)getManaged((native::Context*)context), (HResult)exitCode);
+		if(m_nativeStateMonitor) {
+			delete m_nativeStateMonitor;
+			m_nativeStateMonitor = nullptr;
+		}
 	}
 
 	//-------------- Managed Context class. --------------------//
@@ -168,17 +142,10 @@ using namespace common;
 	}
 
 	generic<typename E, typename S>
-	void Context<E, S>::StateMonitor::set(IStateMonitor<E, S>^ value)
+	void Context<E, S>::StateMonitor::set(IStateMonitor^ value)
 	{
 		m_stateMonitor = value;
-		if(value) {
-			m_stateMonitorCaller = gcnew StateMonitorCaller<E, S>(value);
-			m_nativeContext->setStateMonitor(m_stateMonitorCaller->get());
-		} else {
-			m_nativeContext->setStateMonitor(nullptr);
-			delete m_stateMonitorCaller;
-			m_stateMonitorCaller = nullptr;
-		}
+		m_nativeContext->setStateMonitor(getNative(m_stateMonitor));
 	}
 
 	//-------------- Managed AsyncContext class. --------------------//
