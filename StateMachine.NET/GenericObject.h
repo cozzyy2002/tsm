@@ -4,8 +4,6 @@
 
 namespace tsm_NET
 {
-namespace Generic
-{
 using HResult = tsm_NET::HResult;
 
 generic<typename E, typename S>
@@ -234,8 +232,7 @@ public ref class Error : public tsm_NET::Error
 {
 public:
 	Error(HRESULT hr) : tsm_NET::Error(hr) {}
-	Error(tsm_NET::Generic::HResult hr) : tsm_NET::Error((HRESULT)hr) {}
+	Error(tsm_NET::HResult hr) : tsm_NET::Error((HRESULT)hr) {}
 };
 
-}
 }

@@ -6,8 +6,6 @@ namespace tsm_NET
 {
 using namespace common;
 
-namespace Generic
-{
 	static IList<IEvent^>^ getPendingEvents(ITimerOwner^ timerOwner)
 	{
 		auto ret = gcnew List<IEvent^>();
@@ -406,7 +404,6 @@ namespace Generic
 	{
 		tsm::IEvent::setMemoryWeight(value);
 	}
-}
 
 HRESULT tsm_NET::getAsyncExitCode(native::Context* context, HRESULT* phr)
 {
