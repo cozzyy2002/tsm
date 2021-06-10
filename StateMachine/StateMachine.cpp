@@ -37,20 +37,6 @@ HMODULE tsm::GetStateMachineModule()
 	return hStateMachineModule;
 }
 
-/*static*/ tsm::IContext::OnAssertFailed *tsm::IContext::onAssertFailedProc = nullptr;
-
-HRESULT checkHResult(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
-{
-	if(FAILED(hr)) {
-		if(tsm::IContext::onAssertFailedProc) {
-			tsm::IContext::onAssertFailedProc(hr, exp, sourceFile, line);
-		} else {
-			_tprintf_s(_T("'%s' failed: HRESULT=0x%08x at:\n%s:%d\n"), exp, hr, sourceFile, line);
-		}
-	}
-	return hr;
-}
-
 namespace tsm {
 
 HRESULT StateMachine::setupInner(IContext* context, IState * initialState, IEvent* /*event*/)
@@ -143,7 +129,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 		stateMonitor->onEventHandling(context, event, currentState);
 	});
 
-	HRESULT hr = event->_preHandle(context);
+	auto hr = HR_EXPECT_OK(event->_preHandle(context));
 	switch(hr) {
 	case S_OK:
 		break;
@@ -185,7 +171,7 @@ HRESULT StateMachine::handleEvent(IContext* context, IEvent * event)
 		}
 	}
 
-	hr = event->_postHandle(context, hr);
+	hr = HR_EXPECT_OK(event->_postHandle(context, hr));
 
 	return hr;
 }

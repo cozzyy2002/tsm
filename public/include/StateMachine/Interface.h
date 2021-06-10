@@ -70,9 +70,6 @@ public:
 	virtual IState* _getCurrentState() = 0;
 	virtual void _setCurrentState(IState* state) = 0;
 
-	using OnAssertFailed = void(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
-	static OnAssertFailed* onAssertFailedProc;
-
 	virtual IStateMonitor* _getStateMonitor() = 0;
 
 	virtual ContextHandle* _getHandle(bool reset = false) = 0;
@@ -96,6 +93,15 @@ public:
 #pragma region Methods to be called by StateMachine.
 	virtual HRESULT _preHandle(IContext* context) = 0;
 	virtual HRESULT _postHandle(IContext* context, HRESULT hr) = 0;
+	/**
+	 * Compare priority with other IEvent object.
+	 * This method is used to queue event by priority order in IStateMachine::triggerEvent().
+	 * Implement to return:
+	 *   < 0  : Priority is lower than other's.
+	 *   == 0 : Priority is same as other's.
+	 *   0 <  : Priority is higher than other's.
+	 */
+	virtual int _comparePriority(IEvent* other) const = 0;
 #pragma endregion
 
 #pragma region Definition for event timer

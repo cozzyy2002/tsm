@@ -7,17 +7,12 @@
 class MyEvent : public tsm::Event<MyContext>, public MyObject
 {
 public:
-	MyEvent(ILogger& logger, const std::tstring& name, int priority)
-		: MyObject(name.c_str(), &logger), Event(priority) {
-		hrPreHandle = hrPostHandle = hrHandleEvent = hrEntry = hrExit = S_OK;
-	}
+	MyEvent(ILogger& logger, const std::tstring& name, int priority);
+	~MyEvent();
 
 	// Implementation of tsm::Event
 	virtual HRESULT preHandle(MyContext* context) override;
 	virtual HRESULT postHandle(MyContext* context, HRESULT hr) override;
-
-	// Inplementation of IUnknown to log deleting object.
-	virtual ULONG STDMETHODCALLTYPE Release(void) override;
 
 	CComPtr<MyState> nextState;
 	HRESULT hrPreHandle;

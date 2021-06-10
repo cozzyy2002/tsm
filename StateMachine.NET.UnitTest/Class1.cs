@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System;
 using System.Threading;
 using tsm_NET;
+using Assert = NUnit.Framework.Assert;
 
 namespace StateMachine.NET.UnitTest
 {

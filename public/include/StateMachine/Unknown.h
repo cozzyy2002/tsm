@@ -2,19 +2,13 @@
 
 namespace tsm {
 
-#if defined(UNICODE)
-using tstring = std::wstring;
-#else
-using tstring = std::string;
-#endif
-
 class tsm_STATE_MACHINE_EXPORT Unknown : public IUnknown
 {
 public:
 	Unknown();
 	virtual ~Unknown();
 
-	virtual tstring toString() const;
+	virtual std::tstring toString() const;
 
 #pragma region Implementation of IUnknown
 	/**

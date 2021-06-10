@@ -1,5 +1,7 @@
 #pragma once
 
+#include <StateMachine/Assert.h>
+
 using namespace System;
 using namespace System::Collections::Generic;
 using namespace Runtime::InteropServices;
@@ -123,6 +125,32 @@ protected:
 	static ::CultureInfo^ s_cultureInfo;
 	HRESULT m_hr;
 	String^ m_message;
+};
+
+public ref class Assert
+{
+public:
+	static Assert();
+
+	delegate void OnAssertFailedProcDelegate(HResult hr, String^ exp, String^ sourceFile, int line);
+	static property OnAssertFailedProcDelegate^ OnAssertFailedProc {
+		OnAssertFailedProcDelegate^ get() { return onAssertFailedProc; }
+		void set(OnAssertFailedProcDelegate^ value) { onAssertFailedProc = value; }
+	}
+
+	delegate void OnAssertFailedWriterDelegate(String^ msg);
+	static property OnAssertFailedWriterDelegate^ OnAssertFailedWriter {
+		OnAssertFailedWriterDelegate^ get() { return onAssertFailedWriter; }
+		void set(OnAssertFailedWriterDelegate^ value) { onAssertFailedWriter = value; }
+	}
+
+protected:
+	static OnAssertFailedProcDelegate^ onAssertFailedProc;
+	static OnAssertFailedWriterDelegate^ onAssertFailedWriter;
+
+internal:
+	static tsm::Assert::OnAssertFailedProc onAssertFailedProcDefault;
+	static tsm::Assert::OnAssertFailedWriter onAssertFailedWriterDefault;
 };
 
 namespace common

@@ -16,6 +16,13 @@ namespace NET.UnitTest
     {
         protected TContext context;
 
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
+        {
+            // Set Console as a writer used when StateMachine recognizes HRESULT error.
+            tsm_NET.Assert.OnAssertFailedWriter = x => Console.WriteLine($"----\n{x}\n----");
+        }
+
         [SetUp]
         public void SetUp()
         {
