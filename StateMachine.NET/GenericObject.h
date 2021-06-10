@@ -46,7 +46,7 @@ public:
 	virtual void onStateChanged(C context, E event, S previous, S next) {}
 	virtual void onTimerStarted(C context, E event) {}
 	virtual void onTimerStopped(C context, E event, HResult hr) {}
-	virtual void onWorkerThreadExit(C E, HResult exitCode) {}
+	virtual void onWorkerThreadExit(C context, HResult exitCode) {}
 #pragma endregion
 
 protected:

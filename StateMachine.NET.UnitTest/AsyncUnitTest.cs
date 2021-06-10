@@ -18,6 +18,7 @@ namespace NET.AsyncUnitTest
         public void SetUp()
         {
             context = new Context();
+            //context.StateMonitor = stateMonitor = new Utils.StateMonitor<Context, Event, State>();
             mockState = Substitute.For<State>();
             mockState.IsExitCalledOnShutdown = true;
             Assert.That(context.setup(mockState), Is.EqualTo(HResult.Ok));
@@ -28,12 +29,14 @@ namespace NET.AsyncUnitTest
         [TearDown]
         public void TearDown()
         {
+            //Console.WriteLine(stateMonitor.getMessage("onEvent", "Idle", "Wait"));
             Assert.That(context.shutdown(TimeSpan.FromSeconds(1)), Is.EqualTo(HResult.Ok));
             mockState.Received().exit(context, null, null);
         }
 
         Context context;
         State mockState;
+        //Utils.StateMonitor<Context, Event, State> stateMonitor;
 
         // Default event priority.
         // State::handleEvent() should be called by order of AsyncContext::triggerEvent().
@@ -46,6 +49,17 @@ namespace NET.AsyncUnitTest
             var ActualEventCount = 0;
             var ActualSequences = new int[EventCount];
             var AllEventsHandled = new EventWaitHandle(false, EventResetMode.ManualReset);
+
+            // Prepare testee Event expectation.
+            // Save ID of passed event to ActualSequences array.
+            mockState.handleEvent(context, Arg.Any<Event>(), ref Arg.Any<State>())
+                .Returns(x => {
+                    var ev = x[1] as Event;
+                    ActualSequences[ActualEventCount++] = ev.Id;
+                    if (ActualEventCount == EventCount) { AllEventsHandled.Set(); }
+                    //stateMonitor.addMessage($"onEventHandling: ID={ev.Id}, Count={ActualEventCount}");
+                    return HResult.Ok;
+                });
 
             // Create and trigger events that have same priority.
             var firstEvent = Substitute.For<Event>();
@@ -62,16 +76,8 @@ namespace NET.AsyncUnitTest
                 });
             Assert.That(context.triggerEvent(firstEvent), Is.EqualTo(HResult.Ok));
 
-            // Save ID of passed event to ActualSequences array.
-            mockState.handleEvent(context, Arg.Any<Event>(), ref Arg.Any<State>())
-                .Returns(x => {
-                    var ev = x[1] as Event;
-                    ActualSequences[ActualEventCount++] = ev.Id;
-                    if(ActualEventCount == EventCount) { AllEventsHandled.Set(); }
-                    return HResult.Ok;
-                });
-
             // Wait for last event to be handled.
+            //stateMonitor.addMessage("Waiting.");
             Assert.That(AllEventsHandled.WaitOne(TimeSpan.FromSeconds(1)), Is.True);
 
             // Check count and sequence of handled events.
@@ -102,6 +108,16 @@ namespace NET.AsyncUnitTest
             int[] ActualSequences = new int[EventCount];
             EventWaitHandle AllEventsHandled = new EventWaitHandle(false, EventResetMode.ManualReset);
 
+            // Prepare testee Event expectation.
+            // Save ID of passed event to ActualSequences array.
+            mockState.handleEvent(context, Arg.Any<Event>(), ref Arg.Any<State>())
+                .Returns(x => {
+                    var ev = x[1] as Event;
+                    ActualSequences[ActualEventCount++] = ev.Id;
+                    if (ActualEventCount == EventCount) { AllEventsHandled.Set(); }
+                    return HResult.Ok;
+                });
+
             // Create and trigger events according to priorities array.
             Event firstEvent = Substitute.For<Event>();
             firstEvent.preHandle(context)
@@ -117,16 +133,8 @@ namespace NET.AsyncUnitTest
                 });
             Assert.That(context.triggerEvent(firstEvent), Is.EqualTo(HResult.Ok));
 
-            // Save ID of passed event to ActualSequences array.
-            mockState.handleEvent(context, Arg.Any<Event>(), ref Arg.Any<State>())
-                .Returns(x => {
-                    var ev = x[1] as Event;
-                    ActualSequences[ActualEventCount++] = ev.Id;
-                    if (ActualEventCount == EventCount) { AllEventsHandled.Set(); }
-                    return HResult.Ok;
-                });
-
             // Wait for last event to be handled.
+            //stateMonitor.addMessage("Waiting.");
             Assert.That(AllEventsHandled.WaitOne(TimeSpan.FromSeconds(1)), Is.True);
 
             // Check count and sequence of handled events.
