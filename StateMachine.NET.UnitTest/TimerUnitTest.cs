@@ -3,17 +3,14 @@ using NSubstitute.ReceivedExtensions;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace NET.TimerUnitTest
 {
     using Context = Testee.AsyncContext;
     using Event = Testee.AsyncEvent;
-    using State = Testee.AsyncState;
     using HResult = tsm_NET.HResult;
+    using State = Testee.AsyncState;
 
     [TestFixture]
     class TimerUnitTest

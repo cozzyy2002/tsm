@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using tsm_NET;
-using HResult = tsm_NET.HResult;
 
 namespace StateMachine.NET.TestConsole
 {
