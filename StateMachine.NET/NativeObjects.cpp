@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "NativeObjects.h"
-#include <StateMachine/Context.h>
 
 using namespace native;
 using namespace tsm_NET::common;
@@ -22,37 +21,37 @@ StateMonitor::StateMonitor(StateMonitor::OwnerType^ owner)
 
 void StateMonitor::onIdle(tsm::IContext* context)
 {
-	m_owner->onIdleCallback(context);
+	m_owner->onIdle(getManaged((native::Context*)context));
 }
 
 void StateMonitor::onEventTriggered(tsm::IContext* context, tsm::IEvent* event)
 {
-	m_owner->onEventTriggeredCallback(context, event);
+	m_owner->onEventTriggered(getManaged((native::Context*)context), getManaged((native::Event*)event));
 }
 
 void StateMonitor::onEventHandling(tsm::IContext* context, tsm::IEvent* event, tsm::IState* current)
 {
-	m_owner->onEventHandlingCallback(context, event, current);
+	m_owner->onEventHandling(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)current));
 }
 
 void StateMonitor::onStateChanged(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previous, tsm::IState* next)
 {
-	m_owner->onStateChangedCallback(context, event, previous, next);
+	m_owner->onStateChanged(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previous), getManaged((native::State*)next));
 }
 
 void StateMonitor::onTimerStarted(tsm::IContext* context, tsm::IEvent* event)
 {
-	m_owner->onTimerStartedCallback(context, event);
+	m_owner->onTimerStarted(getManaged((native::Context*)context), getManaged((native::Event*)event));
 }
 
 void StateMonitor::onTimerStopped(tsm::IContext* context, tsm::IEvent* event, HRESULT hr)
 {
-	m_owner->onTimerStoppedCallback(context, event, hr);
+	m_owner->onTimerStopped(getManaged((native::Context*)context), getManaged((native::Event*)event), (tsm_NET::HResult)hr);
 }
 
 void StateMonitor::onWorkerThreadExit(tsm::IContext* context, HRESULT exitCode)
 {
-	m_owner->onWorkerThreadExitCallback(context, exitCode);
+	m_owner->onWorkerThreadExit(getManaged((native::Context*)context), (tsm_NET::HResult)exitCode);
 }
 
 class AsyncDispatcher;
@@ -68,7 +67,7 @@ public:
 	{
 		auto threadStart = gcnew Threading::ThreadStart(this, &ManagedDispatcher::threadMethod);
 		auto thread = gcnew Threading::Thread(threadStart);
-		threadID++;
+		 threadID++;
 		thread->Name = threadID.ToString();
 		thread->Start();
 	}
@@ -155,7 +154,7 @@ void ManagedDispatcher::threadMethod()
 
 tsm::IAsyncDispatcher* Context::_createAsyncDispatcher()
 {
-	return m_managedContext->useNativeThread ? new AsyncDispatcher() : tsm::Context_createAsyncDispatcher();
+	return m_managedContext->UseNativeThread ? new AsyncDispatcher() : tsm::Context_createAsyncDispatcher();
 }
 
 Context::Context(ManagedType^ context, bool isAsync /*= true*/)
@@ -171,8 +170,8 @@ HRESULT Context::getAsyncExitCode(HRESULT* pht)
 }
 
 State::State(ManagedType^ state, ManagedType^ masterState, bool autoDispose)
-	: m_managedState(state)
-	, m_masterState(getNative(masterState))
+	: tsm::State<Context, Event, State>(masterState ? masterState->get() : nullptr)
+	, m_managedState(state)
 	, m_autoDispose(autoDispose)
 {
 }
@@ -180,30 +179,30 @@ State::State(ManagedType^ state, ManagedType^ masterState, bool autoDispose)
 State::~State()
 {
 	if(m_autoDispose) {
-		// When reference count of this object, Managed object is also deleted.
+		// Delete managed object automatically.
 		// In the case of m_autoDispose == false, See Managed State constructor and finalizer.
 		delete m_managedState;
 	}
 }
 
-HRESULT State::_handleEvent(tsm::IContext* context, tsm::IEvent* event, tsm::IState** nextState)
+HRESULT State::handleEvent(Context* context, Event* event, State** nextState)
 {
 	ManagedType^ _nextState = nullptr;
-	auto hr = m_managedState->handleEvent(getManaged((native::Context*)context), getManaged((native::Event*)event), _nextState);
+	auto hr = m_managedState->_handleEvent(getManaged((native::Context*)context), getManaged((native::Event*)event), _nextState);
 	if(_nextState) {
-		*nextState = _nextState->get();
+		*nextState = (State*)_nextState->get();
 	}
 	return (HRESULT)hr;
 }
 
-HRESULT State::_entry(tsm::IContext* context, tsm::IEvent* event, tsm::IState* previousState)
+HRESULT State::entry(Context* context, Event* event, State* previousState)
 {
-	return (HRESULT)m_managedState->entry(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previousState));
+	return (HRESULT)m_managedState->_entry(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)previousState));
 }
 
-HRESULT State::_exit(tsm::IContext* context, tsm::IEvent* event, tsm::IState* nextState)
+HRESULT State::exit(Context* context, Event* event, State* nextState)
 {
-	return (HRESULT)m_managedState->exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
+	return (HRESULT)m_managedState->_exit(getManaged((native::Context*)context), getManaged((native::Event*)event), getManaged((native::State*)nextState));
 }
 
 bool State::_isExitCalledOnShutdown() const
@@ -212,13 +211,8 @@ bool State::_isExitCalledOnShutdown() const
 }
 
 Event::Event(ManagedType^ event, int priority, bool autoDispose)
-	: m_managedEvent(event)
-	, m_priority(priority)
-	, m_timerClient(nullptr)
-	, m_delayTime(0)
-	, m_intervalTime(0)
-	, m_timeoutCount(-1)
-	, m_autoDispose(autoDispose)
+	: tsm::Event<Context>(priority)
+	, m_managedEvent(event), m_autoDispose(autoDispose)
 {
 }
 
@@ -231,19 +225,12 @@ Event::~Event()
 	}
 }
 
-HRESULT Event::_preHandle(tsm::IContext* context)
+HRESULT Event::preHandle(Context* context)
 {
-	return (HRESULT)m_managedEvent->preHandle(getManaged((native::Context*)context));
+	return (HRESULT)m_managedEvent->_preHandle(getManaged((native::Context*)context));
 }
 
-HRESULT Event::_postHandle(tsm::IContext* context, HRESULT hr)
+HRESULT Event::postHandle(Context* context, HRESULT hr)
 {
-	return (HRESULT)m_managedEvent->postHandle(getManaged((native::Context*)context), (tsm_NET::HResult)hr);
-}
-
-void Event::setTimer(tsm::TimerClient* timerClient, DWORD delayTime, DWORD intervalTime /*= 0*/)
-{
-	m_timerClient = timerClient;
-	m_delayTime = delayTime;
-	m_intervalTime = intervalTime;
+	return (HRESULT)m_managedEvent->_postHandle(getManaged((native::Context*)context), (tsm_NET::HResult)hr);
 }

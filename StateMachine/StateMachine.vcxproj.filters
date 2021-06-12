@@ -54,9 +54,6 @@
     <ClInclude Include="AsyncStateMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\public\include\StateMachine\TimerClient.h">
-      <Filter>public\include</Filter>
-    </ClInclude>
     <ClInclude Include="Handles.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -68,6 +65,9 @@
     </ClInclude>
     <ClInclude Include="..\public\include\StateMachine\StateMachineMessage.h">
       <Filter>public\include</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerClient.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

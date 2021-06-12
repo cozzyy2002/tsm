@@ -1,7 +1,6 @@
 #include <StateMachine/stdafx.h>
 
 #include <StateMachine/State.h>
-#include <StateMachine/TimerClient.h>
 #include <StateMachine/Assert.h>
 #include <StateMachine/StateMachineMessage.h>
 #include "StateMachine.h"

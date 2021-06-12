@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using tsm_NET.Generic;
+using tsm_NET;
 
 namespace StateMachine.NET.TestConsole
 {
@@ -16,12 +16,12 @@ namespace StateMachine.NET.TestConsole
             IJob job = null;
             int sel = 0;
             var args = new List<string>(_args);
-            if(0 < args.Count) {
+            if (0 < args.Count) {
                 int.TryParse((string)args[0], out sel);
                 args.RemoveAt(0);
             }
 
-            switch(sel)
+            switch (sel)
             {
             case 1:
                 job = new MemoryWeight();
@@ -49,44 +49,49 @@ namespace StateMachine.NET.TestConsole
 
         private static DateTime start;
 
-        protected static string Now { get { return (DateTime.Now - start).ToString(@"mm\.ss\.fff"); } }
+        public static string Now { get { return (DateTime.Now - start).ToString(@"mm\.ss\.fff"); } }
     }
 
-    class StateMonitor<Event, State> : Common, IStateMonitor<Event, State>
+    class StateMonitor<Context, Event, State> : tsm_NET.StateMonitor<Context, Event, State>
+        where Context : IContext
+        where Event : IEvent
+        where State : IState
     {
-        public virtual void onEventHandling(Context<Event, State> context, Event @event, State current)
+        public override void onEventHandling(Context context, Event @event, State current)
         {
             Console.WriteLine($"{Now} onEventHandling({@event}, {current})");
         }
 
-        public virtual void onEventTriggered(Context<Event, State> context, Event @event)
+        public override void onEventTriggered(Context context, Event @event)
         {
             Console.WriteLine($"{Now} onEventTriggered({@event})");
         }
 
-        public virtual void onIdle(Context<Event, State> context)
+        public override void onIdle(Context context)
         {
             Console.WriteLine($"{Now} onIdle()");
         }
 
-        public virtual void onStateChanged(Context<Event, State> context, Event @event, State previous, State next)
+        public override void onStateChanged(Context context, Event @event, State previous, State next)
         {
             Console.WriteLine($"{Now} onStateChanged({@event}, {previous}, {next})");
         }
 
-        public virtual void onTimerStarted(Context<Event, State> context, Event @event)
+        public override void onTimerStarted(Context context, Event @event)
         {
             Console.WriteLine($"{Now} onTimerStarted({@event})");
         }
 
-        public void onTimerStopped(Context<Event, State> context, Event @event, HResult hr)
+        public override void onTimerStopped(Context context, Event @event, HResult hr)
         {
             Console.WriteLine($"{Now} onTimerStarted({@event}, {hr,08:x})");
         }
 
-        public virtual void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
+        public override void onWorkerThreadExit(Context context, HResult exitCode)
         {
             Console.WriteLine($"{Now} onWorkerThreadExit({exitCode})");
         }
+
+        string Now { get {return Common.Now;} }
     }
 }

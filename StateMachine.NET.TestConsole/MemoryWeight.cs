@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using tsm_NET.Generic;
+using tsm_NET;
 
 namespace StateMachine.NET.TestConsole
 {
@@ -31,7 +31,7 @@ namespace StateMachine.NET.TestConsole
             var context = new Context();
             var initialState = new State();
             context.setup(initialState);
-            context.StateMonitor = new StateMonitor();
+            context.StateMonitor = new StateMonitor<IContext, IEvent, IState>();
 
             while (true)
             {
@@ -143,19 +143,25 @@ namespace StateMachine.NET.TestConsole
             public readonly int NextGeneration;
         }
 
-        class StateMonitor : StateMonitor<Event, State>
+        class StateMonitor : StateMonitor<Context, Event, State>
         {
-            public override void onIdle(Context<Event, State> context)
+            public void onIdle(Context<Event, State> context)
             {
                 Console.Write($"{Now} onIdle(): Total memory={GC.GetTotalMemory(true)} > ");
             }
 
-            public override void onStateChanged(Context<Event, State> context, Event @event, State previous, State next)
+            public void onEventTriggered(Context<Event, State> context, Event @event) { }
+            public void onEventHandling(Context<Event, State> context, Event @event, State current) { }
+
+            public void onStateChanged(Context<Event, State> context, Event @event, State previous, State next)
             {
                 DisposeSubStates(next.generation, previous);
             }
 
-            public override void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
+            public void onTimerStarted(Context<Event, State> context, Event @event) { }
+            public void onTimerStopped(Context<Event, State> context, Event @event, HResult hr) { }
+
+            public void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
             {
                 DisposeSubStates(-1, context.CurrentState);
             }

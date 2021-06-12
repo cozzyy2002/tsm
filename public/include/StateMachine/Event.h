@@ -14,7 +14,8 @@ public:
 	static const int DefaultPriority = 0;
 
 	Event(int priority = DefaultPriority)
-		: m_priority(priority), m_timerClient(nullptr), m_delayTime(0), m_intervalTime(0), m_timeoutCount(-1) {}
+		: m_priority(priority), m_timerClient(nullptr), m_delayTime(0), m_intervalTime(0), m_timeoutCount(-1)
+		, m_handle(HandleFactory<IEvent, EventHandle>::create(this)) {}
 	virtual ~Event() {}
 
 #pragma region Implementation of IState that call methods of sub class.
@@ -38,18 +39,21 @@ public:
 	virtual int _getPriority() const override { return m_priority; }
 	virtual DWORD _getDelayTime() const override { return m_delayTime; }
 	virtual DWORD _getIntervalTime() const override { return m_intervalTime; }
-	virtual TimerClient* _getTimerClient() const override { return m_timerClient; }
+	virtual ITimerClient* _getTimerClient() const override { return m_timerClient; }
 	virtual int _getTimeoutCount() const override { return m_timeoutCount; }
 protected:
 	virtual void _setTimeoutCount(int count) override { m_timeoutCount = count; }
 
 public:
 	// Set delay time to one-shot timer.
-	void setDelayTimer(TimerClient* timerClient, DWORD delayTime) { setTimer(timerClient, delayTime, 0); }
+	void setDelayTimer(ITimerOwner* timerOwner, DWORD delayTime) { setTimer(timerOwner, delayTime, 0); }
 	// Set interval time to interval timer.
-	void setIntervaleTimer(TimerClient* timerClient, DWORD intervalTime) { setTimer(timerClient, 0, intervalTime); }
+	void setIntervaleTimer(ITimerOwner* timerOwner, DWORD intervalTime) { setTimer(timerOwner, 0, intervalTime); }
 	// Set delay time and interval time.
-	void setTimer(TimerClient* timerClient, DWORD delayTime, DWORD intervalTime = 0) {
+	void setTimer(ITimerOwner* timerOwner, DWORD delayTime, DWORD intervalTime = 0) {
+		setTimer(timerOwner->_getTimerClient(), delayTime, intervalTime);
+	}
+	void setTimer(ITimerClient* timerClient, DWORD delayTime, DWORD intervalTime = 0) {
 		m_delayTime = delayTime;
 		m_intervalTime = intervalTime;
 		m_timerClient = timerClient;
@@ -58,11 +62,14 @@ public:
 		return m_timerClient ? m_timerClient->cancelEventTimer(this, timeout) : E_ILLEGAL_METHOD_CALL;
 	}
 
+	virtual EventHandle* _getHandle() override { return m_handle.get(); }
+
 protected:
+	std::unique_ptr<EventHandle, HandleFactory<IEvent, EventHandle>> m_handle;
 	int m_priority;
 	DWORD m_delayTime;
 	DWORD m_intervalTime;
-	TimerClient* m_timerClient;
+	ITimerClient* m_timerClient;
 	int m_timeoutCount;
 };
 

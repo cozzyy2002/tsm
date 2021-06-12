@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using tsm_NET.Generic;
+using tsm_NET;
 
 namespace StateMachine.NET.TestConsole
 {
@@ -58,7 +58,7 @@ namespace StateMachine.NET.TestConsole
             public override HResult entry(Context context, Event @event, State previousState)
             {
                 var _event = new Event("Next");
-                _event.setTimer(this, @event.DelayTime, @event.InterValTime);
+                _event.setTimer(this, @event.DelayTime, @event.IntervalTime);
                 context.triggerEvent(_event);
                 return HResult.Ok;
             }
@@ -88,48 +88,48 @@ namespace StateMachine.NET.TestConsole
             public string Name { get; protected set; }
             public override string ToString()
             {
-                return $"Event: {Name}, Delay={DelayTime.TotalSeconds}, Interval={InterValTime.TotalSeconds}";
+                return $"Event: {Name}, Delay={DelayTime.TotalSeconds}, Interval={IntervalTime.TotalSeconds}";
             }
         }
 
-        class StateMonitor : IStateMonitor<Event, State>
+        class StateMonitor : StateMonitor<Context, Event, State>
         {
             void print(string args, [CallerMemberName] string caller="")
             {
-                Console.WriteLine($"{Now} [{Context.CurrentTherad}] {caller}({args})");
+                Console.WriteLine($"{Now} [{Context.CurrentThread}] {caller}({args})");
             }
 
-            public void onEventHandling(Context<Event, State> context, Event @event, State current)
+            public override void onEventHandling(Context context, Event @event, State current)
             {
                 print($"{context}, {@event}, {current}");
             }
 
-            public void onEventTriggered(Context<Event, State> context, Event @event)
+            public override void onEventTriggered(Context context, Event @event)
             {
                 print($"{context}, {@event}");
             }
 
-            public void onIdle(Context<Event, State> context)
+            public override void onIdle(Context context)
             {
                 print($"{context}");
             }
 
-            public void onStateChanged(Context<Event, State> context, Event @event, State previous, State next)
+            public override void onStateChanged(Context context, Event @event, State previous, State next)
             {
                 print($"{context}, {@event}, {previous}, {next}");
             }
 
-            public void onTimerStarted(Context<Event, State> context, Event @event)
+            public override void onTimerStarted(Context context, Event @event)
             {
                 print($"{context}, {@event}");
             }
 
-            public void onTimerStopped(Context<Event, State> context, Event @event, HResult hr)
+            public override void onTimerStopped(Context context, Event @event, HResult hr)
             {
                 print($"{context}, {@event}, {hr,08:x}");
             }
 
-            public void onWorkerThreadExit(Context<Event, State> context, HResult exitCode)
+            public override void onWorkerThreadExit(Context context, HResult exitCode)
             {
                 print($"{context}, ExitCode={exitCode}");
             }

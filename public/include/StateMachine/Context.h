@@ -1,13 +1,12 @@
 #pragma once
 
 #include "Interface.h"
-#include "TimerClient.h"
 #include <memory>
 
 namespace tsm {
 
 template<class E = IEvent, class S = IState>
-class Context : public IContext, public TimerClient
+class Context : public IContext
 {
 public:
 	virtual ~Context() {}
@@ -32,12 +31,25 @@ public:
 
 	virtual IStateMonitor* _getStateMonitor() override { return nullptr; }
 
-	// Implementation of IContext::_getTimerClient().
-	virtual TimerClient* _getTimerClient() override { return this; }
+	virtual ITimerClient* ITimerOwner::_getTimerClient() override {
+		if(!m_timerClient) { m_timerClient.reset(ITimerOwner::createClient()); }
+		return m_timerClient.get();
+	}
+
+	virtual ContextHandle* _getHandle(bool reset = false) override {
+		if(!m_handle || reset) {
+			// NOTE: Creating ContextHandle object refers IContext::isAsync().
+			//       So it should be performed after constructing Context object including derived class.
+			m_handle.reset(HandleFactory<IContext, ContextHandle>::create(this));
+		}
+		return m_handle.get();
+	}
 
 	S* getCurrentState() { return (S*)_getCurrentState(); }
 
 protected:
+	std::unique_ptr<ContextHandle, HandleFactory<IContext, ContextHandle>> m_handle;
+	std::unique_ptr<ITimerClient> m_timerClient;
 	std::unique_ptr<IStateMachine> m_stateMachine;
 	CComPtr<IState> m_currentState;
 };

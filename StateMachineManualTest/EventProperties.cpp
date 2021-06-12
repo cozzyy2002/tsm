@@ -158,21 +158,21 @@ MyEvent * CEventProperties::createEvent()
 
 	// Set timer to the event.
 	auto timerType = getOptionPropertyValue(timerTypeOptions, timerTypeProperty, TimerType::None);
-	tsm::TimerClient* timerClient;
+	tsm::ITimerOwner* timerOwner;
 	switch(timerType) {
 	default:
 	case TimerType::None:
-		timerClient = nullptr;
+		timerOwner = nullptr;
 		break;
 	case TimerType::Context:
-		timerClient = context;
+		timerOwner = context;
 		break;
 	case TimerType::State:
-		timerClient = context->getCurrentState();
+		timerOwner = context->getCurrentState();
 		break;
 	}
-	if(timerClient) {
-		e->setTimer(timerClient, delayProperty->GetValue().lVal, intervalProperty->GetValue().lVal);
+	if(timerOwner) {
+		e->setTimer(timerOwner, delayProperty->GetValue().lVal, intervalProperty->GetValue().lVal);
 	}
 
 	// Get next state and master state of the state.

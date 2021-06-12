@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Error = tsm_NET.Generic.Error;
+using tsm_NET;
 
 namespace StateMachine.NET.TestConsole
 {
@@ -15,7 +15,7 @@ namespace StateMachine.NET.TestConsole
                 Error.CultureInfo = new CultureInfo(args[0]);
             }
             //show<tsm_NET.HResult>();
-            show<tsm_NET.Generic.HResult>();
+            show<tsm_NET.HResult>();
         }
 
         void show<H>()

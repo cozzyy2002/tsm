@@ -1,6 +1,5 @@
 #include "stdafx.h"
 
-#include <StateMachine/TimerClient.h>
 #include <StateMachine/StateMachineMessage.h>
 #include "../StateMachine/Handles.h"
 #include "Mocks.h"
@@ -27,9 +26,8 @@ public:
 		EXPECT_EQ(nullptr, mockContext._getCurrentState());
 	}
 
-	tsm::TimerHandle* getTimerHandle(tsm::TimerClient& timerClient) { return  timerClient._getHandle(); }
-	auto getPendingEvents(tsm::TimerClient& timerClient) {
-		auto eventVectors = timerClient.getPendingEvents();
+	auto getPendingEvents(tsm::ITimerOwner& timerOwner) {
+		auto eventVectors = timerOwner.getPendingEvents();
 		std::set<tsm::IEvent*> events;
 		for(auto& event : eventVectors) {
 			events.insert(event.p);
