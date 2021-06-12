@@ -216,7 +216,7 @@ namespace StateMachine.NET.UnitTest
                 .When(x => x.onEventTriggered(Arg.Any<Context>(), Arg.Any<Event>()))
                 .Do(x => { Console.WriteLine($"{Now} onEventTriggered()"); });
             mockStateMonitor
-                .When(x=> x.onEventHandling(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>()))
+                .When(x => x.onEventHandling(Arg.Any<Context>(), Arg.Any<Event>(), Arg.Any<State>()))
                 .Do(x => { Console.WriteLine($"{Now} onEventHandling()"); });
             mockStateMonitor
                 .When(x => x.onTimerStarted(Arg.Any<Context>(), Arg.Any<Event>()))
@@ -231,7 +231,7 @@ namespace StateMachine.NET.UnitTest
                     var e = x[1] as Event;
                     Console.WriteLine($"{Now} handleEvent: count={count}");
 
-                    if(count == 0) {
+                    if (count == 0) {
                         Console.WriteLine("  Changing state to next state.");
                         x[2] = mockNextState;
                     }
@@ -261,6 +261,83 @@ namespace StateMachine.NET.UnitTest
 
             mockInitialState.Received()
                 .handleEvent(context, mockEvent, ref Arg.Is(State.Null));
+        }
+    }
+
+    [TestFixture]
+    public class AssertTestCase
+    {
+        class Context : Context<Event, State> { }
+        class Event : Event<Context> { }
+        class State : State<Context, Event, State> { }
+
+        Context context = new Context();
+        Event @event = new Event();
+
+        // Interface to create mock for Assert delegates.
+        public interface IAssert
+        {
+            void proc(HResult hr, string exp, string sourceFile, int line);
+            void writer(string msg);
+        }
+
+        IAssert assert;
+
+        [SetUp]
+        public void SetUp()
+        {
+            // Reset stattic Assert delegates.
+            tsm_NET.Assert.OnAssertFailedProc = null;
+            tsm_NET.Assert.OnAssertFailedWriter = null;
+
+            assert = Substitute.For<IAssert>();
+        }
+
+        // Test for OnAssertFailedProc.
+        [Test]
+        public void AssertProcTest()
+        {
+            tsm_NET.Assert.OnAssertFailedProc = assert.proc;
+
+            assert
+                .When(x => x.proc(Arg.Any<HResult>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>()))
+                .Do(x =>
+                {
+                    Console.WriteLine($"OnAssertFailedProc(HResult=0x{x[0]:x})");
+                });
+            var hr = context.handleEvent(@event);
+            Console.WriteLine($"HResult returned = 0x{hr,08:x}");
+
+            assert.Received()
+                .proc(hr, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>());
+            assert.DidNotReceiveWithAnyArgs()
+                .writer(default);
+        }
+
+        // Test for OnAssertFailedWriter.
+        [Test]
+        public void AssertWriterTest()
+        {
+            var assertMessage = "";
+            tsm_NET.Assert.OnAssertFailedWriter = assert.writer;
+
+            assert
+                .When(x => x.writer(Arg.Any<string>()))
+                .Do(args =>
+                {
+                    assertMessage = (string)args[0];
+                    Console.WriteLine($"Assert.OnAssertFailedWriter(`{assertMessage}`)");
+                });
+
+            var hr = context.handleEvent(@event);
+            Console.WriteLine($"HResult returned = 0x{hr,08:x}");
+
+            assert.DidNotReceiveWithAnyArgs()
+                .proc(default, default, default, default);
+            assert.Received()
+                .writer(Arg.Any<string>());
+
+            Assert.That(assertMessage.Contains($"{hr:x}"));
         }
     }
 }
