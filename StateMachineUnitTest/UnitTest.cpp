@@ -378,3 +378,92 @@ TEST_F(NotImplTest, 0)
 
 	EXPECT_TRUE(mockEvent.deleted());
 }
+
+class AssertUnitTest : public ::UnitTest<MockContext>
+{
+public:
+	class IAssert
+	{
+	public:
+		virtual void proc(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line) = 0;
+		virtual void writer(LPCTSTR msg) = 0;
+		virtual ~IAssert() {}
+	};
+
+	class MockAssert : public IAssert
+	{
+	public:
+		MOCK_METHOD4(proc, void(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line));
+		MOCK_METHOD1(writer, void(LPCTSTR msg));
+	};
+
+	void SetUp() {
+		// Save default Assert functions.
+		defaultProc = Assert::onAssertFailedProc;
+		defaultWriter = Assert::onAssertFailedWriter;
+
+		pMockAssert = new MockAssert();
+	}
+	void TearDown() {
+		// Restore Assert functions.
+		Assert::onAssertFailedProc = defaultProc;
+		Assert::onAssertFailedWriter = defaultWriter;
+
+		delete pMockAssert;
+	}
+
+	using Assert = tsm::Assert;
+	Assert::OnAssertFailedProc defaultProc;
+	Assert::OnAssertFailedWriter defaultWriter;
+
+	// Static mock object for lambda to access this member without capture clause.
+	static MockAssert* pMockAssert;
+};
+
+AssertUnitTest::MockAssert* AssertUnitTest::pMockAssert;
+
+TEST_F(AssertUnitTest, proc)
+{
+	HRESULT hResult;
+	EXPECT_CALL(*pMockAssert, proc(_, _, _, _)).WillOnce(
+		[&hResult](HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
+		{
+			hResult = hr;
+			_tprintf_s(_T("OnAssertFailedProc(0x%x)\n"), hr);
+		}
+	);
+	EXPECT_CALL(*pMockAssert, writer(_)).Times(0);
+
+	Assert::onAssertFailedProc = [](HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
+	{
+		AssertUnitTest::pMockAssert->proc(hr, exp, sourceFile, line);
+	};
+
+	auto hr = mockContext.handleEvent(&mockEvent);
+	_tprintf_s(_T("HResult returned = 0x%08x\n"), hr);
+	ASSERT_EQ(hr, hResult);
+}
+
+TEST_F(AssertUnitTest, writer)
+{
+	std::tstring assertMessage;
+	EXPECT_CALL(*pMockAssert, proc(_, _, _, _)).Times(0);
+	EXPECT_CALL(*pMockAssert, writer(_)).WillOnce(([&assertMessage](LPCTSTR msg)
+	{
+		assertMessage = msg;
+		_tprintf_s(_T("%s\n"), msg);
+	}));
+
+	Assert::onAssertFailedProc = nullptr;
+	Assert::onAssertFailedWriter = [](LPCTSTR msg)
+	{
+		AssertUnitTest::pMockAssert->writer(msg);
+	};
+
+	auto hr = mockContext.handleEvent(&mockEvent);
+	_tprintf_s(_T("HResult returned = 0x%08x\n"), hr);
+
+	TCHAR hrStr[10];
+	_stprintf_s(hrStr, _T("%x"), hr);
+	ASSERT_NE(assertMessage.find(hrStr), std::tstring::npos);
+}
