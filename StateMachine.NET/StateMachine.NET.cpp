@@ -60,7 +60,7 @@ static void onAssertFailedProcNative(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile
 		proc((HResult)hr, gcnew String(exp), gcnew String(sourceFile), line);
 	} else {
 		// Call default proc.
-		Assert::onAssertFailedProcDefault(hr, exp, sourceFile, line);
+		tsm::Assert::defaultAssertFailedProc(hr, exp, sourceFile, line);
 	}
 }
 
@@ -72,15 +72,13 @@ static void onAssertFailedWriterNative(LPCTSTR msg)
 		writer(gcnew String(msg));
 	} else {
 		// Call default writer.
-		Assert::onAssertFailedWriterDefault(msg);
+		tsm::Assert::defaultAssertFailedWriter(msg);
 	}
 }
 
 static Assert::Assert()
 {
 	// Save default Assert Failed functions and Set my functions.
-	onAssertFailedProcDefault = tsm::Assert::onAssertFailedProc;
 	tsm::Assert::onAssertFailedProc = onAssertFailedProcNative;
-	onAssertFailedWriterDefault = tsm::Assert::onAssertFailedWriter;
 	tsm::Assert::onAssertFailedWriter = onAssertFailedWriterNative;
 }

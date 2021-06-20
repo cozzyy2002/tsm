@@ -4,12 +4,10 @@
 
 using namespace tsm;
 
-static void defaultAssertFailedProc(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
-static void defaultAssertFailedWriter(LPCTSTR msg);
 
 // Default OnAssertFailedProc
 // Formats error message and pass the message to the writer.
-/*static*/ void defaultAssertFailedProc(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
+/*static*/ void Assert::defaultAssertFailedProc(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line)
 {
 	TCHAR msg[1000];
 	_stprintf_s(msg, _T("'%s' failed: HRESULT=0x%08x at:\n%s:%d"), exp, hr, sourceFile, line);
@@ -19,7 +17,7 @@ static void defaultAssertFailedWriter(LPCTSTR msg);
 
 // Default OnAssertFailedWriter
 // Writes the message to the debugger.
-/*static*/ void defaultAssertFailedWriter(LPCTSTR msg)
+/*static*/ void Assert::defaultAssertFailedWriter(LPCTSTR msg)
 {
 	OutputDebugString(msg);
 	OutputDebugString(_T("\n"));

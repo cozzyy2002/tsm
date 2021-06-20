@@ -19,10 +19,12 @@ public:
 	// Procedure that is called when error occurs in ASSERT/EXPECT macro.
 	using OnAssertFailedProc = void (*)(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
 	static OnAssertFailedProc onAssertFailedProc;
+	static void defaultAssertFailedProc(HRESULT hr, LPCTSTR exp, LPCTSTR sourceFile, int line);
 
 	// Procedure that is called by OnAssertFailedProc to write error message.
 	using OnAssertFailedWriter = void (*)(LPCTSTR msg);
 	static OnAssertFailedWriter onAssertFailedWriter;
+	static void defaultAssertFailedWriter(LPCTSTR msg);
 };
 
 }

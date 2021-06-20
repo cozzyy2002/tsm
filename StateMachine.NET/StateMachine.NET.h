@@ -147,10 +147,6 @@ public:
 protected:
 	static OnAssertFailedProcDelegate^ onAssertFailedProc;
 	static OnAssertFailedWriterDelegate^ onAssertFailedWriter;
-
-internal:
-	static tsm::Assert::OnAssertFailedProc onAssertFailedProcDefault;
-	static tsm::Assert::OnAssertFailedWriter onAssertFailedWriterDefault;
 };
 
 namespace common
