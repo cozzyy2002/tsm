@@ -71,7 +71,7 @@ template<class C>
 class MockEvent : public tsm::Event<C>, public TestUnknown
 {
 public:
-	MockEvent(int id = 0) : TestUnknown(m_cRef), id(id) { setObject(this); }
+	MockEvent(int id = 0) : TestUnknown(m_impl.getCRef()), id(id) { setObject(this); }
 
 	MOCK_METHOD1_T(preHandle, HRESULT(C*));
 	MOCK_METHOD2_T(postHandle, HRESULT(C*, HRESULT));
@@ -86,7 +86,7 @@ template<class C>
 class MockState : public tsm::State<C, MockEvent<C>>, public TestUnknown
 {
 public:
-	MockState() : TestUnknown(m_cRef) { setObject(this); }
+	MockState() : TestUnknown(m_impl.getCRef()) { setObject(this); }
 	virtual ~MockState() {}
 
 	void setMasterState(MockState* masterState) { m_masterState = masterState; }
