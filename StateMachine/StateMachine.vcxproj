@@ -163,6 +163,7 @@
     <ClInclude Include="..\public\include\StateMachine\Interface.h" />
     <ClInclude Include="..\public\include\StateMachine\State.h" />
     <ClInclude Include="..\public\include\StateMachine\StateMachineMessage.h" />
+    <ClInclude Include="..\public\include\StateMachine\StateMonitor.h" />
     <ClInclude Include="..\public\include\StateMachine\stdafx.h" />
     <ClInclude Include="..\public\include\StateMachine\Unknown.h" />
     <ClInclude Include="AsyncStateMachine.h" />
