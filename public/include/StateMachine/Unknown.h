@@ -6,9 +6,9 @@ template<class T>
 class UnknownImpl
 {
 public:
-	UnknownImpl(T* obj, LPCQITAB pqit = nullptr);
+	UnknownImpl(T* obj);
 
-	HRESULT QueryInterface(REFIID riid, void** ppvObject);
+	HRESULT QueryInterface(REFIID riid, void** ppvObject, LPCQITAB pqitab = nullptr);
 	ULONG AddRef(void);
 	ULONG Release(void);
 
@@ -18,9 +18,6 @@ public:
 protected:
 	T* m_obj;
 	ULONG m_cRef;
-	LPCQITAB m_pqit;
-
-	static const QITAB defaultQITab[];
 };
 
 class tsm_STATE_MACHINE_EXPORT Unknown : public IUnknown
@@ -51,21 +48,20 @@ protected:
 };
 
 template<class T>
-const QITAB UnknownImpl<T>::defaultQITab[] = {
-	QITABENT(T, IUnknown),
-	{ 0 }
-};
-
-template<class T>
-UnknownImpl<T>::UnknownImpl(T* obj, LPCQITAB pqit /*= nullptr*/)
-	: m_obj(obj), m_pqit(pqit ? pqit : defaultQITab), m_cRef(0)
+UnknownImpl<T>::UnknownImpl(T* obj)
+	: m_obj(obj), m_cRef(0)
 {
 }
 
 template<class T>
-HRESULT UnknownImpl<T>::QueryInterface(REFIID riid, void** ppvObject)
+HRESULT UnknownImpl<T>::QueryInterface(REFIID riid, void** ppvObject, LPCQITAB pqitab /*= nullptr*/)
 {
-	return QISearch(m_obj, m_pqit, riid, ppvObject);
+	static const QITAB defaultQITab[] = {
+		QITABENT(T, IUnknown),
+		{ 0 }
+	};
+
+	return QISearch(m_obj, pqitab ? pqitab : defaultQITab, riid, ppvObject);
 }
 
 template<class T>

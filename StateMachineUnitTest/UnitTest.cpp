@@ -467,3 +467,136 @@ TEST_F(AssertUnitTest, writer)
 	_stprintf_s(hrStr, _T("%x"), hr);
 	ASSERT_NE(assertMessage.find(hrStr), std::tstring::npos);
 }
+
+
+// -------- UnknownImplUnitTest --------
+
+class TesteeBase
+{
+public:
+	TesteeBase() { objectCount++; }
+	virtual ~TesteeBase() { objectCount--; }
+	static int objectCount;
+};
+
+int TesteeBase::objectCount = 0;
+
+// Testee class derived from IUnknown.
+class TesteeIUnknown : public IUnknown, public TesteeBase
+{
+public:
+	TesteeIUnknown() : impl(this) {}
+
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface(
+		/* [in] */ REFIID riid,
+		/* [iid_is][out] */ _COM_Outptr_ void __RPC_FAR* __RPC_FAR* ppvObject) override {
+		return impl.QueryInterface(riid, ppvObject);
+	}
+	virtual ULONG STDMETHODCALLTYPE AddRef(void) { return impl.AddRef(); }
+	virtual ULONG STDMETHODCALLTYPE Release(void) { return impl.Release(); }
+
+	tsm::UnknownImpl<TesteeIUnknown> impl;
+};
+
+// Testee class derived from IUnknown and extra interface.
+class TesteeISupportErrorInfo : public ISupportErrorInfo, public TesteeBase
+{
+public:
+	TesteeISupportErrorInfo() : impl(this) {}
+
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface(
+		/* [in] */ REFIID riid,
+		/* [iid_is][out] */ _COM_Outptr_ void __RPC_FAR* __RPC_FAR* ppvObject) override
+	{
+		static const QITAB qitab[] = {
+			QITABENT(TesteeISupportErrorInfo, ISupportErrorInfo),
+			{ 0 }
+		};
+		return impl.QueryInterface(riid, ppvObject, qitab);
+	}
+	virtual ULONG STDMETHODCALLTYPE AddRef(void) { return impl.AddRef(); }
+	virtual ULONG STDMETHODCALLTYPE Release(void) { return impl.Release(); }
+
+	virtual HRESULT STDMETHODCALLTYPE InterfaceSupportsErrorInfo(REFIID riid) { return E_NOTIMPL; }
+
+	tsm::UnknownImpl<TesteeISupportErrorInfo> impl;
+};
+
+using UnknownImplUnitTestTesteeTypes = Types<TesteeIUnknown, TesteeISupportErrorInfo>;
+
+template<class T>
+class UnknownImplUnitTest : public Test
+{
+public:
+	using Testee = T;
+	void SetUp() {
+		Testee::objectCount = 0;
+	}
+};
+
+TYPED_TEST_SUITE(UnknownImplUnitTest, UnknownImplUnitTestTesteeTypes);
+
+TYPED_TEST(UnknownImplUnitTest, create_delete)
+{
+	{
+		CComPtr<Testee> testee;
+		testee = new Testee();
+		ASSERT_EQ(Testee::objectCount, 1);
+		ASSERT_EQ(testee->impl.getCRef(), 1);
+	}
+	ASSERT_EQ(Testee::objectCount, 0);
+}
+
+TYPED_TEST(UnknownImplUnitTest, cRef)
+{
+	CComPtr<Testee> testee1(new Testee());
+	CComPtr<Testee> testee2(testee1.p);
+
+	ASSERT_EQ(testee1->impl.getCRef(), 2);
+	ASSERT_EQ(Testee::objectCount, 1);
+	testee1.Release();
+	ASSERT_EQ(testee2->impl.getCRef(), 1);
+	ASSERT_EQ(Testee::objectCount, 1);
+	testee2.Release();
+	ASSERT_EQ(Testee::objectCount, 0);
+}
+
+
+TYPED_TEST(UnknownImplUnitTest, QueryInterface)
+{
+	{
+		CComPtr<Testee> testee(new Testee());
+		CComPtr<IUnknown> unk;
+
+		ASSERT_HRESULT_SUCCEEDED(testee.QueryInterface(&unk));
+		ASSERT_EQ(testee, unk);
+		ASSERT_EQ(testee->impl.getCRef(), 2);
+
+		// Interface that Testee class does not implement.
+		CComPtr<IRegistrar> reg;
+		ASSERT_EQ(testee.QueryInterface(&reg), E_NOINTERFACE);
+
+		ASSERT_EQ(testee.QueryInterface((IRegistrar**)nullptr), E_POINTER);
+	}
+
+	// All objects should be deleted.
+	ASSERT_EQ(Testee::objectCount, 0);
+}
+
+TEST(TesteeISupportErrorInfoUnitTest, QueryInterface)
+{
+	TesteeISupportErrorInfo::objectCount = 0;
+	{
+		CComPtr<TesteeISupportErrorInfo> testee(new TesteeISupportErrorInfo());
+		ASSERT_EQ(testee->impl.getCRef(), 1);
+		ASSERT_EQ(TesteeISupportErrorInfo::objectCount, 1);
+
+		CComPtr<ISupportErrorInfo> sup;
+		ASSERT_HRESULT_SUCCEEDED(testee.QueryInterface(&sup));
+		ASSERT_EQ(testee->impl.getCRef(), 2);
+		ASSERT_EQ(TesteeISupportErrorInfo::objectCount, 1);
+	}
+
+	// All objects should be deleted.
+	ASSERT_EQ(TesteeISupportErrorInfo::objectCount, 0);
+}
