@@ -42,7 +42,6 @@ public:
 #pragma endregion
 
 	S* getMasterState() { return (S*)m_masterState.p; }
-	S* getSubState() { return (S*)m_subState.p; }
 
 	bool isSubState() const { return m_masterState ? true : false; }
 

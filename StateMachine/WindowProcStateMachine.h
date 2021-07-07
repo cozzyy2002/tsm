@@ -20,6 +20,7 @@ public:
 protected:
 	// Message type to be passed to the window procedure as WPARAM
 	enum class MessageType {
+		Unknown,	// Ignore Window Message if wParam == 0.
 		Setup,
 		Shutdown,
 		HandleEvent,

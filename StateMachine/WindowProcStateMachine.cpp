@@ -142,7 +142,7 @@ LRESULT WindowProcStateMachine::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPAR
 	auto context = (IContext*)GetProp(hWnd, windowPropertyName);
 	if(context) {
 		auto asyncData = context->_getHandle()->asyncData;
-		if(asyncData->msg == msg) {
+		if((asyncData->msg == msg) && lParam) {
 			auto type = (MessageType)wParam;
 			auto message = (Message*)lParam;
 			HR_EXPECT_OK(message->_this->windowProc(type, message));
