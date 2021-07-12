@@ -36,7 +36,7 @@ public:
 		return m_timerClient.get();
 	}
 
-	virtual ContextHandle* _getHandle(bool reset = false) override {
+	virtual ContextHandle* _getHandle(bool reset) override {
 		if(!m_handle || reset) {
 			// NOTE: Creating ContextHandle object refers IContext::isAsync().
 			//       So it should be performed after constructing Context object including derived class.

@@ -29,8 +29,10 @@ class tsm_STATE_MACHINE_EXPORT ITimerClient
 public:
 	virtual ~ITimerClient() {}
 
-	virtual HRESULT cancelEventTimer(IEvent* event, int timeout = 0) = 0;
-	virtual HRESULT cancelAllEventTimers(int timeout = 0) = 0;
+	virtual HRESULT cancelEventTimer(IEvent* event) { return cancelEventTimer(event, 0); }
+	virtual HRESULT cancelEventTimer(IEvent* event, int timeout) = 0;
+	virtual HRESULT cancelAllEventTimers() { return cancelAllEventTimers(0); }
+	virtual HRESULT cancelAllEventTimers(int timeout) = 0;
 	virtual std::vector<CComPtr<IEvent>> getPendingEvents() = 0;
 
 	enum class TimerType {
@@ -72,7 +74,8 @@ public:
 
 	virtual IStateMonitor* _getStateMonitor() = 0;
 
-	virtual ContextHandle* _getHandle(bool reset = false) = 0;
+	virtual ContextHandle* _getHandle() { return _getHandle(false); }
+	virtual ContextHandle* _getHandle(bool reset) = 0;
 
 	// Implementation of HandleOwner::_getInstance().
 	// Creating ContextHandle depends on value returned by isAsync() method.
