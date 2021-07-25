@@ -195,9 +195,9 @@ TEST_F(TriggerEventUnitTest, 5)
 			return S_OK;
 		}));
 
-	auto startTime = GetTickCount64();
 	e0.setTimer(&mockContext, 100, 200);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.triggerEvent(&e0));
+	auto startTime = GetTickCount64();
 	Sleep(200 * TIME_COUNT);
 	ASSERT_HRESULT_SUCCEEDED(mockContext.cancelEventTimer(&e0, CANCEL_TIMER_TIMEOUT));
 
@@ -211,7 +211,7 @@ TEST_F(TriggerEventUnitTest, 5)
 	{
 		auto time = (DWORD)(times[i] - startTime);
 		LOG4CPLUS_INFO(logger, "  " << time << ", diff=" << time - expectedTimes[i]);
-		EXPECT_NEAR(time, expectedTimes[i], 16);
+		EXPECT_NEAR(time, expectedTimes[i], 32);
 		startTime = times[i];
 	}
 }
