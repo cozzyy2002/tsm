@@ -70,13 +70,14 @@ protected:
 template<class C>
 class MockEvent : public tsm::Event<C>, public TestUnknown
 {
+protected:
 public:
-	MockEvent(int id = 0) : TestUnknown(m_impl.getCRef()), id(id) { setObject(this); }
+	MockEvent(int id = 0) : TestUnknown(this->m_impl.getCRef()), id(id) { setObject(this); }
 
 	MOCK_METHOD1_T(preHandle, HRESULT(C*));
 	MOCK_METHOD2_T(postHandle, HRESULT(C*, HRESULT));
 
-	void setPriority(int priority) { m_priority = priority; }
+	void setPriority(int priority) { this->m_priority = priority; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) { return TestUnknown::Release(); }
 
 	int id;
@@ -85,19 +86,20 @@ public:
 template<class C>
 class MockState : public tsm::State<C, MockEvent<C>>, public TestUnknown
 {
+protected:
 public:
-	MockState() : TestUnknown(m_impl.getCRef()) { setObject(this); }
+	MockState() : TestUnknown(this->m_impl.getCRef()) { setObject(this); }
 	virtual ~MockState() {}
 
-	void setMasterState(MockState* masterState) { m_masterState = masterState; }
+	void setMasterState(MockState* masterState) { this->m_masterState = masterState; }
 	virtual ULONG STDMETHODCALLTYPE Release(void) {
 		auto cRef = TestUnknown::Release();
 		// Do as if deleted.
-		if(cRef == 0) m_masterState.Release();
+		if(cRef == 0) this->m_masterState.Release();
 		return cRef;
 	}
 
-	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent<C>*, IState**));
-	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent<C>*, IState*));
-	MOCK_METHOD3_T(exit, HRESULT(C*, MockEvent<C>*, IState*));
+	MOCK_METHOD3_T(handleEvent, HRESULT(C*, MockEvent<C>*, tsm::IState**));
+	MOCK_METHOD3_T(entry, HRESULT(C*, MockEvent<C>*, tsm::IState*));
+	MOCK_METHOD3_T(exit, HRESULT(C*, MockEvent<C>*, tsm::IState*));
 };

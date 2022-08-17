@@ -20,7 +20,7 @@ static LPCSTR getObjectName(T* obj) { return typeid(*obj).name(); }
 typedef Types<MockContext, MockAsyncContext> ContextTypes;
 
 template<class C>
-class UnitTest : public Test
+class UnitTestBase : public Test
 {
 public:
 	using MockEvent_t = MockEvent<C>;
@@ -37,16 +37,16 @@ public:
 
 // -------------------------
 template<class C>
-class SetupUnitTest : public ::UnitTest<C>
+class SetupUnitTest : public UnitTestBase<C>
 {
 public:
 	void SetUp() {
-		UnitTest::SetUp();
+		UnitTestBase<C>::SetUp();
 	}
 	void TearDown() {
-		EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+		EXPECT_HRESULT_SUCCEEDED(this->mockContext.shutdown());
 
-		UnitTest::TearDown();
+		UnitTestBase<C>::TearDown();
 	}
 };
 
@@ -55,106 +55,106 @@ TYPED_TEST_SUITE(SetupUnitTest, ContextTypes);
 // StateMachine::setup(Event* = nullptr)
 TYPED_TEST(SetupUnitTest, 0)
 {
-	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
+	EXPECT_CALL(this->mockState0, entry(&this->mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
-	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
-	ASSERT_EQ(S_OK, mockContext.waitReady());
+	ASSERT_EQ(S_OK, this->mockContext.setup(&this->mockState0));
+	ASSERT_EQ(S_OK, this->mockContext.waitReady());
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_FALSE(mockState0.deleted());
-	ASSERT_EQ(S_OK, mockContext.shutdown());
-	EXPECT_TRUE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_FALSE(this->mockState0.deleted());
+	ASSERT_EQ(S_OK, this->mockContext.shutdown());
+	EXPECT_TRUE(this->mockState0.deleted());
 }
 
 // StateMachine::setup(Event* = event)
 TYPED_TEST(SetupUnitTest, 1)
 {
-	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(S_OK));
+	EXPECT_CALL(this->mockState0, entry(&this->mockContext, &this->mockEvent, _)).WillOnce(Return(S_OK));
 
-	ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
-	ASSERT_EQ(S_OK, mockContext.waitReady());
+	ASSERT_EQ(S_OK, this->mockContext.setup(&this->mockState0, &this->mockEvent));
+	ASSERT_EQ(S_OK, this->mockContext.waitReady());
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_FALSE(mockState0.deleted());
-	ASSERT_EQ(S_OK, mockContext.shutdown());
-	EXPECT_TRUE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_FALSE(this->mockState0.deleted());
+	ASSERT_EQ(S_OK, this->mockContext.shutdown());
+	EXPECT_TRUE(this->mockState0.deleted());
 }
 
 // State::entry() returns error
 TYPED_TEST(SetupUnitTest, 2)
 {
 	auto hr = E_ABORT;
-	EXPECT_CALL(mockState0, entry(&mockContext, &mockEvent, _)).WillOnce(Return(hr));
+	EXPECT_CALL(this->mockState0, entry(&this->mockContext, &this->mockEvent, _)).WillOnce(Return(hr));
 
-	if(mockContext.isAsync()) {
+	if(this->mockContext.isAsync()) {
 		// AsyncContext::getAsyncExitCode() should return the error code from State::entry().
-		ASSERT_EQ(S_OK, mockContext.setup(&mockState0, &mockEvent));
-		ASSERT_EQ(TSM_S_NO_WORKER_THREAD, mockContext.waitReady());
+		ASSERT_EQ(S_OK, this->mockContext.setup(&this->mockState0, &this->mockEvent));
+		ASSERT_EQ(TSM_S_NO_WORKER_THREAD, this->mockContext.waitReady());
 		HRESULT hrExitCode;
-		ASSERT_EQ(S_OK, mockContext.getAsyncExitCode(&hrExitCode));
+		ASSERT_EQ(S_OK, this->mockContext.getAsyncExitCode(&hrExitCode));
 		ASSERT_EQ(hr, hrExitCode);
 	} else {
 		// Context::setup() should return the error code from State::entry().
-		ASSERT_EQ(hr, mockContext.setup(&mockState0, &mockEvent));
+		ASSERT_EQ(hr, this->mockContext.setup(&this->mockState0, &this->mockEvent));
 	}
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_FALSE(mockState0.deleted());
-	ASSERT_EQ(S_OK, mockContext.shutdown());
-	EXPECT_TRUE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_FALSE(this->mockState0.deleted());
+	ASSERT_EQ(S_OK, this->mockContext.shutdown());
+	EXPECT_TRUE(this->mockState0.deleted());
 }
 
 // StateMachine::setup() was called twice.
 // 2nd call should fail.
 TYPED_TEST(SetupUnitTest, 3)
 {
-	EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
+	EXPECT_CALL(this->mockState0, entry(&this->mockContext, nullptr, _)).WillOnce(Return(S_OK));
 
-	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
-	ASSERT_EQ(TSM_E_SETUP_HAS_BEEN_MADE, mockContext.setup(&mockState0, &mockEvent));
-	ASSERT_EQ(S_OK, mockContext.waitReady());
+	ASSERT_EQ(S_OK, this->mockContext.setup(&this->mockState0));
+	ASSERT_EQ(TSM_E_SETUP_HAS_BEEN_MADE, this->mockContext.setup(&this->mockState0, &this->mockEvent));
+	ASSERT_EQ(S_OK, this->mockContext.waitReady());
 
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_EQ(1, mockState0.getReferenceCount());
-	ASSERT_EQ(S_OK, mockContext.shutdown());
-	EXPECT_TRUE(mockState0.deleted());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_EQ(1, this->mockState0.getReferenceCount());
+	ASSERT_EQ(S_OK, this->mockContext.shutdown());
+	EXPECT_TRUE(this->mockState0.deleted());
 }
 
 // StateMachine::shutdown() is called before setup().
 TYPED_TEST(SetupUnitTest, 4)
 {
 	// shutdown() can be called even if before setup().
-	ASSERT_EQ(S_OK, mockContext.shutdown());
+	ASSERT_EQ(S_OK, this->mockContext.shutdown());
 
-	EXPECT_EQ(nullptr, mockContext._getCurrentState());
+	EXPECT_EQ(nullptr, this->mockContext._getCurrentState());
 }
 
 // StateMachine::handleEvent() is called before setup().
 TYPED_TEST(SetupUnitTest, 5)
 {
-	ASSERT_EQ(TSM_E_SETUP_HAS_NOT_BEEN_MADE, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(TSM_E_SETUP_HAS_NOT_BEEN_MADE, this->mockContext.handleEvent(&this->mockEvent));
 
-	EXPECT_TRUE(mockEvent.deleted());
+	EXPECT_TRUE(this->mockEvent.deleted());
 }
 
 // -------------------------
 template<class C>
-class EventUnitTest : public ::UnitTest<C>
+class EventUnitTest : public UnitTestBase<C>
 {
 public:
 	void SetUp() {
-		UnitTest::SetUp();
+		UnitTestBase<C>::SetUp();
 
-		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
-		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
-		ASSERT_EQ(S_OK, mockContext.waitReady());
+		EXPECT_CALL(this->mockState0, entry(&this->mockContext, nullptr, _)).WillOnce(Return(S_OK));
+		ASSERT_EQ(S_OK, this->mockContext.setup(&this->mockState0));
+		ASSERT_EQ(S_OK, this->mockContext.waitReady());
 	}
 	void TearDown() {
-		ASSERT_EQ(S_OK, mockContext.shutdown());
+		ASSERT_EQ(S_OK, this->mockContext.shutdown());
 
-		UnitTest::TearDown();
+		UnitTestBase<C>::TearDown();
 	}
 };
 
@@ -164,149 +164,149 @@ TYPED_TEST_SUITE(EventUnitTest, ContextTypes);
 // Event::preHandle() returns S_OK.
 TYPED_TEST(EventUnitTest, NoStateTransition)
 {
-	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+	EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockEvent, postHandle(&mockContext, S_OK))
+	EXPECT_CALL(this->mockEvent, postHandle(&this->mockContext, S_OK))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
+	EXPECT_CALL(this->mockState0, handleEvent(&this->mockContext, &this->mockEvent, Not(nullptr)))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+	EXPECT_CALL(this->mockState0, exit(_, _, _)).Times(0);
 
-	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(S_OK, this->mockContext.handleEvent(&this->mockEvent));
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_FALSE(this->mockState0.deleted());
 }
 
 // Event::preHandle() returns S_FALSE(State::handleEvent() is not called).
 TYPED_TEST(EventUnitTest, PreHandleFalse)
 {
-	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+	EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 		.WillOnce(Return(S_FALSE));
-	EXPECT_CALL(mockEvent, postHandle(_, _)).Times(0);
-	EXPECT_CALL(mockState0, handleEvent(_, _, _)).Times(0);
-	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+	EXPECT_CALL(this->mockEvent, postHandle(_, _)).Times(0);
+	EXPECT_CALL(this->mockState0, handleEvent(_, _, _)).Times(0);
+	EXPECT_CALL(this->mockState0, exit(_, _, _)).Times(0);
 
-	ASSERT_EQ(S_FALSE, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(S_FALSE, this->mockContext.handleEvent(&this->mockEvent));
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_FALSE(this->mockState0.deleted());
 }
 
 // Event::preHandle() returns error(State::handleEvent() is not called).
 TYPED_TEST(EventUnitTest, PreHandleError)
 {
 	auto hr = E_ABORT;
-	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+	EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 		.WillOnce(Return(hr));
-	EXPECT_CALL(mockEvent, postHandle(_, _)).Times(0);
-	EXPECT_CALL(mockState0, handleEvent(_, _, _)).Times(0);
-	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+	EXPECT_CALL(this->mockEvent, postHandle(_, _)).Times(0);
+	EXPECT_CALL(this->mockState0, handleEvent(_, _, _)).Times(0);
+	EXPECT_CALL(this->mockState0, exit(_, _, _)).Times(0);
 
-	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(hr, this->mockContext.handleEvent(&this->mockEvent));
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_FALSE(this->mockState0.deleted());
 }
 
 // State transition occurs.
 TYPED_TEST(EventUnitTest, StateTransition)
 {
-	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+	EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockEvent, postHandle(&mockContext, S_OK))
+	EXPECT_CALL(this->mockEvent, postHandle(&this->mockContext, S_OK))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
-		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
-	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(S_OK));
-	EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));
+	EXPECT_CALL(this->mockState0, handleEvent(&this->mockContext, &this->mockEvent, Not(nullptr)))
+		.WillOnce(DoAll(SetArgPointee<2>(&this->mockState1), Return(S_OK)));
+	EXPECT_CALL(this->mockState0, exit(&this->mockContext, &this->mockEvent, &this->mockState1)).WillOnce(Return(S_OK));
+	EXPECT_CALL(this->mockState1, entry(&this->mockContext, &this->mockEvent, &this->mockState0)).WillOnce(Return(S_OK));
 
-	ASSERT_HRESULT_SUCCEEDED(mockContext.handleEvent(&mockEvent));
+	ASSERT_HRESULT_SUCCEEDED(this->mockContext.handleEvent(&this->mockEvent));
 
-	EXPECT_EQ(&mockState1, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_TRUE(mockState0.deleted());
-	EXPECT_FALSE(mockState1.deleted());
+	EXPECT_EQ(&this->mockState1, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_TRUE(this->mockState0.deleted());
+	EXPECT_FALSE(this->mockState1.deleted());
 }
 
 // State::handleEvent() returns error.
 TYPED_TEST(EventUnitTest, HandleEventError)
 {
 	auto hr = E_ABORT;
-	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+	EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockEvent, postHandle(&mockContext, hr))
+	EXPECT_CALL(this->mockEvent, postHandle(&this->mockContext, hr))
 		.WillOnce(Return(hr));
-	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
+	EXPECT_CALL(this->mockState0, handleEvent(&this->mockContext, &this->mockEvent, Not(nullptr)))
 		.WillOnce(Return(hr));
-	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+	EXPECT_CALL(this->mockState0, exit(_, _, _)).Times(0);
 
-	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(hr, this->mockContext.handleEvent(&this->mockEvent));
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_FALSE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_FALSE(this->mockState0.deleted());
 }
 
 // State::exit() returns error.
 TYPED_TEST(EventUnitTest, ExitError)
 {
 	auto hr = E_ABORT;
-	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+	EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockEvent, postHandle(&mockContext, hr))
+	EXPECT_CALL(this->mockEvent, postHandle(&this->mockContext, hr))
 		.WillOnce(Return(hr));
-	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
-		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
-	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(hr));
-	EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).Times(0);
+	EXPECT_CALL(this->mockState0, handleEvent(&this->mockContext, &this->mockEvent, Not(nullptr)))
+		.WillOnce(DoAll(SetArgPointee<2>(&this->mockState1), Return(S_OK)));
+	EXPECT_CALL(this->mockState0, exit(&this->mockContext, &this->mockEvent, &this->mockState1)).WillOnce(Return(hr));
+	EXPECT_CALL(this->mockState1, entry(&this->mockContext, &this->mockEvent, &this->mockState0)).Times(0);
 
-	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(hr, this->mockContext.handleEvent(&this->mockEvent));
 
 	// mockState0 remains as current state.
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_FALSE(mockState0.deleted());
-	EXPECT_TRUE(mockState1.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_FALSE(this->mockState0.deleted());
+	EXPECT_TRUE(this->mockState1.deleted());
 }
 
 // State::entry() returns error.
 TYPED_TEST(EventUnitTest, EntryError)
 {
 	auto hr = E_ABORT;
-	EXPECT_CALL(mockEvent, preHandle(&mockContext))
+	EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 		.WillOnce(Return(S_OK));
-	EXPECT_CALL(mockEvent, postHandle(&mockContext, hr))
+	EXPECT_CALL(this->mockEvent, postHandle(&this->mockContext, hr))
 		.WillOnce(Return(hr));
-	EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, Not(nullptr)))
-		.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
-	EXPECT_CALL(mockState0, exit(&mockContext, &mockEvent, &mockState1)).WillOnce(Return(S_OK));
-	EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(hr));
+	EXPECT_CALL(this->mockState0, handleEvent(&this->mockContext, &this->mockEvent, Not(nullptr)))
+		.WillOnce(DoAll(SetArgPointee<2>(&this->mockState1), Return(S_OK)));
+	EXPECT_CALL(this->mockState0, exit(&this->mockContext, &this->mockEvent, &this->mockState1)).WillOnce(Return(S_OK));
+	EXPECT_CALL(this->mockState1, entry(&this->mockContext, &this->mockEvent, &this->mockState0)).WillOnce(Return(hr));
 
-	ASSERT_EQ(hr, mockContext.handleEvent(&mockEvent));
+	ASSERT_EQ(hr, this->mockContext.handleEvent(&this->mockEvent));
 
 	// mockState1 becomes current state.
-	EXPECT_EQ(&mockState1, mockContext._getCurrentState());
-	EXPECT_TRUE(mockEvent.deleted());
-	EXPECT_TRUE(mockState0.deleted());
-	EXPECT_FALSE(mockState1.deleted());
+	EXPECT_EQ(&this->mockState1, this->mockContext._getCurrentState());
+	EXPECT_TRUE(this->mockEvent.deleted());
+	EXPECT_TRUE(this->mockState0.deleted());
+	EXPECT_FALSE(this->mockState1.deleted());
 }
 
 // -------------------------
 template<class C>
-class SubStateUnitTest : public ::UnitTest<C>
+class SubStateUnitTest : public UnitTestBase<C>
 {
 public:
 	void SetUp() {
-		UnitTest::SetUp();
+		UnitTestBase<C>::SetUp();
 	}
 	void TearDown() {
-		EXPECT_HRESULT_SUCCEEDED(mockContext.shutdown());
+		EXPECT_HRESULT_SUCCEEDED(this->mockContext.shutdown());
 
-		UnitTest::TearDown();
+		UnitTestBase<C>::TearDown();
 	}
 };
 
@@ -318,68 +318,68 @@ TYPED_TEST(SubStateUnitTest, 0)
 {
 	{
 		InSequence _sequence;
-		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
-		EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		EXPECT_CALL(this->mockState0, entry(&this->mockContext, nullptr, _)).WillOnce(Return(S_OK));
+		EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 			.WillOnce(Return(S_OK));
-		EXPECT_CALL(mockState0, handleEvent(&mockContext, &mockEvent, _))
-			.WillOnce(DoAll(SetArgPointee<2>(&mockState1), Return(S_OK)));
-		EXPECT_CALL(mockState1, entry(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));
-		EXPECT_CALL(mockEvent, postHandle(&mockContext, S_OK))
+		EXPECT_CALL(this->mockState0, handleEvent(&this->mockContext, &this->mockEvent, _))
+			.WillOnce(DoAll(SetArgPointee<2>(&this->mockState1), Return(S_OK)));
+		EXPECT_CALL(this->mockState1, entry(&this->mockContext, &this->mockEvent, &this->mockState0)).WillOnce(Return(S_OK));
+		EXPECT_CALL(this->mockEvent, postHandle(&this->mockContext, S_OK))
 			.WillOnce(Return(S_OK));
-		EXPECT_CALL(mockEvent, preHandle(&mockContext))
+		EXPECT_CALL(this->mockEvent, preHandle(&this->mockContext))
 			.WillOnce(Return(S_OK));
-		EXPECT_CALL(mockState1, handleEvent(&mockContext, &mockEvent, _))
-			.WillOnce(DoAll(SetArgPointee<2>(&mockState0), Return(S_OK)));
-		EXPECT_CALL(mockState1, exit(&mockContext, &mockEvent, &mockState0)).WillOnce(Return(S_OK));
-		EXPECT_CALL(mockEvent, postHandle(&mockContext, S_OK))
+		EXPECT_CALL(this->mockState1, handleEvent(&this->mockContext, &this->mockEvent, _))
+			.WillOnce(DoAll(SetArgPointee<2>(&this->mockState0), Return(S_OK)));
+		EXPECT_CALL(this->mockState1, exit(&this->mockContext, &this->mockEvent, &this->mockState0)).WillOnce(Return(S_OK));
+		EXPECT_CALL(this->mockEvent, postHandle(&this->mockContext, S_OK))
 			.WillOnce(Return(S_OK));
 	}
-	EXPECT_CALL(mockState0, exit(_, _, _)).Times(0);
+	EXPECT_CALL(this->mockState0, exit(_, _, _)).Times(0);
 
-	ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
-	ASSERT_EQ(S_OK, mockContext.waitReady());
+	ASSERT_EQ(S_OK, this->mockContext.setup(&this->mockState0));
+	ASSERT_EQ(S_OK, this->mockContext.waitReady());
 
-	mockState1.setMasterState(&mockState0);
-	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));	// State0 -> State1
-	ASSERT_EQ(S_OK, mockContext.handleEvent(&mockEvent));	// State1 -> State0(Sub state goes back to master state)
+	this->mockState1.setMasterState(&this->mockState0);
+	ASSERT_EQ(S_OK, this->mockContext.handleEvent(&this->mockEvent));	// State0 -> State1
+	ASSERT_EQ(S_OK, this->mockContext.handleEvent(&this->mockEvent));	// State1 -> State0(Sub state goes back to master state)
 
-	EXPECT_EQ(&mockState0, mockContext._getCurrentState());
-	EXPECT_FALSE(mockState0.deleted());
-	EXPECT_TRUE(mockState1.deleted());
-	ASSERT_EQ(S_OK, mockContext.shutdown());
-	EXPECT_TRUE(mockState0.deleted());
+	EXPECT_EQ(&this->mockState0, this->mockContext._getCurrentState());
+	EXPECT_FALSE(this->mockState0.deleted());
+	EXPECT_TRUE(this->mockState1.deleted());
+	ASSERT_EQ(S_OK, this->mockContext.shutdown());
+	EXPECT_TRUE(this->mockState0.deleted());
 }
 
 // Test for Context to ensure that async operations are denied.
-class NotImplTest : public ::UnitTest<MockContext>
+class NotImplTest : public UnitTestBase<MockContext>
 {
 public:
 	void SetUp() {
-		UnitTest::SetUp();
+		UnitTestBase<MockContext>::SetUp();
 
-		EXPECT_CALL(mockState0, entry(&mockContext, nullptr, _)).WillOnce(Return(S_OK));
-		ASSERT_EQ(S_OK, mockContext.setup(&mockState0));
-		ASSERT_EQ(S_OK, mockContext.waitReady());
+		EXPECT_CALL(this->mockState0, entry(&this->mockContext, nullptr, _)).WillOnce(Return(S_OK));
+		ASSERT_EQ(S_OK, this->mockContext.setup(&this->mockState0));
+		ASSERT_EQ(S_OK, this->mockContext.waitReady());
 	}
 	void TearDown() {
-		ASSERT_EQ(S_OK, mockContext.shutdown());
+		ASSERT_EQ(S_OK, this->mockContext.shutdown());
 
-		UnitTest::TearDown();
+		UnitTestBase<MockContext>::TearDown();
 	}
 };
 
 TEST_F(NotImplTest, 0)
 {
 	HRESULT hrExitCode;
-	EXPECT_EQ(E_NOTIMPL, mockContext.getAsyncExitCode(&hrExitCode));
+	EXPECT_EQ(E_NOTIMPL, this->mockContext.getAsyncExitCode(&hrExitCode));
 
 	MockEvent<MockContext> mockEvent;
-	EXPECT_EQ(TSM_E_NOT_SUPPORTED, mockContext.triggerEvent(&mockEvent));
+	EXPECT_EQ(TSM_E_NOT_SUPPORTED, this->mockContext.triggerEvent(&mockEvent));
 
 	EXPECT_TRUE(mockEvent.deleted());
 }
 
-class AssertUnitTest : public ::UnitTest<MockContext>
+class AssertUnitTest : public UnitTestBase<MockContext>
 {
 public:
 	class IAssert
@@ -439,7 +439,7 @@ TEST_F(AssertUnitTest, proc)
 		AssertUnitTest::pMockAssert->proc(hr, exp, sourceFile, line);
 	};
 
-	auto hr = mockContext.handleEvent(&mockEvent);
+	auto hr = this->mockContext.handleEvent(&this->mockEvent);
 	_tprintf_s(_T("HResult returned = 0x%08x\n"), hr);
 	ASSERT_EQ(hr, hResult);
 }
@@ -460,7 +460,7 @@ TEST_F(AssertUnitTest, writer)
 		AssertUnitTest::pMockAssert->writer(msg);
 	};
 
-	auto hr = mockContext.handleEvent(&mockEvent);
+	auto hr = this->mockContext.handleEvent(&this->mockEvent);
 	_tprintf_s(_T("HResult returned = 0x%08x\n"), hr);
 
 	TCHAR hrStr[10];
@@ -528,9 +528,8 @@ template<class T>
 class UnknownImplUnitTest : public Test
 {
 public:
-	using Testee = T;
 	void SetUp() {
-		Testee::objectCount = 0;
+		T::objectCount = 0;
 	}
 };
 
@@ -539,40 +538,40 @@ TYPED_TEST_SUITE(UnknownImplUnitTest, UnknownImplUnitTestTesteeTypes);
 TYPED_TEST(UnknownImplUnitTest, create_delete)
 {
 	{
-		CComPtr<Testee> testee;
-		testee = new Testee();
-		ASSERT_EQ(Testee::objectCount, 1);
+		CComPtr<TypeParam> testee;
+		testee = new TypeParam();
+		ASSERT_EQ(TypeParam::objectCount, 1);
 		ASSERT_EQ(testee->impl.getCRef(), 1);
 	}
-	ASSERT_EQ(Testee::objectCount, 0);
+	ASSERT_EQ(TypeParam::objectCount, 0);
 }
 
 TYPED_TEST(UnknownImplUnitTest, cRef)
 {
-	CComPtr<Testee> testee1(new Testee());
-	CComPtr<Testee> testee2(testee1.p);
+	CComPtr<TypeParam> testee1(new TypeParam());
+	CComPtr<TypeParam> testee2(testee1.p);
 
 	ASSERT_EQ(testee1->impl.getCRef(), 2);
-	ASSERT_EQ(Testee::objectCount, 1);
+	ASSERT_EQ(TypeParam::objectCount, 1);
 	testee1.Release();
 	ASSERT_EQ(testee2->impl.getCRef(), 1);
-	ASSERT_EQ(Testee::objectCount, 1);
+	ASSERT_EQ(TypeParam::objectCount, 1);
 	testee2.Release();
-	ASSERT_EQ(Testee::objectCount, 0);
+	ASSERT_EQ(TypeParam::objectCount, 0);
 }
 
 
 TYPED_TEST(UnknownImplUnitTest, QueryInterface)
 {
 	{
-		CComPtr<Testee> testee(new Testee());
+		CComPtr<TypeParam> testee(new TypeParam());
 		CComPtr<IUnknown> unk;
 
 		ASSERT_HRESULT_SUCCEEDED(testee.QueryInterface(&unk));
 		ASSERT_EQ(testee, unk);
 		ASSERT_EQ(testee->impl.getCRef(), 2);
 
-		// Interface that Testee class does not implement.
+		// Interface that TypeParam class does not implement.
 		CComPtr<IRegistrar> reg;
 		ASSERT_EQ(testee.QueryInterface(&reg), E_NOINTERFACE);
 
@@ -580,7 +579,7 @@ TYPED_TEST(UnknownImplUnitTest, QueryInterface)
 	}
 
 	// All objects should be deleted.
-	ASSERT_EQ(Testee::objectCount, 0);
+	ASSERT_EQ(TypeParam::objectCount, 0);
 }
 
 TEST(TesteeISupportErrorInfoUnitTest, QueryInterface)
